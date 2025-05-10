@@ -3,7 +3,7 @@ import { AuthProvider } from '@/contexts/auth';
 import { AssociationProvider } from './contexts/AssociationContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import { SessionRecovery } from '@/components/SessionRecovery';
 import AuthGuard from './components/guards/AuthGuard';
@@ -83,21 +83,22 @@ function App() {
   // Define role permissions for different routes
   const memberRoles: UserRoleType[] = ['member', 'manager', 'admin', 'system_admin', 'super_admin', 'guest'];
   const managerRoles: UserRoleType[] = ['manager', 'admin', 'system_admin', 'super_admin'];
-  const adminRoles: UserRoleType[] = ['admin', 'system_admin', 'super_admin'];
-
-  //Define mobile flag
-  const isMobile:boolean = isMobileUserAgent();
+  const adminRoles: UserRoleType[] = ['admin', 'system_admin', 'super_admin'];  // Define mobile flag for responsive UI adjustments
+  const isMobile: boolean = isMobileUserAgent();
 
   useEffect(() => {
     isConfigured();
-
-  }, []); // Run only once on mount
-
+    // Log device type detection for debugging
+    console.log(`Device type detected: ${isMobile ? 'Mobile' : 'Desktop'}`);
+    
+    // Set a data attribute on the HTML element for CSS targeting
+    document.documentElement.setAttribute('data-device-type', isMobile ? 'mobile' : 'desktop');
+    
+  }, [isMobile]); // Added isMobile as a dependency
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-          <AuthProvider>
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">          <AuthProvider>
             <AssociationProvider>
               <SessionRecovery />
               <Routes>

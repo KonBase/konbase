@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,38 +11,60 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConventionAttendeesPage from '@/components/conventions/ConventionAttendeesPage';
 import ConventionLocationsTab from '@/components/conventions/ConventionLocationsTab';
 import ConventionLogsTab from '@/components/conventions/ConventionLogsTab';
+import RedeemInvitationButton from '@/components/conventions/RedeemInvitationButton';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const ConventionDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [convention, setConvention] = useState<Convention | null>(null);
+  const navigate = useNavigate();  const [convention, setConvention] = useState<Convention | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [equipmentCount, setEquipmentCount] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
+  const [hasAccess, setHasAccess] = useState(true); // Default to true initially
+  const [attendeeCount, setAttendeeCount] = useState(0);
   const { toast } = useToast();
-
   const fetchConventionData = useCallback(async () => {
     if (!id) return;
 
     setIsLoading(true);
     try {
-      // Fetch convention details, equipment count, and staff count in parallel
-      const [conventionResult, equipmentResult, staffResult] = await Promise.all([
+      // Get current user first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Fetch convention details, equipment count, staff count, and attendee count in parallel
+      const [
+        conventionResult, 
+        equipmentResult, 
+        staffResult,
+        attendeeResult,
+        accessCheckResult
+      ] = await Promise.all([
         supabase.from('conventions').select('*').eq('id', id).single(),
         supabase.from('convention_equipment').select('id', { count: 'exact', head: true }).eq('convention_id', id),
-        supabase.from('convention_access').select('id', { count: 'exact', head: true }).eq('convention_id', id)
+        supabase.from('convention_access')
+          .select('id', { count: 'exact', head: true })
+          .eq('convention_id', id)
+          .in('role', ['organizer', 'staff']),
+        supabase.from('convention_access')
+          .select('id', { count: 'exact', head: true })
+          .eq('convention_id', id),
+        // Check if the current user has access to the convention
+        user ? supabase.rpc('can_access_convention', { p_convention_id: id }) : { data: false }
       ]);
 
       // Check for errors after all promises settle
       if (conventionResult.error) throw conventionResult.error;
       if (equipmentResult.error) throw equipmentResult.error;
       if (staffResult.error) throw staffResult.error;
+      if (attendeeResult.error) throw attendeeResult.error;
+      if (accessCheckResult.error) throw accessCheckResult.error;
 
       setConvention(conventionResult.data);
       setEquipmentCount(equipmentResult.count ?? 0);
       setStaffCount(staffResult.count ?? 0);
+      setAttendeeCount(attendeeResult.count ?? 0);
+      setHasAccess(!!accessCheckResult.data);
 
     } catch (error: any) {
       console.error('Error loading convention data:', error);
@@ -55,6 +77,8 @@ const ConventionDetails = () => {
       setConvention(null);
       setEquipmentCount(0);
       setStaffCount(0);
+      setAttendeeCount(0);
+      setHasAccess(false);
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +137,7 @@ const ConventionDetails = () => {
   const endDate = new Date(convention.end_date);
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      {/* Header Section */}
+    <div className="space-y-6 p-4 md:p-6">      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b">
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -130,15 +153,20 @@ const ConventionDetails = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          {!hasAccess && (
+            <RedeemInvitationButton 
+              variant="default"
+              label="Join Convention"
+              onRedeemed={fetchConventionData}
+            />
+          )}
           {/* TODO: Implement Edit functionality */}
           <Button variant="outline" disabled>
             <Edit className="mr-2 h-4 w-4" /> Edit
           </Button>
         </div>
-      </div>
-
-      {/* Overview Cards - Improved layout and content */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      </div>      {/* Overview Cards - Improved layout and content */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Duration</CardTitle>
@@ -158,20 +186,29 @@ const ConventionDetails = () => {
             <div className="text-lg font-bold truncate" title={convention.location || 'Not set'}>{convention.location || 'Not set'}</div>
             <p className="text-xs text-muted-foreground">Primary venue</p>
           </CardContent>
-        </Card>
-        <Card>
+        </Card>        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Staff Access</CardTitle>
+            <CardTitle className="text-sm font-medium">Attendees</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">{staffCount}</div>
-            <p className="text-xs text-muted-foreground">Members with access</p>
+            <div className="text-lg font-bold">{attendeeCount}</div>
+            <p className="text-xs text-muted-foreground">Total participants</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Equipment Items</CardTitle>
+            <CardTitle className="text-sm font-medium">Staff</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold">{staffCount}</div>
+            <p className="text-xs text-muted-foreground">Organizers & staff</p>
+          </CardContent>
+        </Card>
+        <Card className="hidden lg:block">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Equipment</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -224,12 +261,28 @@ const ConventionDetails = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="attendees" className="mt-4">
+        </TabsContent>        <TabsContent value="attendees" className="mt-4">
           {/* Render the ConventionAttendeesPage component */}
           {id ? (
-            <ConventionAttendeesPage conventionId={id} />
+            <>
+              {/* Show join banner for users without access */}
+              {!hasAccess && (
+                <Card className="mb-4 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                  <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4">
+                    <div>
+                      <h3 className="text-lg font-medium text-blue-800 dark:text-blue-300">Join This Convention</h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-400">You need an invitation code to access this convention's attendees and resources.</p>
+                    </div>
+                    <RedeemInvitationButton 
+                      variant="default"
+                      onRedeemed={fetchConventionData}
+                      className="whitespace-nowrap"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+              <ConventionAttendeesPage conventionId={id} />
+            </>
           ) : (
             <Card>
               <CardHeader>

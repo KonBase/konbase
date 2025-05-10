@@ -40,7 +40,6 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
-
   const handleCreateInvite = async () => {
     setIsLoading(true);
     try {
@@ -56,6 +55,7 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
       if (userError) throw userError;
       if (!user) throw new Error('Not authenticated');
       
+      // Create the invitation in the database
       const { error } = await supabase.from('convention_invitations').insert({
         code,
         convention_id: conventionId,
@@ -67,9 +67,17 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
       
       if (error) throw error;
       
+      // Log creation to convention_logs
+      await supabase.from('convention_logs').insert({
+        convention_id: conventionId,
+        user_id: user.id,
+        action: 'Created Invitation',
+        details: { role, email: email || null }
+      });
+      
       // If email was provided, send email (this would typically be done server-side)
       if (email) {
-        // Email sending logic would go here
+        // TODO: Implement real email sending via a server function
         // For now, just show the code to be shared manually
         toast({
           title: 'Invitation Created',
@@ -90,18 +98,81 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSearchUser = async () => {
+  };  const handleSearchUser = async () => {
     setIsLoading(true);
     try {
+      // Check if user exists
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
+
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error('Not authenticated');
+
+      // Handle case where user doesn't exist
+      if (!data) {
+        // User not found - create invitation and suggest sharing with them
+        toast({
+          title: 'User Not Found',
+          description: `No user with email ${email} was found. Creating invitation code instead.`,
+          variant: 'default',
+        });
+        
+        // Generate a random alphanumeric code
+        const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        // Set expiration date to 7 days from now
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        
+        // Create invitation
+        const { error: inviteError } = await supabase.from('convention_invitations').insert({
+          code,
+          convention_id: conventionId,
+          created_by: user.id,
+          role, // Use the selected role
+          expires_at: expiresAt.toISOString(),
+          uses_remaining: 1, // Single-use invitation
+        });
+        
+        if (inviteError) throw inviteError;
+        
+        // Log creation to convention_logs
+        await supabase.from('convention_logs').insert({
+          convention_id: conventionId,
+          user_id: user.id,
+          action: 'Created Invitation for New User',
+          details: { role, email }
+        });
+        
+        setInviteCode(code);
+        return;
+      }
 
       if (error) throw error;
+
+      // Check if user is already in convention
+      const { data: existingAccess, error: checkError } = await supabase
+        .from('convention_access')
+        .select('id')
+        .eq('convention_id', conventionId)
+        .eq('user_id', data.id)
+        .maybeSingle();
+        
+      if (checkError) throw checkError;
+      
+      if (existingAccess) {
+        toast({
+          title: 'Already Added',
+          description: `User ${data.name} already has access to this convention.`,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       toast({
         title: 'User Found',
@@ -118,6 +189,19 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         });
 
       if (addError) throw addError;
+
+      // Log to convention logs
+      await supabase.from('convention_logs').insert({
+        convention_id: conventionId,
+        user_id: user.id,
+        action: 'Added User',
+        details: { 
+          added_user_id: data.id, 
+          added_user_name: data.name, 
+          added_user_email: data.email, 
+          role 
+        }
+      });
 
       toast({
         title: 'User Added',
@@ -199,8 +283,7 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
               <div className="grid grid-cols-4 items-center gap-4 mt-4">
                 <Label htmlFor="role" className="text-right">
                   Role
-                </Label>
-                <Select 
+                </Label>                <Select 
                   value={role} 
                   onValueChange={setRole}
                 >
