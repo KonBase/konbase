@@ -1,8 +1,13 @@
-
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
 // Role definitions with hierarchy and permissions
-export type UserRoleType = 'super_admin' | 'system_admin' | 'admin' | 'manager' | 'member' | 'guest';
+export type UserRoleType =
+  | 'super_admin'
+  | 'system_admin'
+  | 'admin'
+  | 'manager'
+  | 'member'
+  | 'guest';
 
 export interface RoleDefinition {
   level: number;
@@ -13,48 +18,60 @@ export interface RoleDefinition {
 }
 
 export const USER_ROLES: Record<UserRoleType, RoleDefinition> = {
-  'super_admin': {
+  super_admin: {
     level: 100,
     name: 'Super Admin',
-    description: 'Complete system access with ability to manage all associations',
+    description:
+      'Complete system access with ability to manage all associations',
     requires2FA: true,
-    permissions: ['admin:all', 'manage:users', 'manage:associations', 'manage:billing', 'manage:system']
+    permissions: [
+      'admin:all',
+      'manage:users',
+      'manage:associations',
+      'manage:billing',
+      'manage:system',
+    ],
   },
-  'system_admin': {
+  system_admin: {
     level: 90,
     name: 'System Admin',
     description: 'Administrative access with limited access to system settings',
     requires2FA: true,
-    permissions: ['manage:users', 'manage:associations', 'manage:billing']
+    permissions: ['manage:users', 'manage:associations', 'manage:billing'],
   },
-  'admin': {
+  admin: {
     level: 80,
     name: 'Admin',
     description: 'Administrative access to manage association and users',
     requires2FA: false,
-    permissions: ['manage:users', 'manage:association', 'manage:inventory', 'manage:conventions']
+    permissions: [
+      'manage:users',
+      'manage:association',
+      'manage:inventory',
+      'manage:conventions',
+    ],
   },
-  'manager': {
+  manager: {
     level: 60,
     name: 'Manager',
     description: 'Ability to manage inventory and events',
     requires2FA: false,
-    permissions: ['manage:inventory', 'manage:conventions', 'view:reports']
+    permissions: ['manage:inventory', 'manage:conventions', 'view:reports'],
   },
-  'member': {
+  member: {
     level: 40,
     name: 'Member',
     description: 'Regular member with basic access',
     requires2FA: false,
-    permissions: ['view:inventory', 'view:conventions', 'participate:events']
+    permissions: ['view:inventory', 'view:conventions', 'participate:events'],
   },
-  'guest': {
+  guest: {
     level: 20,
     name: 'Guest',
     description: 'Limited guest access',
     requires2FA: false,
-    permissions: ['view:public']
-  }
+    permissions: ['view:public'],
+  },
 };
 
 // Extended User type with additional properties needed by the application

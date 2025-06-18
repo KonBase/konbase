@@ -24,6 +24,7 @@ Associations represent organizations, clubs, or groups that manage conventions a
 ### Member Management
 
 - **Role-Based Access Control**: Assign different permission levels:
+
   - **Admins**: Complete association control
   - **Managers**: Equipment and convention management capabilities
   - **Members**: Basic access to view and participate
@@ -68,6 +69,7 @@ The Association Module serves as the foundation for:
 ## Administration
 
 Super administrators can access the Association Management interface to:
+
 - View all associations in the system
 - Create new associations
 - Delete associations (with appropriate safeguards)
@@ -76,6 +78,7 @@ Super administrators can access the Association Management interface to:
 ## Getting Started
 
 To begin using the Association Module:
+
 1. Register a new account
 2. Create a new association or accept an invitation to join an existing one
 3. Set up your association profile with relevant details

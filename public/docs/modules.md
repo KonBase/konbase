@@ -33,18 +33,18 @@ const MyModule: KonbaseModule = {
   version: '1.0.0',
   description: 'A custom module for Konbase',
   author: 'Your Name',
-  
+
   onRegister: async () => {
     console.log('My module registered');
   },
-  
+
   onEnable: async () => {
     console.log('My module enabled');
   },
-  
+
   onDisable: async () => {
     console.log('My module disabled');
-  }
+  },
 };
 
 export default MyModule;
@@ -68,7 +68,7 @@ const MyDashboardComponent = () => {
 
 const MyModule: KonbaseModule = {
   // ... basic module properties
-  
+
   getDashboardComponents: () => {
     return [
       {
@@ -91,7 +91,7 @@ import { Settings } from 'lucide-react'; // Import icons
 
 const MyModule: KonbaseModule = {
   // ... basic module properties
-  
+
   getNavigationItems: () => {
     return [
       {
@@ -99,10 +99,10 @@ const MyModule: KonbaseModule = {
         label: 'My Module',
         path: '/my-module',
         icon: Settings,
-        order: 100 // Lower order items appear higher in the list
-      }
+        order: 100, // Lower order items appear higher in the list
+      },
     ];
-  }
+  },
 };
 ```
 
@@ -113,7 +113,7 @@ Modules can create and manage their own database tables:
 ```typescript
 const MyModule: KonbaseModule = {
   // ... basic module properties
-  
+
   getDatabaseMigrations: () => {
     return [
       {
@@ -137,10 +137,10 @@ const MyModule: KonbaseModule = {
         `,
         down: `
           DROP TABLE IF EXISTS my_module_data;
-        `
-      }
+        `,
+      },
     ];
-  }
+  },
 };
 ```
 
@@ -151,23 +151,23 @@ Modules can define a configuration schema:
 ```typescript
 const MyModule: KonbaseModule = {
   // ... basic module properties
-  
+
   getConfigurationSchema: () => {
     return {
       properties: {
         apiKey: {
           type: 'string',
           title: 'API Key',
-          format: 'password'
+          format: 'password',
         },
         maxItems: {
           type: 'number',
           title: 'Maximum Items',
-          default: 10
-        }
-      }
+          default: 10,
+        },
+      },
     };
-  }
+  },
 };
 ```
 
@@ -198,20 +198,21 @@ To submit your module to the Konbase Module Store:
 3. Submit through the developer portal
 
 For more information, contact the Konbase team.
-```
+
+````
 
 ## 9. Integration Instructions
 
 Now that we've created all the necessary components, here's how to integrate them into your existing application:
 
 1. **Add ModuleWrapper to your app**:
-   
+
    In your main app component or layout, wrap your application with the ModuleWrapper:
 
    ```tsx
    import { ModuleWrapper } from './components/modules/ModuleWrapper';
    import { ModuleLoader } from './components/modules/ModuleLoader';
-   
+
    function App() {
      return (
        <ModuleLoader>
@@ -221,20 +222,20 @@ Now that we've created all the necessary components, here's how to integrate the
        </ModuleLoader>
      );
    }
-   ```
+````
 
 2. **Add ModuleManager to your admin routes**:
 
    ```tsx
    import { ModuleManager } from './components/modules/ModuleManager';
-   
+
    // In your routes configuration
    const routes = [
      // ... existing routes
      {
        path: '/admin/modules',
-       element: <ModuleManager />
-     }
+       element: <ModuleManager />,
+     },
    ];
    ```
 
@@ -242,14 +243,14 @@ Now that we've created all the necessary components, here's how to integrate the
 
    ```tsx
    import { ModuleDashboardComponents } from './components/modules/ModuleDashboardComponents';
-   
+
    // In your Dashboard component
    function Dashboard() {
      return (
        <div>
          <h1>Dashboard</h1>
          {/* Your existing dashboard content */}
-         
+
          <h2>Module Components</h2>
          <ModuleDashboardComponents />
        </div>
@@ -261,14 +262,14 @@ Now that we've created all the necessary components, here's how to integrate the
 
    ```tsx
    import { ModuleNavigationItems } from './components/modules/ModuleNavigationItems';
-   
+
    // In your Navigation/Sidebar component
    function Sidebar() {
      return (
        <nav>
          <ul>
            {/* Your existing navigation items */}
-           
+
            {/* Module navigation items */}
            <ModuleNavigationItems />
          </ul>

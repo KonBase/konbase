@@ -1,263 +1,129 @@
+'use client';
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { DateFormat, TimeFormat } from "@/utils/dateTimeUtils";
+import * as React from 'react';
+import {
+  ThemeProviderContext,
+  type Theme,
+  type TextSize,
+  type Contrast,
+  type Density,
+  type ThemeProviderState,
+} from './ThemeContextDefinition';
 
-type Theme = "dark" | "light" | "system";
-type TextSize = "default" | "large" | "larger";
-type ColorContrast = "default" | "increased" | "high";
-type AnimationPreference = "full" | "reduced" | "none";
-type UIDensity = "compact" | "comfortable" | "spacious";
-
-type ThemeProviderProps = {
+interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-};
-
-type ThemeProviderState = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  textSize: TextSize;
-  setTextSize: (size: TextSize) => void;
-  contrast: ColorContrast;
-  setContrast: (contrast: ColorContrast) => void;
-  animations: AnimationPreference;
-  setAnimations: (preference: AnimationPreference) => void;
-  density: UIDensity;
-  setDensity: (density: UIDensity) => void;
-  reducedMotion: boolean;
-  setReducedMotion: (reduced: boolean) => void;
-  screenReader: boolean;
-  setScreenReader: (enabled: boolean) => void;
-  language: string;
-  setLanguage: (lang: string) => void;
-  dateFormat: DateFormat;
-  setDateFormat: (format: DateFormat) => void;
-  timeFormat: TimeFormat;
-  setTimeFormat: (format: TimeFormat) => void;
-};
-
-const initialState: ThemeProviderState = {
-  theme: "system",
-  setTheme: () => null,
-  textSize: "default",
-  setTextSize: () => null,
-  contrast: "default",
-  setContrast: () => null,
-  animations: "full",
-  setAnimations: () => null,
-  density: "comfortable",
-  setDensity: () => null,
-  reducedMotion: false,
-  setReducedMotion: () => null,
-  screenReader: false,
-  setScreenReader: () => null,
-  language: "en-US",
-  setLanguage: () => null,
-  dateFormat: "MM/DD/YYYY",
-  setDateFormat: () => null,
-  timeFormat: "12",
-  setTimeFormat: () => null,
-};
-
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
+}
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
-  ...props
+  defaultTheme = 'system',
+  storageKey = 'konbase-ui-theme',
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(`${storageKey}-theme`) as Theme) || defaultTheme
-  );
-  
-  const [textSize, setTextSize] = useState<TextSize>(
-    () => (localStorage.getItem(`${storageKey}-textSize`) as TextSize) || "default"
-  );
-  
-  const [contrast, setContrast] = useState<ColorContrast>(
-    () => (localStorage.getItem(`${storageKey}-contrast`) as ColorContrast) || "default"
-  );
-  
-  const [animations, setAnimations] = useState<AnimationPreference>(
-    () => (localStorage.getItem(`${storageKey}-animations`) as AnimationPreference) || "full"
-  );
-  
-  const [density, setDensity] = useState<UIDensity>(
-    () => (localStorage.getItem(`${storageKey}-density`) as UIDensity) || "comfortable"
-  );
-  
-  const [reducedMotion, setReducedMotion] = useState<boolean>(
-    () => localStorage.getItem(`${storageKey}-reducedMotion`) === "true"
-  );
-  
-  const [screenReader, setScreenReader] = useState<boolean>(
-    () => localStorage.getItem(`${storageKey}-screenReader`) === "true"
-  );
+  const [theme, setTheme] = React.useState<Theme>(() => {
+    // Initialize theme state without accessing localStorage or window during SSR
+    return defaultTheme;
+  });
+  const [textSize, setTextSize] = React.useState<TextSize>('medium');
+  const [contrast, setContrast] = React.useState<Contrast>('normal');
+  const [reducedMotion, setReducedMotion] = React.useState(false);
+  const [animations, setAnimations] = React.useState(true);
+  const [density, setDensity] = React.useState<Density>('comfortable');
+  const [screenReader, setScreenReader] = React.useState(false);
+  const [language, setLanguage] = React.useState('en');
+  const [dateFormat, setDateFormat] = React.useState('MM/DD/YYYY');
+  const [timeFormat, setTimeFormat] = React.useState<'12h' | '24h'>('12h');
+  const [mounted, setMounted] = React.useState(false);
 
-  const [language, setLanguage] = useState<string>(
-    () => localStorage.getItem('user-language') || 'en-US'
-  );
-
-  const [dateFormat, setDateFormat] = useState<DateFormat>(
-    () => (localStorage.getItem('date-format') as DateFormat) || 'MM/DD/YYYY'
-  );
-
-  const [timeFormat, setTimeFormat] = useState<TimeFormat>(
-    () => (localStorage.getItem('time-format') as TimeFormat) || '12'
-  );
-
-  // Apply theme class
-  useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-  }, [theme]);
-
-  // Apply text size
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    root.classList.remove("text-size-default", "text-size-large", "text-size-larger");
-    root.classList.add(`text-size-${textSize}`);
-  }, [textSize]);
-
-  // Apply contrast
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    root.classList.remove("contrast-default", "contrast-increased", "contrast-high");
-    root.classList.add(`contrast-${contrast}`);
-  }, [contrast]);
-
-  // Apply animations preference
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    root.classList.remove("animations-full", "animations-reduced", "animations-none");
-    root.classList.add(`animations-${animations}`);
-  }, [animations]);
-
-  // Apply UI density
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    root.classList.remove("density-compact", "density-comfortable", "density-spacious");
-    root.classList.add(`density-${density}`);
-  }, [density]);
-
-  // Apply reduced motion preference
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    if (reducedMotion) {
-      root.classList.add("reduced-motion");
+  // Effect to set mounted state and load theme from localStorage
+  React.useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem(storageKey) as Theme;
+    if (savedTheme) {
+      setTheme(savedTheme);
     } else {
-      root.classList.remove("reduced-motion");
+      // If no saved theme, set to defaultTheme (which might be 'system')
+      // This ensures consistency if defaultTheme is 'system' and needs media query
+      setTheme(defaultTheme);
     }
-  }, [reducedMotion]);
+  }, [storageKey, defaultTheme]);
 
-  // Apply screen reader optimization
-  useEffect(() => {
+  // Effect to apply theme to DOM, runs only after mounted and when theme changes
+  React.useEffect(() => {
+    if (!mounted) return; // Only run on client after hydration
+
     const root = window.document.documentElement;
-    
-    if (screenReader) {
-      root.classList.add("screen-reader-optimized");
-    } else {
-      root.classList.remove("screen-reader-optimized");
+    root.classList.remove('light', 'dark');
+
+    let currentTheme = theme;
+    if (theme === 'system') {
+      currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
     }
-  }, [screenReader]);
+    root.classList.add(currentTheme);
+  }, [theme, mounted]);
 
-  // Apply language
-  useEffect(() => {
-    document.documentElement.lang = language.split('-')[0];
-    localStorage.setItem('user-language', language);
-  }, [language]);
-
-  // Save date and time format preferences
-  useEffect(() => {
-    localStorage.setItem('date-format', dateFormat);
-  }, [dateFormat]);
-
-  useEffect(() => {
-    localStorage.setItem('time-format', timeFormat);
-  }, [timeFormat]);
-
-  // Save preferences to localStorage
-  const savePreference = (key: string, value: string | boolean) => {
-    localStorage.setItem(`${storageKey}-${key}`, String(value));
-  };
-
-  const value = {
+  const value: ThemeProviderState = {
     theme,
-    setTheme: (theme: Theme) => {
-      savePreference("theme", theme);
-      setTheme(theme);
+    setTheme: (newTheme: Theme) => {
+      if (mounted) {
+        // Ensure localStorage is only accessed on client
+        localStorage.setItem(storageKey, newTheme);
+      }
+      setTheme(newTheme);
     },
     textSize,
-    setTextSize: (size: TextSize) => {
-      savePreference("textSize", size);
-      setTextSize(size);
-    },
+    setTextSize,
     contrast,
-    setContrast: (contrast: ColorContrast) => {
-      savePreference("contrast", contrast);
-      setContrast(contrast);
-    },
-    animations,
-    setAnimations: (preference: AnimationPreference) => {
-      savePreference("animations", preference);
-      setAnimations(preference);
-    },
-    density,
-    setDensity: (density: UIDensity) => {
-      savePreference("density", density);
-      setDensity(density);
-    },
+    setContrast,
     reducedMotion,
-    setReducedMotion: (reduced: boolean) => {
-      savePreference("reducedMotion", reduced);
-      setReducedMotion(reduced);
-    },
+    setReducedMotion,
+    animations,
+    setAnimations,
+    density,
+    setDensity,
     screenReader,
-    setScreenReader: (enabled: boolean) => {
-      savePreference("screenReader", enabled);
-      setScreenReader(enabled);
-    },
+    setScreenReader,
     language,
     setLanguage,
     dateFormat,
     setDateFormat,
-    timeFormat, 
+    timeFormat,
     setTimeFormat,
   };
 
+  // To prevent flash of unstyled content or incorrect theme before hydration,
+  // we can render children only after mounted, or use a placeholder.
+  // However, for theme, it's often preferred to let the default render and then switch.
+  // The `suppressHydrationWarning` on <html> in layout.tsx helps with minor attribute mismatches.
+  // The key is that the *structure* of the DOM should match.
+  // If we delay rendering children, it could cause a layout shift.
+
+  // The initial render will use the defaultTheme (or 'system' evaluated on server if possible, though less common for theme).
+  // The client will then hydrate with this, and useEffect will update if localStorage/system pref differs.
+
+  if (!mounted) {
+    // Optional: Render a loader or null to avoid applying client-side theme logic before hydration
+    // This can prevent hydration errors if the server and client render different initial themes.
+    // However, this might cause a flash of unstyled content or a layout shift.
+    // For now, we'll rely on `suppressHydrationWarning` and careful effect management.
+    // return null; // Or a loading spinner
+  }
+
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext.Provider value={value}>
       {children}
     </ThemeProviderContext.Provider>
   );
 }
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
+  const context = React.useContext(ThemeProviderContext);
 
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
+  if (context === undefined)
+    throw new Error('useTheme must be used within a ThemeProvider');
 
   return context;
 };

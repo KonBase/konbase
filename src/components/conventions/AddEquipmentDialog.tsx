@@ -1,12 +1,35 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -31,8 +54,11 @@ interface Location {
 }
 
 const equipmentSchema = z.object({
-  item_id: z.string().min(1, { message: "Please select an item" }),
-  quantity: z.coerce.number().int().positive({ message: "Quantity must be positive" }),
+  item_id: z.string().min(1, { message: 'Please select an item' }),
+  quantity: z.coerce
+    .number()
+    .int()
+    .positive({ message: 'Quantity must be positive' }),
   convention_location_id: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
@@ -47,7 +73,7 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
   const [items, setItems] = useState<Item[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof equipmentSchema>>({
     resolver: zodResolver(equipmentSchema),
     defaultValues: {
@@ -62,14 +88,14 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
   useEffect(() => {
     const fetchEquipmentItems = async () => {
       if (!isOpen) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('items')
           .select('id, name, barcode, category_id')
           .eq('is_consumable', false)
           .order('name');
-        
+
         if (error) throw error;
         setItems(data || []);
       } catch (error: any) {
@@ -89,19 +115,21 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
   useEffect(() => {
     const fetchLocations = async () => {
       if (!isOpen || !conventionId) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('convention_locations')
           .select('id, name')
           .eq('convention_id', conventionId)
           .order('name');
-        
+
         if (error) throw error;
         setLocations(data || []);
 
         // Set default location to "Storage" if it exists
-        const storageLocation = data?.find((location) => location.name.toLowerCase() === 'storage');
+        const storageLocation = data?.find(
+          (location) => location.name.toLowerCase() === 'storage',
+        );
         if (storageLocation) {
           form.setValue('convention_location_id', storageLocation.id);
         }
@@ -121,9 +149,9 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof equipmentSchema>) => {
     if (!conventionId) {
       toast({
-        title: "Error",
-        description: "Convention ID is missing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Convention ID is missing',
+        variant: 'destructive',
       });
       return;
     }
@@ -131,15 +159,21 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
     setIsLoading(true);
     try {
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError) throw userError;
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error('Not authenticated');
 
       // Prepare data, converting "__NONE__" back to null for convention_location_id
       const dataToSend = {
         ...values,
-        convention_location_id: values.convention_location_id === '__NONE__' ? null : values.convention_location_id,
+        convention_location_id:
+          values.convention_location_id === '__NONE__'
+            ? null
+            : values.convention_location_id,
       };
 
       // Check if this item is already allocated to the convention
@@ -166,27 +200,25 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
         if (error) throw error;
 
         toast({
-          title: "Equipment updated",
-          description: "The equipment allocation has been updated",
+          title: 'Equipment updated',
+          description: 'The equipment allocation has been updated',
         });
       } else {
         // Create new allocation
-        const { error } = await supabase
-          .from('convention_equipment')
-          .insert({
-            convention_id: conventionId,
-            item_id: dataToSend.item_id,
-            quantity: dataToSend.quantity,
-            convention_location_id: dataToSend.convention_location_id,
-            status: 'stored',
-            notes: dataToSend.notes,
-          });
+        const { error } = await supabase.from('convention_equipment').insert({
+          convention_id: conventionId,
+          item_id: dataToSend.item_id,
+          quantity: dataToSend.quantity,
+          convention_location_id: dataToSend.convention_location_id,
+          status: 'stored',
+          notes: dataToSend.notes,
+        });
 
         if (error) throw error;
 
         toast({
-          title: "Equipment added",
-          description: "The equipment has been allocated to the convention",
+          title: 'Equipment added',
+          description: 'The equipment has been allocated to the convention',
         });
       }
 
@@ -194,11 +226,11 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
       onEquipmentAdded();
       onClose();
     } catch (error: any) {
-      console.error("Error adding equipment:", error);
+      console.error('Error adding equipment:', error);
       toast({
-        title: "Error adding equipment",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error adding equipment',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -269,10 +301,10 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Any special instructions or notes" 
-                      {...field} 
-                      value={field.value || ''} 
+                    <Textarea
+                      placeholder="Any special instructions or notes"
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -294,4 +326,3 @@ export const AddEquipmentDialog: React.FC<AddEquipmentDialogProps> = ({
     </Dialog>
   );
 };
-

@@ -1,11 +1,21 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/auth/useAuth'; // Corrected import path
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle } from 'lucide-react';
@@ -13,76 +23,90 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { logDebug, handleError } from '@/utils/debug';
 import { getLastVisitedPath, saveCurrentPath } from '@/utils/session-utils';
 
-const LoginForm = () => {
-  const location = useLocation();
+export function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
-  const { login, signInWithOAuth, userProfile, user, loading: authLoading } = useAuth();
-  const [isReady] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const emailVerificationNeeded = location.state?.emailVerification;
+  const { login, signInWithOAuth, user, loading: authLoading } = useAuth();
+  const emailVerificationNeeded = searchParams?.get('emailVerification');
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
-  const redirectAttempts = useState(0);
-  const isGitHubPages = window.location.hostname.includes('github.io');
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
+  const isGitHubPages =
+    typeof window !== 'undefined'
+      ? window.location.hostname.includes('github.io')
+      : false;
 
   // Enhanced redirection effect
   useEffect(() => {
     // Only attempt redirection if we have a target and auth is not loading
     if (redirectTo && !authLoading) {
-      logDebug('Attempting redirection after login', { 
-        path: redirectTo, 
-        userExists: !!user, 
-        profileExists: !!userProfile,
-        isGitHubPages
-      }, 'info');
-      
-      // If we have a user or profile, we can redirect
-      if (user || userProfile) {
-        logDebug('User authenticated, redirecting to', { path: redirectTo }, 'info');
-        
+      logDebug(
+        'Attempting redirection after login',
+        {
+          path: redirectTo,
+          userExists: !!user,
+          isGitHubPages,
+        },
+        'info',
+      );
+
+      // If we have a user, we can redirect
+      if (user) {
+        logDebug(
+          'User authenticated, redirecting to',
+          { path: redirectTo },
+          'info',
+        );
+
         // Small delay to ensure all auth state is properly updated
         setTimeout(() => {
-          navigate(redirectTo, { replace: true });
+          router.push(redirectTo);
           setRedirectTo(null);
         }, 100);
-      } 
+      }
       // If we're still not logged in after multiple attempts, force redirect to dashboard
-      else if (redirectAttempts[0] >= 3) {
-        logDebug('Forcing dashboard redirect after multiple attempts', null, 'warn');
-        navigate('/dashboard', { replace: true });
+      else if (redirectAttempts >= 3) {
+        logDebug(
+          'Forcing dashboard redirect after multiple attempts',
+          null,
+          'warn',
+        );
+        router.push('/dashboard');
         setRedirectTo(null);
       }
       // Increment redirect attempts
       else {
-        redirectAttempts[1](prev => prev + 1);
+        setRedirectAttempts((prev) => prev + 1);
       }
     }
-  }, [redirectTo, user, userProfile, authLoading, navigate, redirectAttempts, isGitHubPages]);
+  }, [redirectTo, user, authLoading, router, redirectAttempts, isGitHubPages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       logDebug('Login attempt', { email }, 'info');
-      
+
       await login(email, password);
-      
+
       toast({
         title: 'Login successful',
         description: 'Welcome back! Redirecting...',
       });
 
       // Reset redirect attempts counter
-      redirectAttempts[1](0);
+      setRedirectAttempts(0);
 
-      if (location.state?.from) {
-        setRedirectTo(location.state.from);
+      const fromParam = searchParams?.get('from');
+      if (fromParam) {
+        setRedirectTo(fromParam);
       } else {
         const lastPath = getLastVisitedPath();
         // Save dashboard as the destination, in case redirection fails
@@ -91,12 +115,16 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       handleError(error, 'LoginForm.handleSubmit');
-      
-      if (error.message?.includes('email') && error.message?.includes('verification')) {
+
+      if (
+        error.message?.includes('email') &&
+        error.message?.includes('verification')
+      ) {
         toast({
-          title: "Email verification required",
-          description: "Please check your inbox and verify your email before logging in.",
-          variant: "destructive",
+          title: 'Email verification required',
+          description:
+            'Please check your inbox and verify your email before logging in.',
+          variant: 'destructive',
         });
       } else {
         toast({
@@ -105,7 +133,7 @@ const LoginForm = () => {
           variant: 'destructive',
         });
       }
-      
+
       setIsLoading(false);
     }
   };
@@ -117,10 +145,15 @@ const LoginForm = () => {
       await signInWithOAuth('google');
     } catch (error: any) {
       handleError(error, 'LoginForm.handleGoogleSignIn');
+      toast({
+        title: 'Google sign-in failed',
+        description: error.message || 'Failed to sign in with Google.',
+        variant: 'destructive',
+      });
       setIsGoogleLoading(false);
     }
   };
-  
+
   const handleDiscordLogin = async () => {
     try {
       setIsDiscordLoading(true);
@@ -128,34 +161,42 @@ const LoginForm = () => {
       await signInWithOAuth('discord');
     } catch (error: any) {
       handleError(error, 'LoginForm.handleDiscordLogin');
+      toast({
+        title: 'Discord sign-in failed',
+        description: error.message || 'Failed to sign in with Discord.',
+        variant: 'destructive',
+      });
       setIsDiscordLoading(false);
     }
   };
-  
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Login</CardTitle>
-        <CardDescription>Enter your credentials to access your account.</CardDescription>
+        <CardDescription>
+          Enter your credentials to access your account.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {emailVerificationNeeded && (
-            <Alert variant="default">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Email Verification Pending</AlertTitle>
-              <AlertDescription>
-                Please check your email inbox (and spam folder) to verify your account before logging in.
-              </AlertDescription>
-            </Alert>
-          )}
+          <Alert variant="default">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Email Verification Pending</AlertTitle>
+            <AlertDescription>
+              Please check your email inbox (and spam folder) to verify your
+              account before logging in.
+            </AlertDescription>
+          </Alert>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="m@example.com" 
-              required 
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading || isGoogleLoading || isDiscordLoading}
@@ -164,29 +205,38 @@ const LoginForm = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
+            <Input
+              id="password"
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading || isGoogleLoading || isDiscordLoading}
             />
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="remember-me" 
+            <Checkbox
+              id="remember-me"
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
               disabled={isLoading || isGoogleLoading || isDiscordLoading}
             />
-            <Label htmlFor="remember-me" className="text-sm font-normal">Remember me</Label>
+            <Label htmlFor="remember-me" className="text-sm font-normal">
+              Remember me
+            </Label>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading || isDiscordLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || isGoogleLoading || isDiscordLoading}
+          >
             {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
             Login
           </Button>
@@ -202,22 +252,33 @@ const LoginForm = () => {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading || isDiscordLoading}>
-            {isGoogleLoading ? <Spinner size="sm" className="mr-2" /> : null} Google
+          <Button
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading || isGoogleLoading || isDiscordLoading}
+          >
+            {isGoogleLoading ? <Spinner size="sm" className="mr-2" /> : null}{' '}
+            Google
           </Button>
-          <Button variant="outline" onClick={handleDiscordLogin} disabled={isLoading || isGoogleLoading || isDiscordLoading}>
-            {isDiscordLoading ? <Spinner size="sm" className="mr-2" /> : null} Discord
+          <Button
+            variant="outline"
+            onClick={handleDiscordLogin}
+            disabled={isLoading || isGoogleLoading || isDiscordLoading}
+          >
+            {isDiscordLoading ? <Spinner size="sm" className="mr-2" /> : null}{' '}
+            Discord
           </Button>
         </div>
       </CardContent>
       <CardFooter className="text-sm text-center block">
-        Don't have an account?{" "}
-        <Link to="/register" className="font-medium text-primary hover:underline">
+        Don't have an account?{' '}
+        <Link
+          href="/register"
+          className="font-medium text-primary hover:underline"
+        >
           Sign up
         </Link>
       </CardFooter>
     </Card>
   );
-};
-
-export default LoginForm;
+}

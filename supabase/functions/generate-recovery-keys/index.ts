@@ -1,9 +1,9 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
 };
 
 // Function to generate a random recovery key
@@ -31,7 +31,7 @@ serve(async (req) => {
     // Default to 8 keys if not specified
     const body = await req.json().catch(() => ({}));
     const count = body?.count || 8;
-    
+
     // Generate the requested number of recovery keys
     const keys = Array.from({ length: count }, () => {
       const rawKey = generateRandomKey(10);
@@ -39,27 +39,27 @@ serve(async (req) => {
     });
 
     console.log(`Generated ${count} recovery keys`);
-    
+
     return new Response(
       JSON.stringify({
-        keys
+        keys,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+        status: 200,
+      },
     );
   } catch (error) {
     console.error('Error generating recovery keys:', error.message);
-    
+
     return new Response(
       JSON.stringify({
-        error: error.message
+        error: error.message,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+        status: 400,
+      },
     );
   }
 });

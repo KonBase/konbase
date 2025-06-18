@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bug } from 'lucide-react';
-import { logDebug } from '@/utils/debug';
+import { logDebug as _logDebug } from '@/utils/debug';
 
 // Import refactored components
 import DebugPanelHeader from '@/utils/debug/debug-panel-header';
@@ -44,15 +43,15 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
   testConnection,
   isTestingConnection,
   lastTestedAt,
-  testResults
+  testResults,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [errorCount, setErrorCount] = useState<number>(0);
-  
+
   // Track error count to show a warning if errors are increasing
   useEffect(() => {
     if (errorData) {
-      setErrorCount(prev => prev + 1);
+      setErrorCount((prev) => prev + 1);
     }
   }, [errorData]);
 
@@ -62,42 +61,42 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
       setErrorCount(0);
     }
   }, [networkStatus]);
-  
+
   return (
-    <Alert variant="debug" className="mt-4 text-xs">
+    <Alert variant="default" className="mt-4 text-xs">
       <Bug className="h-4 w-4" />
-      
-      <DebugPanelHeader 
+
+      <DebugPanelHeader
         networkStatus={networkStatus}
         isExpanded={isExpanded}
         setIsExpanded={setIsExpanded}
         errorCount={errorCount}
         isTestingConnection={isTestingConnection}
       />
-      
+
       {isExpanded && (
         <AlertDescription className="space-y-2 mt-2">
-          <DebugActionButtons 
+          <DebugActionButtons
             onRetry={onRetry}
             testConnection={testConnection}
             isTestingConnection={isTestingConnection}
           />
-          
-          <TestConnectionSection 
+
+          <TestConnectionSection
             isTestingConnection={isTestingConnection}
             testConnection={testConnection}
             lastTestedAt={lastTestedAt}
             testResults={testResults}
           />
-          
-          <RequestInfoDisplay 
+
+          <RequestInfoDisplay
             userData={userData}
             requestInfo={requestInfo}
             networkStatus={networkStatus}
           />
-          
+
           <ErrorDetails errorData={errorData} />
-          
+
           <DebugPanelFooter />
         </AlertDescription>
       )}

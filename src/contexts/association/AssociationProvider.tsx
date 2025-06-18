@@ -1,14 +1,26 @@
+'use client';
+
 import React, { createContext, useEffect, useState } from 'react';
 import { AssociationContextType, AssociationState } from './AssociationTypes';
 import { Association } from '@/types/association';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from '@/components/ui/use-toast';
-import { createAssociation, fetchUserAssociations, updateAssociation, joinAssociationWithCode as joinWithCode } from './AssociationUtils';
+import {
+  createAssociation,
+  fetchUserAssociations,
+  updateAssociation,
+  joinAssociationWithCode as joinWithCode,
+} from './AssociationUtils';
+import { useAuth } from '@/contexts/auth'; // Import useAuth
 
 // Create the context with a default undefined value
-export const AssociationContext = createContext<AssociationContextType | undefined>(undefined);
+export const AssociationContext = createContext<
+  AssociationContextType | undefined
+>(undefined);
 
-export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   // State for the association context
   const [state, setState] = useState<AssociationState>({
     currentAssociation: null,
@@ -16,38 +28,46 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isLoading: true,
   });
 
-  // Get user profile from hook
-  const { profile } = useUserProfile();
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile(); // Also get profileLoading state
 
   // Update state helper function
   const updateState = (newState: Partial<AssociationState>) => {
-    setState(prevState => ({ ...prevState, ...newState }));
+    setState((prevState) => ({ ...prevState, ...newState }));
   };
 
-  // Load user associations when profile changes
+  // Load user associations when profile or user changes, and profile is not loading
   useEffect(() => {
     const loadAssociations = async () => {
-      if (!profile) {
-        updateState({ isLoading: false });
+      // Wait for profile to be loaded and user to be available
+      if (profileLoading || !user || !profile) {
+        // If profile is still loading, or no user/profile, don't proceed yet
+        // but set isLoading to false if profileLoading is also false (meaning profile fetch finished and it's null)
+        if (!profileLoading) {
+          updateState({
+            isLoading: false,
+            userAssociations: [],
+            currentAssociation: null,
+          });
+        }
         return;
       }
-      
+
       updateState({ isLoading: true });
-      
+
       try {
         const userAssociations = await fetchUserAssociations(profile.id);
         updateState({ userAssociations });
-        
-        // Set current association if we don't have one and found associations
+
         if (!state.currentAssociation && userAssociations.length > 0) {
           updateState({ currentAssociation: userAssociations[0] });
         }
       } catch (error) {
-        console.error("Error loading associations:", error);
+        console.error('Error loading associations:', error);
         toast({
-          title: "Error",
-          description: "Failed to load your associations.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Failed to load your associations.',
+          variant: 'destructive',
         });
       } finally {
         updateState({ isLoading: false });
@@ -55,7 +75,7 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     loadAssociations();
-  }, [profile]);
+  }, [profile, user, profileLoading, state.currentAssociation]); // Add profileLoading and state.currentAssociation
 
   // Set current association
   const setCurrentAssociation = (association: Association | null) => {
@@ -66,37 +86,37 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const handleUpdateAssociation = async (data: Partial<Association>) => {
     updateState({ isLoading: true });
     try {
-      if (!state.currentAssociation) throw new Error("No association selected");
-      
+      if (!state.currentAssociation) throw new Error('No association selected');
+
       await updateAssociation(state.currentAssociation.id, data);
-      
+
       const updatedAssociation = {
         ...state.currentAssociation,
         ...data,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
-      
+
       updateState({ currentAssociation: updatedAssociation });
-      
+
       // Update in the associations list
       updateState({
-        userAssociations: state.userAssociations.map(assoc => 
-          assoc.id === state.currentAssociation?.id 
-            ? updatedAssociation 
-            : assoc
-        )
+        userAssociations: state.userAssociations.map((assoc) =>
+          assoc.id === state.currentAssociation?.id
+            ? updatedAssociation
+            : assoc,
+        ),
       });
-      
+
       toast({
-        title: "Association updated",
-        description: "Association details have been updated successfully.",
+        title: 'Association updated',
+        description: 'Association details have been updated successfully.',
       });
     } catch (error: any) {
-      console.error("Error updating association:", error);
+      console.error('Error updating association:', error);
       toast({
-        title: "Error updating association",
+        title: 'Error updating association',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
       throw error;
     } finally {
@@ -105,30 +125,33 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Create a new association
-  const handleCreateAssociation = async (data: Partial<Association>): Promise<Association | null> => {
+  const handleCreateAssociation = async (
+    data: Partial<Association>,
+  ): Promise<Association | null> => {
     updateState({ isLoading: true });
     try {
-      if (!profile) throw new Error("You must be logged in to create an association");
-      
+      if (!profile)
+        throw new Error('You must be logged in to create an association');
+
       const newAssociation = await createAssociation(data, profile.id);
-      
+
       updateState({
         userAssociations: [...state.userAssociations, newAssociation],
-        currentAssociation: newAssociation
+        currentAssociation: newAssociation,
       });
-      
+
       toast({
-        title: "Association created",
+        title: 'Association created',
         description: `${newAssociation.name} has been created successfully.`,
       });
-      
+
       return newAssociation;
     } catch (error: any) {
-      console.error("Error creating association:", error);
+      console.error('Error creating association:', error);
       toast({
-        title: "Error creating association",
+        title: 'Error creating association',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -137,33 +160,36 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Join an association with invite code
-  const handleJoinAssociationWithCode = async (code: string, userId: string): Promise<{ success: boolean; error?: string }> => {
+  const handleJoinAssociationWithCode = async (
+    code: string,
+    userId: string,
+  ): Promise<{ success: boolean; error?: string }> => {
     updateState({ isLoading: true });
     try {
       const result = await joinWithCode(code, userId);
-      
+
       if (result.success && result.association) {
         // Add the new association to the user's list and set it as current
         const newAssociation = result.association;
-        
+
         updateState({
           userAssociations: [...state.userAssociations, newAssociation],
-          currentAssociation: newAssociation
+          currentAssociation: newAssociation,
         });
-        
+
         toast({
-          title: "Association joined",
+          title: 'Association joined',
           description: `You have joined ${newAssociation.name} successfully.`,
         });
       }
-      
+
       return result;
     } catch (error: any) {
-      console.error("Error joining association:", error);
+      console.error('Error joining association:', error);
       toast({
-        title: "Error joining association",
+        title: 'Error joining association',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
       return { success: false, error: error.message };
     } finally {

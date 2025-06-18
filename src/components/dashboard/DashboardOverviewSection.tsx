@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import AssociationOverviewCard from './AssociationOverviewCard';
 import RecentActivityCard from './RecentActivityCard';
@@ -21,28 +23,32 @@ interface DashboardOverviewSectionProps {
   handleRetry: () => void;
 }
 
-const DashboardOverviewSection: React.FC<DashboardOverviewSectionProps> = ({ 
+const DashboardOverviewSection: React.FC<DashboardOverviewSectionProps> = ({
   currentAssociation,
   isLoadingActivity,
   recentActivity,
   activityError,
-  handleRetry
+  handleRetry,
 }) => {
   return (
     <div className="grid gap-4 md:gap-6 lg:gap-8 md:grid-cols-2 lg:grid-cols-3 mb-6 md:mb-8">
       <ErrorBoundary>
         <AssociationOverviewCard association={currentAssociation} />
       </ErrorBoundary>
-      
+
       <ErrorBoundary>
-        <RecentActivityCard 
+        <RecentActivityCard
           isLoading={isLoadingActivity}
-          activities={typeof recentActivity === 'function' ? recentActivity() : recentActivity}
+          activities={
+            typeof recentActivity === 'function'
+              ? recentActivity()
+              : recentActivity
+          }
           error={activityError}
           onRetry={handleRetry}
         />
       </ErrorBoundary>
-      
+
       <ErrorBoundary>
         <QuickActionsCard />
       </ErrorBoundary>

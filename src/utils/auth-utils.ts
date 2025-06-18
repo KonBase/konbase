@@ -9,22 +9,26 @@ import { logDebug, handleError } from '@/utils/debug';
  */
 export const fetchUserProfile = async (userId: string) => {
   if (!userId) return null;
-  
+
   try {
     logDebug('Fetching user profile', { userId }, 'info');
-    
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-      
+
     if (error) {
       handleError(error, 'fetchUserProfile');
       return null;
     }
-    
-    logDebug('User profile fetched successfully', { profileId: data?.id }, 'info');
+
+    logDebug(
+      'User profile fetched successfully',
+      { profileId: data?.id },
+      'info',
+    );
     return data;
   } catch (error) {
     handleError(error, 'fetchUserProfile');
@@ -40,15 +44,19 @@ export const fetchUserProfile = async (userId: string) => {
  */
 export const enhanceUserWithProfile = (user: User, profileData: any) => {
   if (!user || !profileData) return user;
-  
+
   logDebug('Enhancing user with profile data', { userId: user.id }, 'info');
-  
+
   return {
     ...user,
-    name: profileData.name || user.user_metadata?.name || profileData.email?.split('@')[0] || 'User',
+    name:
+      profileData.name ||
+      user.user_metadata?.name ||
+      profileData.email?.split('@')[0] ||
+      'User',
     profileImage: profileData.profile_image || user.user_metadata?.avatar_url,
-    role: profileData.role as UserRoleType || 'guest',
-    email: user.email || profileData.email
+    role: (profileData.role as UserRoleType) || 'guest',
+    email: user.email || profileData.email,
   };
 };
 
@@ -59,13 +67,13 @@ export const enhanceUserWithProfile = (user: User, profileData: any) => {
  */
 export const isSessionValid = (session: any) => {
   if (!session) return false;
-  
+
   const now = Math.floor(Date.now() / 1000);
   const expiresAt = session.expires_at || session.expiresAt;
-  
+
   const isValid = expiresAt > now;
   logDebug('Checking session validity', { isValid, expiresAt, now }, 'info');
-  
+
   return isValid;
 };
 
@@ -76,16 +84,16 @@ export const isSessionValid = (session: any) => {
  */
 export const getAuthProvider = (user: User | null): string => {
   if (!user) return 'none';
-  
+
   // Check for identities data from Supabase user object
   if (user.app_metadata?.provider) {
     return user.app_metadata.provider;
   }
-  
+
   if (user.app_metadata?.providers && user.app_metadata.providers.length > 0) {
     return user.app_metadata.providers[0];
   }
-  
+
   return 'email';
 };
 
@@ -96,7 +104,7 @@ export const getAuthProvider = (user: User | null): string => {
  */
 export const isSocialAuth = (user: User | null): boolean => {
   if (!user) return false;
-  
+
   const provider = getAuthProvider(user);
   return provider !== 'email' && provider !== 'none';
 };
@@ -108,11 +116,11 @@ export const isSocialAuth = (user: User | null): boolean => {
  */
 export const getAuthErrorMessage = (error: any): string => {
   if (!error) return 'An unknown error occurred';
-  
+
   // Extract error message or code
   const errorCode = error.code || '';
   const errorMessage = error.message || 'An unknown error occurred';
-  
+
   // Map common Supabase error codes to user-friendly messages
   switch (errorCode) {
     case 'auth/invalid-email':

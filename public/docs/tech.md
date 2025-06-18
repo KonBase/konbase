@@ -11,6 +11,7 @@ last_updated: 2025-04-24
 ## Core Technology Stack
 
 ### Frontend
+
 - **Framework**: React 18+
 - **UI Library**: [shadcn/ui](https://ui.shadcn.com/)
 - **State Management**: React Context API + React Query
@@ -18,12 +19,14 @@ last_updated: 2025-04-24
 - **Styling**: Emotion CSS-in-JS + MUI theming
 
 ### Backend
+
 - **Database & Auth**: Supabase
 - **Storage**: Supabase Storage
 - **Functions**: Supabase Edge Functions (Deno runtime)
 - **Real-time**: Supabase Realtime
 
 ### Database
+
 - **Primary Database**: PostgreSQL (via Supabase)
 - **Schema Design**: Relational model with RLS (Row Level Security)
 - **Migrations**: Managed via Supabase migrations
@@ -31,6 +34,7 @@ last_updated: 2025-04-24
 ## Key Libraries & Dependencies
 
 ### Core Dependencies
+
 - `@supabase/supabase-js` - Supabase client library
 - `@mui/material` - Material UI components
 - `@mui/icons-material` - Material icons
@@ -41,6 +45,7 @@ last_updated: 2025-04-24
 - `i18next` - Internationalization
 
 ### Visualization & UI Enhancements
+
 - `nivo` - Data visualization components
 - `react-beautiful-dnd` - Drag and drop functionality
 - `react-calendar` - Calendar components
@@ -48,16 +53,18 @@ last_updated: 2025-04-24
 - `@mui/x-date-pickers` - Date picker components
 
 ### Development Tools
+
 - TypeScript - Static type checking
-- ESLint - Code quality
+- ESLint - Code quality and linting
 - Prettier - Code formatting
-- Vite - Build tool and dev server
+- Next.js - Full-stack React framework with App Router
 - Vitest - Unit testing framework
-- Cypress - E2E testing
+- Playwright - E2E testing
 
 ## Application Architecture
 
 ### Component Structure
+
 - **Atomic Design Methodology**
   - Atoms: Basic UI elements
   - Molecules: Composite components
@@ -66,6 +73,7 @@ last_updated: 2025-04-24
   - Pages: Full application views
 
 ### Module Organization
+
 - **Core Modules**
   - Authentication
   - Association Management
@@ -73,8 +81,9 @@ last_updated: 2025-04-24
   - Convention Management
   - User Management
   - Reporting
-  
+
 ### Data Flow
+
 - **API Layer**: Custom hooks for Supabase interactions
 - **State Management**: Context providers for global state
 - **Query Management**: React Query for server state
@@ -82,18 +91,18 @@ last_updated: 2025-04-24
 ## External Integrations
 
 ### Current Integrations
+
 - **Authentication Providers**
   - Email/Password
   - Google OAuth
   - Discord OAuth
-  
 - **Storage**
   - Supabase Storage for file uploads (images, documents)
-  
 - **Notifications**
   - Email notifications via Supabase functions
 
 ### Planned Integrations
+
 - Calendar exports (iCal, Google Calendar)
 - Payment processing // planning
 - CSV/Excel import/export

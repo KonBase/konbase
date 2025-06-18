@@ -1,8 +1,10 @@
+'use client';
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,7 +40,7 @@ const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const { signInWithOAuth } = useAuth();
 
@@ -55,13 +57,21 @@ const RegisterForm = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      logDebug('Register attempt', { email: values.email, name: values.name, hasInvitationCode: !!values.invitationCode }, 'info');
-      
+      logDebug(
+        'Register attempt',
+        {
+          email: values.email,
+          name: values.name,
+          hasInvitationCode: !!values.invitationCode,
+        },
+        'info',
+      );
+
       // First, check if the invitation code exists and is valid (if provided)
       let associationInvitation = null;
       let conventionInvitation = null;
       let invitationType = null;
-      
+
       if (values.invitationCode) {
         // Check for association invitation
         const { data: assocData, error: assocError } = await supabase
@@ -72,11 +82,19 @@ const RegisterForm = () => {
           .maybeSingle();
 
         if (assocError) {
-          logDebug('Error checking association invitation', assocError, 'error');
+          logDebug(
+            'Error checking association invitation',
+            assocError,
+            'error',
+          );
         } else if (assocData) {
           associationInvitation = assocData;
           invitationType = 'association';
-          logDebug('Found valid association invitation', { id: assocData.id, role: assocData.role }, 'info');
+          logDebug(
+            'Found valid association invitation',
+            { id: assocData.id, role: assocData.role },
+            'info',
+          );
         }
 
         // If no association invitation found, check for convention invitation
@@ -90,11 +108,19 @@ const RegisterForm = () => {
             .maybeSingle();
 
           if (convError) {
-            logDebug('Error checking convention invitation', convError, 'error');
+            logDebug(
+              'Error checking convention invitation',
+              convError,
+              'error',
+            );
           } else if (convData) {
             conventionInvitation = convData;
             invitationType = 'convention';
-            logDebug('Found valid convention invitation', { id: convData.id, role: convData.role }, 'info');
+            logDebug(
+              'Found valid convention invitation',
+              { id: convData.id, role: convData.role },
+              'info',
+            );
           }
         }
       }
@@ -117,8 +143,12 @@ const RegisterForm = () => {
       }
 
       if (data.session) {
-        logDebug('User registered with session', { userId: data.user?.id }, 'info');
-        
+        logDebug(
+          'User registered with session',
+          { userId: data.user?.id },
+          'info',
+        );
+
         // If we have an invitation, process it
         if (associationInvitation) {
           // Add user to association with proper role
@@ -133,9 +163,10 @@ const RegisterForm = () => {
           if (memberError) {
             logDebug('Error adding user to association', memberError, 'error');
             toast({
-              variant: "destructive",
-              title: "Error setting up association access",
-              description: "Your account was created but there was an issue with your association access. Please contact an administrator.",
+              variant: 'destructive',
+              title: 'Error setting up association access',
+              description:
+                'Your account was created but there was an issue with your association access. Please contact an administrator.',
             });
           } else {
             // Update user's primary association and role in profile
@@ -148,7 +179,11 @@ const RegisterForm = () => {
               .eq('id', data.user.id);
 
             if (profileError) {
-              logDebug('Error updating user profile with association', profileError, 'error');
+              logDebug(
+                'Error updating user profile with association',
+                profileError,
+                'error',
+              );
             }
 
             // Mark invitation as used
@@ -162,12 +197,16 @@ const RegisterForm = () => {
               .eq('id', associationInvitation.id);
 
             if (invitationError) {
-              logDebug('Error marking invitation as used', invitationError, 'error');
+              logDebug(
+                'Error marking invitation as used',
+                invitationError,
+                'error',
+              );
             }
           }
-          
+
           // Redirect to dashboard
-          navigate('/dashboard');
+          router.push('/dashboard');
         } else if (conventionInvitation) {
           // Add user to convention access with proper role
           const { error: accessError } = await supabase
@@ -182,9 +221,10 @@ const RegisterForm = () => {
           if (accessError) {
             logDebug('Error adding user to convention', accessError, 'error');
             toast({
-              variant: "destructive",
-              title: "Error setting up convention access",
-              description: "Your account was created but there was an issue with your convention access. Please contact an administrator.",
+              variant: 'destructive',
+              title: 'Error setting up convention access',
+              description:
+                'Your account was created but there was an issue with your convention access. Please contact an administrator.',
             });
           } else {
             // Decrease the uses_remaining count for the invitation
@@ -196,30 +236,34 @@ const RegisterForm = () => {
               .eq('id', conventionInvitation.id);
 
             if (invitationError) {
-              logDebug('Error updating invitation uses count', invitationError, 'error');
+              logDebug(
+                'Error updating invitation uses count',
+                invitationError,
+                'error',
+              );
             }
           }
-          
+
           // Redirect to dashboard
-          navigate('/dashboard');
+          router.push('/dashboard');
         } else {
           // No invitation - redirect to create first association
-          navigate('/setup');
+          router.push('/setup');
         }
       } else {
         logDebug('User registered, email confirmation required', null, 'info');
         toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
+          title: 'Account created!',
+          description: 'Please check your email to verify your account.',
         });
-        navigate('/login');
+        router.push('/login');
       }
     } catch (error: any) {
       handleError(error, 'RegisterForm.onSubmit');
       toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
+        variant: 'destructive',
+        title: 'Registration failed',
+        description: error.message || 'Something went wrong. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -237,7 +281,7 @@ const RegisterForm = () => {
       setIsGoogleLoading(false);
     }
   };
-  
+
   const handleDiscordSignUp = async () => {
     try {
       setIsDiscordLoading(true);
@@ -267,7 +311,7 @@ const RegisterForm = () => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="email"
@@ -275,13 +319,17 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="john@example.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="password"
@@ -295,7 +343,7 @@ const RegisterForm = () => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="invitationCode"
@@ -303,7 +351,10 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Invitation Code (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter invitation code if you have one" {...field} />
+                  <Input
+                    placeholder="Enter invitation code if you have one"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +367,7 @@ const RegisterForm = () => {
                 <Spinner className="mr-2" /> Creating account...
               </span>
             ) : (
-              "Create account"
+              'Create account'
             )}
           </Button>
         </form>
@@ -369,7 +420,7 @@ const RegisterForm = () => {
             </span>
           )}
         </Button>
-        
+
         <Button
           variant="outline"
           type="button"
@@ -383,8 +434,16 @@ const RegisterForm = () => {
             </span>
           ) : (
             <span className="flex items-center justify-center">
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.375-.444.864-.608 1.25a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.496 19.496 0 0 0 3.677 4.492a.07.07 0 0 0-.032.027C.533 9.884-.32 15.116.099 20.276a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.127c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.892a.077.077 0 0 0-.041.106c.36.698.772 1.362 1.225 1.994a.076.076 0 0 0 .084.028 19.834 19.834 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-10.376-3.549-14.629a.061.061 0 0 0-.031-.03zM8.02 16.5c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" fill="#5865F2"/>
+              <svg
+                className="mr-2 h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.375-.444.864-.608 1.25a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.496 19.496 0 0 0 3.677 4.492a.07.07 0 0 0-.032.027C.533 9.884-.32 15.116.099 20.276a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.127c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.892a.077.077 0 0 0-.041.106c.36.698.772 1.362 1.225 1.994a.076.076 0 0 0 .084.028 19.834 19.834 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-10.376-3.549-14.629a.061.061 0 0 0-.031-.03zM8.02 16.5c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                  fill="#5865F2"
+                />
               </svg>
               Discord
             </span>

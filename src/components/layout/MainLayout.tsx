@@ -1,27 +1,37 @@
+'use client';
+
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth';
 import { Header } from './Header';
 import DashboardFooter from './DashboardFooter';
 
-const MainLayout: React.FC = () => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user, loading: isLoading } = useAuth(); // Use 'user' and rename 'loading' if needed
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Check if current path is profile or settings, which don't need header
-  const isHeaderDisabledPage = location.pathname.startsWith('/profile') || 
-                               location.pathname.startsWith('/settings');
-  
+  const isHeaderDisabledPage =
+    pathname.startsWith('/profile') || pathname.startsWith('/settings');
+
   // Check if current path is public and doesn't require authentication
-  const isPublicPage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register';
+  const isPublicPage =
+    location.pathname === '/' ||
+    location.pathname === '/login' ||
+    location.pathname === '/register';
 
   useEffect(() => {
     // Check if user is authenticated and redirect if needed
-    if (!isLoading && !user && !isPublicPage) { // Check for 'user' existence instead of 'isAuthenticated'
-      navigate('/login');
+    if (!isLoading && !user && !isPublicPage) {
+      // Check for 'user' existence instead of 'isAuthenticated'
+      router.push('/login');
     }
-  }, [user, isLoading, navigate, location.pathname, isPublicPage]); // Update dependency array
+  }, [user, isLoading, router, pathname, isPublicPage]); // Update dependency array
 
   // Add meta viewport tag dynamically to ensure proper mobile display
   useEffect(() => {
@@ -29,7 +39,8 @@ const MainLayout: React.FC = () => {
     if (!viewportMeta) {
       const meta = document.createElement('meta');
       meta.name = 'viewport';
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      meta.content =
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
       document.head.appendChild(meta);
     }
   }, []);
@@ -44,12 +55,10 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-col min-h-screen">
       {!isHeaderDisabledPage && <Header />}
       <main className="flex-1">
-        <div className="container px-4 py-4 md:px-6 md:py-6">
-          <Outlet />
-        </div>
+        <div className="container px-4 py-4 md:px-6 md:py-6">{children}</div>
       </main>
       <DashboardFooter />
     </div>

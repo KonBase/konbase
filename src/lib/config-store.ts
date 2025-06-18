@@ -11,10 +11,12 @@ const CONFIG_KEY = 'konbase_config';
 
 // Load configuration from localStorage
 export function loadConfig(): SupabaseConfig | null {
+  if (typeof window === 'undefined') return null;
+
   try {
     const configStr = localStorage.getItem(CONFIG_KEY);
     if (!configStr) return null;
-    
+
     return JSON.parse(configStr) as SupabaseConfig;
   } catch (error) {
     console.error('Failed to load configuration:', error);
@@ -24,6 +26,8 @@ export function loadConfig(): SupabaseConfig | null {
 
 // Save configuration to localStorage
 export function saveConfig(config: SupabaseConfig): boolean {
+  if (typeof window === 'undefined') return false;
+
   try {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     return true;
@@ -45,8 +49,8 @@ export function isConfigured(): boolean {
   }
 
   // If not configured via localStorage, check environment variables
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // Return true if both environment variables are present and non-empty
   return !!(supabaseUrl && supabaseAnonKey);

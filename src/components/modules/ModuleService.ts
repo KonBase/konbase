@@ -1,6 +1,12 @@
+'use client';
+
 import { supabase } from '@/lib/supabase';
 import moduleRegistry from './ModuleRegistry';
-import { ModuleManifest, ModuleDatabaseMigration, ModuleConfiguration } from '@/types/modules';
+import {
+  ModuleManifest,
+  ModuleDatabaseMigration,
+  ModuleConfiguration,
+} from '@/types/modules';
 import { logDebug } from '@/utils/debug';
 
 /**
@@ -20,15 +26,19 @@ export class ModuleService {
 
       // Create module tables if they don't exist
       await this.ensureModuleTables();
-      
+
       // Load module state from database
       await this.loadModuleState();
-      
+
       moduleRegistry.setInitialized(true);
       logDebug('Module system initialized successfully', null, 'info');
       return true;
     } catch (error) {
-      logDebug(`Error initializing module system: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error initializing module system: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -65,11 +75,13 @@ export class ModuleService {
                 WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
               )
             );
-        `
+        `,
       });
 
       if (manifestsError) {
-        throw new Error(`Failed to create module_manifests table: ${manifestsError.message}`);
+        throw new Error(
+          `Failed to create module_manifests table: ${manifestsError.message}`,
+        );
       }
 
       // Create module_configurations table if it doesn't exist
@@ -92,11 +104,13 @@ export class ModuleService {
                 WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
               )
             );
-        `
+        `,
       });
 
       if (configError) {
-        throw new Error(`Failed to create module_configurations table: ${configError.message}`);
+        throw new Error(
+          `Failed to create module_configurations table: ${configError.message}`,
+        );
       }
 
       // Create module_migrations table to track applied migrations
@@ -122,16 +136,22 @@ export class ModuleService {
                 WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
               )
             );
-        `
+        `,
       });
 
       if (migrationsError) {
-        throw new Error(`Failed to create module_migrations table: ${migrationsError.message}`);
+        throw new Error(
+          `Failed to create module_migrations table: ${migrationsError.message}`,
+        );
       }
 
       logDebug('Module tables created or verified successfully', null, 'info');
     } catch (error) {
-      logDebug(`Error ensuring module tables: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error ensuring module tables: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       throw error;
     }
   }
@@ -147,15 +167,25 @@ export class ModuleService {
         .select('*');
 
       if (manifestsError) {
-        throw new Error(`Failed to load module manifests: ${manifestsError.message}`);
+        throw new Error(
+          `Failed to load module manifests: ${manifestsError.message}`,
+        );
       }
 
-      logDebug(`Loaded ${manifests.length} module manifests from database`, null, 'info');
-      
+      logDebug(
+        `Loaded ${manifests.length} module manifests from database`,
+        null,
+        'info',
+      );
+
       // We don't restore the actual modules from DB - they need to be registered at runtime
       // This just loads their enabled/disabled state and other metadata
     } catch (error) {
-      logDebug(`Error loading module state: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error loading module state: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       throw error;
     }
   }
@@ -165,9 +195,8 @@ export class ModuleService {
    */
   async saveModuleManifest(manifest: ModuleManifest): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('module_manifests')
-        .upsert({
+      const { error } = await supabase.from('module_manifests').upsert(
+        {
           id: manifest.id,
           name: manifest.name,
           version: manifest.version,
@@ -177,8 +206,10 @@ export class ModuleService {
           permissions: manifest.permissions || [],
           is_enabled: manifest.isEnabled,
           install_date: manifest.installDate,
-          update_date: manifest.updateDate
-        }, { onConflict: 'id' });
+          update_date: manifest.updateDate,
+        },
+        { onConflict: 'id' },
+      );
 
       if (error) {
         throw error;
@@ -186,7 +217,11 @@ export class ModuleService {
 
       return true;
     } catch (error) {
-      logDebug(`Error saving module manifest: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error saving module manifest: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -194,7 +229,10 @@ export class ModuleService {
   /**
    * Apply database migrations for a module
    */
-  async applyDatabaseMigrations(moduleId: string, migrations: ModuleDatabaseMigration[]): Promise<boolean> {
+  async applyDatabaseMigrations(
+    moduleId: string,
+    migrations: ModuleDatabaseMigration[],
+  ): Promise<boolean> {
     try {
       // Get previously applied migrations
       const { data: appliedMigrations, error: fetchError } = await supabase
@@ -206,20 +244,26 @@ export class ModuleService {
         throw fetchError;
       }
 
-      const appliedVersions = new Set(appliedMigrations.map(m => m.version));
-      
+      const appliedVersions = new Set(appliedMigrations.map((m) => m.version));
+
       // Apply new migrations in order
       for (const migration of migrations) {
         if (!appliedVersions.has(migration.version)) {
-          logDebug(`Applying migration ${migration.version} for module ${moduleId}`, null, 'info');
-          
+          logDebug(
+            `Applying migration ${migration.version} for module ${moduleId}`,
+            null,
+            'info',
+          );
+
           // Execute migration SQL
           const { error: migrationError } = await supabase.rpc('execute_sql', {
-            sql_query: migration.sql
+            sql_query: migration.sql,
           });
 
           if (migrationError) {
-            throw new Error(`Failed to apply migration ${migration.version}: ${migrationError.message}`);
+            throw new Error(
+              `Failed to apply migration ${migration.version}: ${migrationError.message}`,
+            );
           }
 
           // Record the migration as applied
@@ -228,20 +272,30 @@ export class ModuleService {
             .insert({
               module_id: moduleId,
               version: migration.version,
-              description: migration.description
+              description: migration.description,
             });
 
           if (recordError) {
-            throw new Error(`Failed to record migration ${migration.version}: ${recordError.message}`);
+            throw new Error(
+              `Failed to record migration ${migration.version}: ${recordError.message}`,
+            );
           }
 
-          logDebug(`Successfully applied migration ${migration.version} for module ${moduleId}`, null, 'info');
+          logDebug(
+            `Successfully applied migration ${migration.version} for module ${moduleId}`,
+            null,
+            'info',
+          );
         }
       }
 
       return true;
     } catch (error) {
-      logDebug(`Error applying migrations for module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error applying migrations for module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -259,7 +313,10 @@ export class ModuleService {
       // Apply migrations if provided
       if (module.getDatabaseMigrations) {
         const migrations = module.getDatabaseMigrations();
-        const migrationResult = await this.applyDatabaseMigrations(moduleId, migrations);
+        const migrationResult = await this.applyDatabaseMigrations(
+          moduleId,
+          migrations,
+        );
         if (!migrationResult) {
           throw new Error(`Failed to apply migrations for module ${moduleId}`);
         }
@@ -272,7 +329,9 @@ export class ModuleService {
       }
 
       // Update the manifest in the database
-      const manifest = moduleRegistry.getAllManifests().find(m => m.id === moduleId);
+      const manifest = moduleRegistry
+        .getAllManifests()
+        .find((m) => m.id === moduleId);
       if (manifest) {
         manifest.isEnabled = true;
         manifest.updateDate = new Date().toISOString();
@@ -281,7 +340,11 @@ export class ModuleService {
 
       return true;
     } catch (error) {
-      logDebug(`Error enabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error enabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -298,7 +361,9 @@ export class ModuleService {
       }
 
       // Update the manifest in the database
-      const manifest = moduleRegistry.getAllManifests().find(m => m.id === moduleId);
+      const manifest = moduleRegistry
+        .getAllManifests()
+        .find((m) => m.id === moduleId);
       if (manifest) {
         manifest.isEnabled = false;
         manifest.updateDate = new Date().toISOString();
@@ -307,7 +372,11 @@ export class ModuleService {
 
       return true;
     } catch (error) {
-      logDebug(`Error disabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error disabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -315,7 +384,9 @@ export class ModuleService {
   /**
    * Get module configuration from database
    */
-  async getModuleConfiguration(moduleId: string): Promise<ModuleConfiguration | null> {
+  async getModuleConfiguration(
+    moduleId: string,
+  ): Promise<ModuleConfiguration | null> {
     try {
       const { data, error } = await supabase
         .from('module_configurations')
@@ -329,7 +400,7 @@ export class ModuleService {
           return {
             moduleId,
             settings: {},
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
           };
         }
         throw error;
@@ -338,10 +409,14 @@ export class ModuleService {
       return {
         moduleId: data.module_id,
         settings: data.settings,
-        lastUpdated: data.last_updated
+        lastUpdated: data.last_updated,
       };
     } catch (error) {
-      logDebug(`Error getting module configuration: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error getting module configuration: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return null;
     }
   }
@@ -351,13 +426,14 @@ export class ModuleService {
    */
   async saveModuleConfiguration(config: ModuleConfiguration): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('module_configurations')
-        .upsert({
+      const { error } = await supabase.from('module_configurations').upsert(
+        {
           module_id: config.moduleId,
           settings: config.settings,
-          last_updated: new Date().toISOString()
-        }, { onConflict: 'module_id' });
+          last_updated: new Date().toISOString(),
+        },
+        { onConflict: 'module_id' },
+      );
 
       if (error) {
         throw error;
@@ -365,7 +441,11 @@ export class ModuleService {
 
       return true;
     } catch (error) {
-      logDebug(`Error saving module configuration: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error saving module configuration: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }

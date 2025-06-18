@@ -191,6 +191,9 @@ export interface ConventionTemplate {
   name: string;
   description: string | null;
   configuration: Record<string, any>;
+  includes_locations?: boolean;
+  includes_requirements?: boolean;
+  includes_equipment?: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;

@@ -1,18 +1,22 @@
+'use client';
 
-import { Outlet, useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import Footer from './Footer';
+import { ReactNode } from 'react';
 
-const MainLayoutWrapper = () => {
-  const location = useLocation();
-  
+interface MainLayoutWrapperProps {
+  children: ReactNode;
+}
+
+const MainLayoutWrapper = ({ children }: MainLayoutWrapperProps) => {
+  const pathname = usePathname();
+
   // Check if we're on the login or register pages
-  const hideFooter = location.pathname === '/login' || location.pathname === '/register';
-  
+  const hideFooter = pathname === '/login' || pathname === '/register';
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <div className="flex-grow">
-        <Outlet />
-      </div>
+      <div className="flex-grow">{children}</div>
       {!hideFooter && <Footer />}
     </div>
   );

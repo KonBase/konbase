@@ -1,26 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'; // Added useCallback
-import { Session, User, AuthError, SignInWithPasswordCredentials } from '@supabase/supabase-js';
+'use client';
+
+import React, { useEffect, useState, useCallback, type ReactNode } from 'react';
+import {
+  User,
+  Session,
+  AuthError,
+  SignInWithPasswordCredentials,
+} from '@supabase/supabase-js';
 import { getSupabaseClient, initializeSupabaseClient } from '@/lib/supabase';
-import { isConfigured } from '@/lib/config-store'; 
+import { isConfigured } from '@/lib/config-store';
 import { UserRoleType, USER_ROLES } from '@/types/user'; // Import UserRoleType and USER_ROLES
+import { AuthContext } from './AuthContextDefinition'; // Import AuthContext from the definition file
+import { ErrorType } from '@/types/common';
 
-// ... (Keep existing type definitions: AuthContextType, UserProfile, etc.) ...
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  userProfile: UserProfile | null;
-  loading: boolean;
-  error: AuthError | null;
-  isReady: boolean; 
-  isAuthenticated: boolean; // Add isAuthenticated
-  signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>; 
-  signInWithOAuth: (provider: 'google' | 'discord') => Promise<void>; 
-  signOut: () => Promise<void>;
-  reinitializeClient: () => void;
-  hasRole: (role: UserRoleType) => boolean; // Add hasRole
-}
-
-interface UserProfile {
+export interface UserProfile {
   // Define structure based on your 'profiles' table
   id: string;
   username?: string;
@@ -31,128 +24,148 @@ interface UserProfile {
   // Add other profile fields as needed
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface ElevateToSuperAdminResult {
+  success: boolean;
+  message: string;
+}
+
+interface AuthContextProviderValue extends AuthContextType {
+  elevateToSuperAdmin: () => Promise<ElevateToSuperAdminResult>;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  hasPermission: (requiredRole: UserRoleType) => boolean;
+  checkRoleAccess: (role: UserRoleType) => Promise<boolean>;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  userProfile: UserProfile | null;
+  error: AuthError | null;
+  isReady: boolean;
+  isAuthenticated: boolean;
+  signInWithPassword: (
+    credentials: SignInWithPasswordCredentials,
+  ) => Promise<void>;
+  signInWithOAuth: (provider: 'google' | 'discord') => Promise<void>;
+  signOut: () => Promise<void>;
+  reinitializeClient: () => void;
+  hasRole: (requiredRole: UserRoleType) => boolean;
+}
+
+// Removed the createContext line, as it's now in AuthContextDefinition
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [supabaseClient, setSupabaseClient] = useState(() => getSupabaseClient());
+  const [supabaseClient, setSupabaseClient] = useState(() =>
+    getSupabaseClient(),
+  );
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<AuthError | null>(null);
-  const [isReady, setIsReady] = useState<boolean>(false); 
+  const [isReady, setIsReady] = useState<boolean>(false);
 
   // --- hasRole Implementation ---
-  const hasRole = useCallback((requiredRole: UserRoleType): boolean => {
-    if (!userProfile || !userProfile.role) {
-      return false;
-    }
-    const currentUserRole = userProfile.role;
-    const currentUserLevel = USER_ROLES[currentUserRole]?.level ?? 0;
-    const requiredLevel = USER_ROLES[requiredRole]?.level ?? 0;
-    
-    // Check if the user's role level is greater than or equal to the required level
-    return currentUserLevel >= requiredLevel;
-  }, [userProfile]);
+  const hasRole = useCallback(
+    (requiredRole: UserRoleType): boolean => {
+      if (!userProfile || !userProfile.role) {
+        return false;
+      }
+      const currentUserRole = userProfile.role;
+      const currentUserLevel = USER_ROLES[currentUserRole]?.level ?? 0;
+      const requiredLevel = USER_ROLES[requiredRole]?.level ?? 0;
+
+      // Check if the user's role level is greater than or equal to the required level
+      return currentUserLevel >= requiredLevel;
+    },
+    [userProfile],
+  );
   // --- End hasRole Implementation ---
 
-  const fetchUserProfile = async (userId: string) => {
-    if (!supabaseClient) return; 
-    try {
-      // Ensure two_factor_enabled is selected
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('*, two_factor_enabled') // Explicitly select two_factor_enabled
-        .eq('id', userId)
-        .single();
+  const fetchUserProfile = useCallback(
+    async (userId?: string) => {
+      if (!supabaseClient) return;
+      try {
+        // Ensure two_factor_enabled is selected
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('*, two_factor_enabled') // Explicitly select two_factor_enabled
+          .eq('id', userId)
+          .single();
 
-      if (error) throw error;
-      setUserProfile(data as UserProfile);
-    } catch (fetchError) {
-      console.error('Error fetching user profile:', fetchError);
-      setUserProfile(null); 
-    }
-  };
+        if (error) throw error;
+        setUserProfile(data as UserProfile);
+      } catch (fetchError) {
+        console.error('Error fetching user profile:', fetchError);
+        setUserProfile(null);
+      }
+    },
+    [supabaseClient],
+  );
 
   useEffect(() => {
-    // Check if the app is configured first
-    if (!isConfigured()) {
-      setLoading(false);
-      setIsReady(false); // Mark auth as not ready if not configured
-      setSupabaseClient(null); // Ensure client is null if not configured
-      return; // Don't proceed with auth checks
-    }
+    if (!supabaseClient) return;
 
-    // If configured, ensure the client is initialized
-    let client = supabaseClient;
-    if (!client) {
-      client = initializeSupabaseClient();
-      setSupabaseClient(client);
-    }
+    const handleAuthStateChange = async () => {
+      const {
+        data: { user: currentUser },
+      } = await supabaseClient.auth.getUser();
 
-    // Only run auth checks if the client is initialized
-    if (!client) {
-      setLoading(false); 
-      setIsReady(false); // Still not ready if client failed to initialize
-      return;
-    }
-
-    setLoading(true);
-    // Check initial session
-    client.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
+      if (currentUser && !userProfile) {
+        await fetchUserProfile(currentUser.id);
+      } else if (!currentUser) {
+        setUser(null);
+        setUserProfile(null);
       }
-      setLoading(false);
-      setIsReady(true); // Mark as ready after initial check
-    }).catch(err => {
-        console.error("Error getting session:", err);
-        setError(err as AuthError);
-        setLoading(false);
-        setIsReady(true); // Mark as ready even if session check fails, allows login attempts
+    };
+
+    handleAuthStateChange();
+
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
     });
 
-    // Set up auth state listener
-    const { data: authListener } = client.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        if (currentUser) {
-          fetchUserProfile(currentUser.id);
-        } else {
-          setUserProfile(null); // Clear profile on logout
-        }
-        setLoading(false); // Update loading state on change
-        setIsReady(true); // Ensure ready state is true after changes
-      }
-    );
-
-    // Cleanup listener on unmount
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-    // Re-run effect if isConfigured() changes (e.g., after setup completes)
-    // or if the client instance changes via reinitializeClient
-  }, [supabaseClient]); 
+    return () => subscription.unsubscribe();
+  }, [fetchUserProfile, userProfile, supabaseClient]);
 
   // ... signInWithPassword remains the same ...
-  const signInWithPassword = async (credentials: SignInWithPasswordCredentials) => {
+  const signInWithPassword = async (
+    credentials: SignInWithPasswordCredentials,
+  ) => {
     if (!supabaseClient) {
-      setError({ name: 'ConfigError', message: 'Supabase not configured.' } as AuthError);
+      setError({
+        name: 'ConfigError',
+        message: 'Supabase not configured.',
+      } as AuthError);
       return;
     }
     setLoading(true);
     setError(null);
     try {
       // Pass credentials directly
-      const { error } = await supabaseClient.auth.signInWithPassword(credentials);
+      const { error } =
+        await supabaseClient.auth.signInWithPassword(credentials);
       if (error) throw error;
       // Session update will be handled by onAuthStateChange
     } catch (err) {
@@ -166,7 +179,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Add signInWithOAuth function
   const signInWithOAuth = async (provider: 'google' | 'discord') => {
     if (!supabaseClient) {
-      setError({ name: 'ConfigError', message: 'Supabase not configured.' } as AuthError);
+      setError({
+        name: 'ConfigError',
+        message: 'Supabase not configured.',
+      } as AuthError);
       return;
     }
     setLoading(true);
@@ -185,28 +201,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error(`OAuth sign in error (${provider}):`, err);
       setError(err as AuthError);
       // Ensure loading is stopped even on error before redirect might happen
-      setLoading(false); 
-    } 
+      setLoading(false);
+    }
     // No finally setLoading(false) here, as successful OAuth redirects away
   };
 
   // ... signOut remains the same ...
   const signOut = async () => {
-    if (!supabaseClient) {
-        setError({ name: 'ConfigError', message: 'Supabase not configured.' } as AuthError);
-        return;
-    }
-    setLoading(true);
-    setError(null);
+    if (!supabaseClient) return;
+
     try {
       const { error } = await supabaseClient.auth.signOut();
       if (error) throw error;
-      // State updates (session, user, profile) handled by onAuthStateChange
-    } catch (err) {
-      console.error('Sign out error:', err);
-      setError(err as AuthError);
-    } finally {
-      setLoading(false);
+
+      setUser(null);
+      setUserProfile(null);
+    } catch (error) {
+      const err = error as ErrorType;
+      console.error('Error signing out:', err);
     }
   };
 
@@ -219,32 +231,109 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // --- isAuthenticated derived state ---
-  const isAuthenticated = !!session; 
+  const isAuthenticated = !!session;
   // --- End isAuthenticated ---
+
+  // Add login wrapper that matches AuthContextType interface
+  const login = async (email: string, password: string) => {
+    await signInWithPassword({ email, password });
+  };
+
+  // Add logout wrapper that matches AuthContextType interface
+  const logout = async () => {
+    await signOut();
+  };
 
   const value = {
     session,
-    user,
+    user: user ? { ...user, email: user.email || '' } : null,
     userProfile,
     loading,
     error,
-    isReady, 
+    isReady,
     isAuthenticated, // Provide isAuthenticated
     signInWithPassword,
-    signInWithOAuth, 
+    signInWithOAuth,
     signOut,
     reinitializeClient,
     hasRole, // Provide hasRole
+    login, // Add login method
+    logout, // Add logout method
+    register: async (email: string, password: string) => {
+      // Add register method implementation
+      if (!supabaseClient) {
+        throw new Error('Supabase not configured');
+      }
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+    },
+    updateProfile: async (updates: any) => {
+      // Add updateProfile method implementation
+      if (!supabaseClient || !user) {
+        throw new Error('No authenticated user');
+      }
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+      if (error) throw error;
+      await fetchUserProfile(user.id);
+    },
+    resetPassword: async (email: string) => {
+      // Add resetPassword method implementation
+      if (!supabaseClient) {
+        throw new Error('Supabase not configured');
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+    },
+    updatePassword: async (newPassword: string) => {
+      // Add updatePassword method implementation
+      if (!supabaseClient) {
+        throw new Error('Supabase not configured');
+      }
+      const { error } = await supabaseClient.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+    },
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  return (
+    <AuthContext.Provider 
+      value={{
+        ...value,
+            await fetchUserProfile(user.id);
+            return { success: true, message: 'Successfully elevated to Super Admin' };
+          } catch (err) {
+            const error = err as Error;
+            return { success: false, message: error.message };
+          }
+        },
+              hasPermission: (requiredRole: UserRoleType) => boolean;
+              checkRoleAccess: (role: UserRoleType) => Promise<boolean>;
+            }
 
-// Custom hook to use the Auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+                        if (!supabaseClient || !user) {
+            throw new Error('No authenticated user');
+          }
+          const { error } = await supabaseClient
+            .from('profiles')
+            .update({ role: 'SUPER_ADMIN' })
+            .eq('id', user.id);
+          if (error) throw error;
+          await fetchUserProfile(user.id);
+        },
+        isLoading: loading,
+        ...value,
+        signIn: (email: string, password: string) => signInWithPassword({ email, password }),
+        signUp: value.register,
+        hasPermission: hasRole,
+        checkRoleAccess: async (role: UserRoleType) => hasRole(role),
+        // Add any other missing properties required by AuthContextType
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

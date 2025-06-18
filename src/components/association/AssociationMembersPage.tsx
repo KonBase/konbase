@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAssociationMembers } from '@/hooks/useAssociationMembers';
@@ -10,8 +12,11 @@ interface AssociationMembersPageProps {
   associationId: string;
 }
 
-const AssociationMembersPage = ({ associationId }: AssociationMembersPageProps) => {
-  const { members, loading, fetchMembers, updateMemberRole, removeMember } = useAssociationMembers(associationId);
+const AssociationMembersPage = ({
+  associationId,
+}: AssociationMembersPageProps) => {
+  const { members, loading, fetchMembers, updateMemberRole, removeMember } =
+    useAssociationMembers(associationId);
 
   useEffect(() => {
     fetchMembers();
@@ -22,7 +27,11 @@ const AssociationMembersPage = ({ associationId }: AssociationMembersPageProps) 
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
-    if (confirm(`Are you sure you want to remove ${memberName} from the association?`)) {
+    if (
+      confirm(
+        `Are you sure you want to remove ${memberName} from the association?`,
+      )
+    ) {
       await removeMember(memberId);
     }
   };
@@ -37,10 +46,10 @@ const AssociationMembersPage = ({ associationId }: AssociationMembersPageProps) 
         {loading ? (
           <MemberLoadingState />
         ) : (
-          <MemberList 
-            members={members} 
-            onUpdateRole={handleUpdateRole} 
-            onRemoveMember={handleRemoveMember} 
+          <MemberList
+            members={members}
+            onUpdateRole={handleUpdateRole}
+            onRemoveMember={handleRemoveMember}
           />
         )}
       </CardContent>

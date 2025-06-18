@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import NoAssociationView from '@/components/dashboard/NoAssociationView';
@@ -22,7 +23,7 @@ const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
   currentAssociation,
   handleRetry,
   lastError,
-  retryCount
+  retryCount,
 }) => {
   return (
     <div className="container mx-auto py-6">

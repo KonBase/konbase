@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ModuleProvider } from './ModuleContext';
 import { Spinner } from '../ui/spinner';

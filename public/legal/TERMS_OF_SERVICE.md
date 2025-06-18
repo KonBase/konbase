@@ -1,6 +1,6 @@
 # Terms of Service
 
-*Last Updated: April 23, 2025*
+_Last Updated: April 23, 2025_
 
 ## 1. Introduction and Acceptance
 
@@ -25,6 +25,7 @@ To use certain features of the Platform, you must register for an account. You a
 ### 3.2 Account Security
 
 You are responsible for:
+
 - Safeguarding your account credentials
 - All activities that occur under your account
 - Notifying us immediately of any unauthorized use of your account
@@ -33,6 +34,7 @@ You are responsible for:
 ### 3.3 User Roles and Permissions
 
 KonBase implements role-based access control:
+
 - **Super Admin**: Complete system access with administrative privileges
 - **System Admin**: Administrative access with limited system settings access
 - **Admin**: Association management and user administration capabilities
@@ -51,6 +53,7 @@ Users may create associations within the Platform. The creator of an association
 ### 4.2 Member Management
 
 Association administrators may:
+
 - Invite new members
 - Assign and modify member roles
 - Remove members

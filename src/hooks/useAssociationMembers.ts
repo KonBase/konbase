@@ -33,65 +33,65 @@ export const useAssociationMembers = (associationId: string) => {
    */
   const fetchMembers = useCallback(async () => {
     if (!associationId) return;
-    
+
     setLoading(true);
     try {
       logDebug('Fetching association members', { associationId });
-      
+
       // First get the association members
       const { data: membersData, error: membersError } = await supabase
         .from('association_members')
         .select('id, user_id, association_id, created_at') // Explicitly select existing columns
         .eq('association_id', associationId);
-        
+
       if (membersError) throw membersError;
-      
+
       if (!membersData || membersData.length === 0) {
         setMembers([]);
         return;
       }
-      
+
       // Get the user profiles in a separate query
-      const userIds = membersData.map(member => member.user_id);
+      const userIds = membersData.map((member) => member.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, name, email, profile_image')
         .in('id', userIds);
-        
+
       if (profilesError) throw profilesError;
-      
+
       // Map profiles to members
       const profileMap = new Map();
       if (profilesData) {
-        profilesData.forEach(profile => {
+        profilesData.forEach((profile) => {
           profileMap.set(profile.id, {
             id: profile.id,
             name: profile.name || '',
             email: profile.email || '',
-            profile_image: profile.profile_image
+            profile_image: profile.profile_image,
           });
         });
       }
-      
+
       // Combine the data
-      const transformedMembers = membersData.map(member => {
+      const transformedMembers = membersData.map((member) => {
         const profile = profileMap.get(member.user_id) || {
           id: member.user_id,
           name: 'Unknown User',
           email: 'No email',
-          profile_image: undefined
+          profile_image: undefined,
         };
-        
+
         return {
           id: member.id,
           user_id: member.user_id,
           association_id: member.association_id,
           role: member.role as UserRoleType,
           created_at: member.created_at,
-          profile
+          profile,
         };
       });
-      
+
       setMembers(transformedMembers);
     } catch (error) {
       handleError(error, 'useAssociationMembers.fetchMembers');
@@ -106,7 +106,7 @@ export const useAssociationMembers = (associationId: string) => {
   const updateMemberRole = async (memberId: string, role: UserRoleType) => {
     try {
       logDebug('Updating member role', { memberId, role });
-      
+
       const { error } = await supabase
         .from('profiles')
         .update({ role })
@@ -115,27 +115,27 @@ export const useAssociationMembers = (associationId: string) => {
       if (error) throw error;
 
       // Update local state
-      setMembers(prev => 
-        prev.map(member => 
-          member.id === memberId ? { ...member, role } : member
-        )
+      setMembers((prev) =>
+        prev.map((member) =>
+          member.id === memberId ? { ...member, role } : member,
+        ),
       );
-      
+
       toast({
         title: 'Role updated',
         description: 'Member role has been updated successfully.',
       });
-      
+
       return { success: true };
     } catch (error) {
       handleError(error, 'useAssociationMembers.updateMemberRole');
-      
+
       toast({
         title: 'Failed to update role',
         description: 'There was an error updating the member role.',
         variant: 'destructive',
       });
-      
+
       return { success: false, error };
     }
   };
@@ -146,32 +146,32 @@ export const useAssociationMembers = (associationId: string) => {
   const removeMember = async (memberId: string) => {
     try {
       logDebug('Removing member', { memberId });
-      
+
       const { error } = await supabase
         .from('association_members')
         .delete()
         .eq('id', memberId);
-        
+
       if (error) throw error;
-      
+
       // Update local state
-      setMembers(prev => prev.filter(member => member.id !== memberId));
-      
+      setMembers((prev) => prev.filter((member) => member.id !== memberId));
+
       toast({
         title: 'Member removed',
         description: 'Member has been removed from the association.',
       });
-      
+
       return { success: true };
     } catch (error) {
       handleError(error, 'useAssociationMembers.removeMember');
-      
+
       toast({
         title: 'Failed to remove member',
         description: 'There was an error removing the member.',
         variant: 'destructive',
       });
-      
+
       return { success: false, error };
     }
   };
@@ -181,6 +181,6 @@ export const useAssociationMembers = (associationId: string) => {
     loading,
     fetchMembers,
     updateMemberRole,
-    removeMember
+    removeMember,
   };
 };

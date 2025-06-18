@@ -1,20 +1,30 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "es6"],
+    "composite": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "src/*": ["./src/*"]
+      "@/*": ["./src/*"]
     },
-    "forceConsistentCasingInFileNames": true, // Ensure file name casing consistency
-    "strict": true, // Enable all strict type-checking options
-    "noUnusedParameters": false, // Keep allowing unused parameters if needed
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false // Keep allowing unused locals if needed
-  }
+    "target": "ES2017",
+    "useDefineForClassFields": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "supabase/functions"]
 }

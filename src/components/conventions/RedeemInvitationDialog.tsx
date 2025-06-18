@@ -1,11 +1,13 @@
+'use client';
+
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,11 +25,13 @@ interface RedeemInvitationDialogProps {
 export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
   isOpen,
   onClose,
-  onRedeemed
+  onRedeemed,
 }) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [redeemStatus, setRedeemStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [redeemStatus, setRedeemStatus] = useState<
+    'idle' | 'success' | 'error'
+  >('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const { toast } = useToast();
 
@@ -47,7 +51,10 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
 
     try {
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error('Not authenticated');
 
@@ -75,9 +82,9 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
         .eq('convention_id', invitation.convention_id)
         .eq('user_id', user.id)
         .maybeSingle();
-        
+
       if (checkError) throw checkError;
-      
+
       if (existingAccess) {
         setRedeemStatus('error');
         setStatusMessage('You already have access to this convention.');
@@ -91,7 +98,7 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
           convention_id: invitation.convention_id,
           user_id: user.id,
           role: invitation.role,
-          invitation_code: invitation.code // Track which code was used
+          invitation_code: invitation.code, // Track which code was used
         });
 
       if (addError) throw addError;
@@ -100,11 +107,11 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
       const { error: updateError } = await supabase
         .from('convention_invitations')
         .update({
-          uses_remaining: invitation.uses_remaining - 1
+          uses_remaining: invitation.uses_remaining - 1,
         })
         .eq('id', invitation.id);
 
-      if (updateError) throw updateError;      // Get convention details for the success message
+      if (updateError) throw updateError; // Get convention details for the success message
       const { data: convention, error: conventionError } = await supabase
         .from('conventions')
         .select('id, name, association_id')
@@ -112,14 +119,14 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
         .single();
 
       if (conventionError) throw conventionError;
-      
+
       // Get association details for complete context
       const { data: association, error: associationError } = await supabase
         .from('associations')
         .select('name')
         .eq('id', convention.association_id)
         .single();
-      
+
       if (associationError) throw associationError;
 
       // Log to convention logs
@@ -127,9 +134,12 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
         convention_id: invitation.convention_id,
         user_id: user.id,
         action: 'Redeemed Invitation',
-        details: { invitation_code: invitation.code }
-      });      setRedeemStatus('success');
-      setStatusMessage(`You have successfully joined "${convention.name}" as ${invitation.role}.`);
+        details: { invitation_code: invitation.code },
+      });
+      setRedeemStatus('success');
+      setStatusMessage(
+        `You have successfully joined "${convention.name}" as ${invitation.role}.`,
+      );
 
       toast({
         title: 'Invitation Redeemed',
@@ -142,7 +152,6 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
         resetState();
         onClose();
       }, 2000);
-
     } catch (error: any) {
       console.error('Error redeeming invitation:', error);
       setRedeemStatus('error');
@@ -213,9 +222,11 @@ export const RedeemInvitationDialog: React.FC<RedeemInvitationDialogProps> = ({
           <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleRedeemCode}
-            disabled={isLoading || !invitationCode || redeemStatus === 'success'}
+            disabled={
+              isLoading || !invitationCode || redeemStatus === 'success'
+            }
           >
             {isLoading ? (
               <>

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Building2 } from 'lucide-react';
 import { Association } from '@/types/association';
@@ -10,12 +12,13 @@ interface DashboardHeaderProps {
   isHome: boolean;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
-  currentAssociation, 
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({
+  currentAssociation,
   user,
 }) => {
   const { profile } = useUserProfile();
-  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'system_admin';
+  const isAdmin =
+    profile?.role === 'super_admin' || profile?.role === 'system_admin';
 
   return (
     <div className="flex flex-col space-y-2">

@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+'use client';
+
+import React, { useEffect, useState, ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth'; // Corrected import path
 import { UserRoleType } from '@/types/user'; // Assuming UserRoleType is defined here
 import { checkUserHasRole } from '@/contexts/auth/AuthUtils'; // Import the utility function
@@ -13,7 +15,8 @@ interface AuthGuardProps {
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
   const { user, userProfile, loading } = useAuth(); // Removed isAuthenticated
-  const location = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const [hasRequiredRole, setHasRequiredRole] = useState<boolean | null>(null); // null initially
 
   useEffect(() => {
@@ -38,30 +41,49 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     const checkRoleAccess = () => {
       // Ensure userProfile is loaded before checking roles
       if (!userProfile) {
-         logDebug('AuthGuard: User profile not yet loaded for role check.', {}, 'info');
-         setHasRequiredRole(null); // Wait for profile
-         return;
+        logDebug(
+          'AuthGuard: User profile not yet loaded for role check.',
+          {},
+          'info',
+        );
+        setHasRequiredRole(null); // Wait for profile
+        return;
       }
 
       // Use checkUserHasRole utility function with userProfile
-      const hasAccess = requiredRoles.some(role => checkUserHasRole(userProfile, role));
+      const hasAccess = requiredRoles.some((role) =>
+        checkUserHasRole(userProfile, role),
+      );
       setHasRequiredRole(hasAccess);
 
       if (!hasAccess) {
-        logDebug('Access denied - insufficient role', {
-          userRole: userProfile.role, // Assuming role is on userProfile
-          requiredRoles
-        }, 'warn');
+        logDebug(
+          'Access denied - insufficient role',
+          {
+            userRole: userProfile.role, // Assuming role is on userProfile
+            requiredRoles,
+          },
+          'warn',
+        );
       } else {
-         logDebug('Access granted - sufficient role', {
-           userRole: userProfile.role,
-           requiredRoles
-         }, 'info');
+        logDebug(
+          'Access granted - sufficient role',
+          {
+            userRole: userProfile.role,
+            requiredRoles,
+          },
+          'info',
+        );
       }
     };
     checkRoleAccess();
-
   }, [loading, user, userProfile, requiredRoles]); // Use user instead of isAuthenticated
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   if (loading || hasRequiredRole === null) {
     // Show loading indicator while checking auth status or waiting for profile
@@ -70,21 +92,32 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
   }
 
   // Check if user exists instead of isAuthenticated
+  // Check if user exists instead of isAuthenticated
   if (!user) {
     // Redirect to login page if not authenticated
-    logDebug('Redirecting to login - not authenticated', { from: location.pathname }, 'info');
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    logDebug(
+      'Redirecting to login - not authenticated',
+      { from: pathname },
+      'info',
+    );
+    router.push('/login');
+    return null;
   }
-
   if (!hasRequiredRole) {
     // Redirect to an unauthorized page or dashboard if roles don't match
-    logDebug('Redirecting to unauthorized/dashboard - insufficient role', { from: location.pathname }, 'warn');
+    logDebug(
+      'Redirecting to unauthorized/dashboard - insufficient role',
+      { from: pathname },
+      'warn',
+    );
     // You might want a specific '/unauthorized' page
-    return <Navigate to="/dashboard" state={{ unauthorized: true, from: location }} replace />;
+    router.push('/dashboard');
+    return null;
   }
 
   // If authenticated and has required role (or no specific role required), render the children
   return <>{children}</>;
 };
 
-export default AuthGuard;
+// Make sure this export exists at the bottom
+export { AuthGuard };

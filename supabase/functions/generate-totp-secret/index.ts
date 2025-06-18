@@ -1,10 +1,10 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import * as OTPAuth from 'https://esm.sh/otpauth@9.2.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
@@ -17,7 +17,7 @@ serve(async (req) => {
     // Create a new TOTP secret using the correct API
     // OTPAuth.Secret.generate is not available, use the correct method instead
     const secret = new OTPAuth.Secret();
-    
+
     // Create a new TOTP object
     const totp = new OTPAuth.TOTP({
       issuer: 'KonBase',
@@ -25,35 +25,35 @@ serve(async (req) => {
       algorithm: 'SHA1',
       digits: 6,
       period: 30,
-      secret
+      secret,
     });
 
     // Generate the provisioning URI for QR code
     const keyUri = totp.toString();
 
     console.log('TOTP secret generated successfully');
-    
+
     return new Response(
       JSON.stringify({
         secret: secret.base32,
-        keyUri
+        keyUri,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+        status: 200,
+      },
     );
   } catch (error) {
     console.error('Error generating TOTP secret:', error.message);
-    
+
     return new Response(
       JSON.stringify({
-        error: error.message
+        error: error.message,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+        status: 400,
+      },
     );
   }
 });

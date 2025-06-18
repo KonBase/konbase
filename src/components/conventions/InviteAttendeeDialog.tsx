@@ -1,18 +1,20 @@
+'use client';
+
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +23,8 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Copy, CheckCircle } from 'lucide-react';
 
-interface InviteAttendeeDialogProps {
+// Add export to fix the interface error
+export interface InviteAttendeeDialogProps {
   isOpen: boolean;
   conventionId: string;
   onClose: () => void;
@@ -32,7 +35,7 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
   isOpen,
   conventionId,
   onClose,
-  onInviteSent
+  onInviteSent,
 }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('attendee');
@@ -45,16 +48,19 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
     try {
       // Generate a random alphanumeric code
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-      
+
       // Set expiration date to 7 days from now
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
-      
+
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error('Not authenticated');
-      
+
       // Create the invitation in the database
       const { error } = await supabase.from('convention_invitations').insert({
         code,
@@ -64,17 +70,17 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         expires_at: expiresAt.toISOString(),
         uses_remaining: 1, // Single-use invitation
       });
-      
+
       if (error) throw error;
-      
+
       // Log creation to convention_logs
       await supabase.from('convention_logs').insert({
         convention_id: conventionId,
         user_id: user.id,
         action: 'Created Invitation',
-        details: { role, email: email || null }
+        details: { role, email: email || null },
       });
-      
+
       // If email was provided, send email (this would typically be done server-side)
       if (email) {
         // TODO: Implement real email sending via a server function
@@ -84,10 +90,9 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
           description: `An invitation code has been created. Please share it with ${email}.`,
         });
       }
-      
+
       // Show the invitation code
       setInviteCode(code);
-      
     } catch (error: any) {
       console.error('Error creating invitation:', error);
       toast({
@@ -98,7 +103,8 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };  const handleSearchUser = async () => {
+  };
+  const handleSearchUser = async () => {
     setIsLoading(true);
     try {
       // Check if user exists
@@ -109,7 +115,10 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         .maybeSingle();
 
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error('Not authenticated');
 
@@ -121,34 +130,36 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
           description: `No user with email ${email} was found. Creating invitation code instead.`,
           variant: 'default',
         });
-        
+
         // Generate a random alphanumeric code
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-        
+
         // Set expiration date to 7 days from now
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
-        
+
         // Create invitation
-        const { error: inviteError } = await supabase.from('convention_invitations').insert({
-          code,
-          convention_id: conventionId,
-          created_by: user.id,
-          role, // Use the selected role
-          expires_at: expiresAt.toISOString(),
-          uses_remaining: 1, // Single-use invitation
-        });
-        
+        const { error: inviteError } = await supabase
+          .from('convention_invitations')
+          .insert({
+            code,
+            convention_id: conventionId,
+            created_by: user.id,
+            role, // Use the selected role
+            expires_at: expiresAt.toISOString(),
+            uses_remaining: 1, // Single-use invitation
+          });
+
         if (inviteError) throw inviteError;
-        
+
         // Log creation to convention_logs
         await supabase.from('convention_logs').insert({
           convention_id: conventionId,
           user_id: user.id,
           action: 'Created Invitation for New User',
-          details: { role, email }
+          details: { role, email },
         });
-        
+
         setInviteCode(code);
         return;
       }
@@ -162,9 +173,9 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         .eq('convention_id', conventionId)
         .eq('user_id', data.id)
         .maybeSingle();
-        
+
       if (checkError) throw checkError;
-      
+
       if (existingAccess) {
         toast({
           title: 'Already Added',
@@ -195,12 +206,12 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         convention_id: conventionId,
         user_id: user.id,
         action: 'Added User',
-        details: { 
-          added_user_id: data.id, 
-          added_user_name: data.name, 
-          added_user_email: data.email, 
-          role 
-        }
+        details: {
+          added_user_id: data.id,
+          added_user_name: data.name,
+          added_user_email: data.email,
+          role,
+        },
       });
 
       toast({
@@ -217,7 +228,8 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
       console.error('Error searching or adding user:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Could not add the user to the convention.',
+        description:
+          error.message || 'Could not add the user to the convention.',
         variant: 'destructive',
       });
     } finally {
@@ -233,7 +245,7 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
         title: 'Copied to Clipboard',
         description: 'Invitation code has been copied to clipboard.',
       });
-      
+
       // Reset copy state after 2 seconds
       setTimeout(() => setIsCopied(false), 2000);
     }
@@ -245,7 +257,7 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
     setRole('attendee');
     setInviteCode(null);
     setIsCopied(false);
-    
+
     // If an invite was created, notify the parent
     if (inviteCode) {
       onInviteSent();
@@ -283,10 +295,8 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
               <div className="grid grid-cols-4 items-center gap-4 mt-4">
                 <Label htmlFor="role" className="text-right">
                   Role
-                </Label>                <Select 
-                  value={role} 
-                  onValueChange={setRole}
-                >
+                </Label>{' '}
+                <Select value={role} onValueChange={setRole}>
                   <SelectTrigger className="col-span-3" id="role">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -301,22 +311,22 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
             </div>
             <DialogFooter>
               <Button
-                  type="submit"
-                  onClick={handleSearchUser}
-                  disabled={isLoading || !email}
+                type="submit"
+                onClick={handleSearchUser}
+                disabled={isLoading || !email}
               >
                 {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Searching...
-                    </>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Searching...
+                  </>
                 ) : (
-                    'Search User'
+                  'Search User'
                 )}
               </Button>
-              <Button 
-                type="submit" 
-                onClick={handleCreateInvite} 
+              <Button
+                type="submit"
+                onClick={handleCreateInvite}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -359,15 +369,17 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
                 </div>
               </div>
               <div className="col-span-4 text-sm text-muted-foreground">
-                <p>Share this code with the attendee. They can use it to join the convention.</p>
-                <p className="mt-1">The code will expire in 7 days and can only be used once.</p>
+                <p>
+                  Share this code with the attendee. They can use it to join the
+                  convention.
+                </p>
+                <p className="mt-1">
+                  The code will expire in 7 days and can only be used once.
+                </p>
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={handleClose}
-              >
+              <Button variant="outline" onClick={handleClose}>
                 Done
               </Button>
               <Button
@@ -386,4 +398,3 @@ export const InviteAttendeeDialog: React.FC<InviteAttendeeDialogProps> = ({
     </Dialog>
   );
 };
-

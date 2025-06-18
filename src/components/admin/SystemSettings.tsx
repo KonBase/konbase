@@ -1,3 +1,4 @@
+'use client';
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -39,72 +40,72 @@ export function SystemSettings() {
     backupEnabled: true,
     backupFrequency: 7,
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  
+
   const isSuperAdmin = profile?.role === 'super_admin';
-  
+
   const handleSwitchChange = (key: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    
+
     // Convert to number if the input is numeric
     const processedValue = type === 'number' ? parseInt(value) : value;
-    
-    setSettings(prev => ({
+
+    setSettings((prev) => ({
       ...prev,
-      [name]: processedValue
+      [name]: processedValue,
     }));
   };
-  
+
   const saveSettings = async () => {
     if (!isSuperAdmin) {
       toast({
-        title: "Permission Denied",
-        description: "Only super admins can modify system settings",
-        variant: "destructive"
+        title: 'Permission Denied',
+        description: 'Only super admins can modify system settings',
+        variant: 'destructive',
       });
       return;
     }
-    
+
     setSaving(true);
-    
+
     try {
       // In a real implementation, we would save these to the database
       // For now, we'll just simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Log the change in audit logs
       await supabase.from('audit_logs').insert({
         action: 'update_settings',
         entity: 'system_settings',
         entity_id: 'global',
         user_id: profile?.id || '',
-        changes: settings
+        changes: settings,
       });
-      
+
       toast({
-        title: "Settings Saved",
-        description: "System settings have been updated successfully",
+        title: 'Settings Saved',
+        description: 'System settings have been updated successfully',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save system settings",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to save system settings',
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
     }
   };
-  
+
   return (
     <Tabs defaultValue="general" className="space-y-4">
       <TabsList>
@@ -113,7 +114,7 @@ export function SystemSettings() {
         <TabsTrigger value="email">Email</TabsTrigger>
         <TabsTrigger value="backup">Backup</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="general">
         <Card>
           <CardHeader>
@@ -126,7 +127,9 @@ export function SystemSettings() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="allowRegistration">Allow new user registrations</Label>
+                  <Label htmlFor="allowRegistration">
+                    Allow new user registrations
+                  </Label>
                   <p className="text-sm text-muted-foreground">
                     Enable this to allow new users to register for accounts
                   </p>
@@ -134,13 +137,15 @@ export function SystemSettings() {
                 <Switch
                   id="allowRegistration"
                   checked={settings.allowRegistration}
-                  onCheckedChange={() => handleSwitchChange('allowRegistration')}
+                  onCheckedChange={() =>
+                    handleSwitchChange('allowRegistration')
+                  }
                   disabled={!isSuperAdmin}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="defaultUserRole">Default User Role</Label>
                 <Input
@@ -173,7 +178,7 @@ export function SystemSettings() {
           </CardFooter>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="security">
         <Card>
           <CardHeader>
@@ -185,26 +190,32 @@ export function SystemSettings() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="requireEmailVerification">Require email verification</Label>
+                <Label htmlFor="requireEmailVerification">
+                  Require email verification
+                </Label>
                 <p className="text-sm text-muted-foreground">
-                  Require users to verify their email address before accessing the system
+                  Require users to verify their email address before accessing
+                  the system
                 </p>
               </div>
               <Switch
                 id="requireEmailVerification"
                 checked={settings.requireEmailVerification}
-                onCheckedChange={() => handleSwitchChange('requireEmailVerification')}
+                onCheckedChange={() =>
+                  handleSwitchChange('requireEmailVerification')
+                }
                 disabled={!isSuperAdmin}
               />
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="enforce2FA">Enforce 2FA for admin users</Label>
                 <p className="text-sm text-muted-foreground">
-                  Require two-factor authentication for admin and super_admin users
+                  Require two-factor authentication for admin and super_admin
+                  users
                 </p>
               </div>
               <Switch
@@ -214,9 +225,9 @@ export function SystemSettings() {
                 disabled={!isSuperAdmin}
               />
             </div>
-            
+
             <Separator />
-            
+
             <div className="grid gap-2">
               <Label htmlFor="sessionTimeout">Session timeout (minutes)</Label>
               <Input
@@ -249,14 +260,12 @@ export function SystemSettings() {
           </CardFooter>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="email">
         <Card>
           <CardHeader>
             <CardTitle>Email Settings</CardTitle>
-            <CardDescription>
-              Configure system email settings
-            </CardDescription>
+            <CardDescription>Configure system email settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
@@ -291,7 +300,7 @@ export function SystemSettings() {
           </CardFooter>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="backup">
         <Card>
           <CardHeader>
@@ -315,9 +324,9 @@ export function SystemSettings() {
                 disabled={!isSuperAdmin}
               />
             </div>
-            
+
             <Separator />
-            
+
             <div className="grid gap-2">
               <Label htmlFor="backupFrequency">Backup frequency (days)</Label>
               <Input

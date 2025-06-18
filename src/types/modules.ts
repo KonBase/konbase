@@ -3,10 +3,10 @@ import { ReactNode } from 'react';
 /**
  * Permissions that modules can request
  */
-export type ModulePermission = 
-  | 'read:inventory' 
+export type ModulePermission =
+  | 'read:inventory'
   | 'write:inventory'
-  | 'read:users' 
+  | 'read:users'
   | 'write:users'
   | 'read:associations'
   | 'write:associations'
@@ -27,7 +27,7 @@ export interface ModuleManifest {
   version: string;
   description: string;
   author: string;
-  requires?: string[];  // IDs of modules that this one depends on
+  requires?: string[]; // IDs of modules that this one depends on
   permissions?: ModulePermission[];
   isEnabled: boolean;
   installDate: string;
@@ -89,21 +89,21 @@ export interface KonbaseModule {
   author?: string;
   requires?: string[];
   permissions?: ModulePermission[];
-  
+
   // Lifecycle methods
   onRegister?: () => void | Promise<void>;
   onEnable?: () => void | Promise<void>;
   onDisable?: () => void | Promise<void>;
   onUpdate?: (prevVersion: string) => void | Promise<void>;
-  
+
   // UI components
   getDashboardComponents?: () => ModuleDashboardComponent[];
   getNavigationItems?: () => ModuleNavigationItem[];
   getSettingsPage?: () => ModuleSettingsPage | null;
-  
+
   // Database
   getDatabaseMigrations?: () => ModuleDatabaseMigration[];
-  
+
   // Module's custom configuration schema (if any)
   getConfigurationSchema?: () => Record<string, any> | null;
 }

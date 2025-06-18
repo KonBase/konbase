@@ -1,5 +1,4 @@
-
-import * as React from "react";
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -7,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   flexRender,
   getCoreRowModel,
@@ -16,17 +15,17 @@ import {
   SortingState,
   useReactTable,
   ColumnDef,
-} from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
+} from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   ArrowUpDown,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useUserProfile } from "@/hooks/useUserProfile";
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -44,24 +43,25 @@ export function DataTable<TData, TValue>({
   adminOnly = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { profile } = useUserProfile();
-  
+
   // Check if the user is an admin
-  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'system_admin';
-  
+  const isAdmin =
+    profile?.role === 'super_admin' || profile?.role === 'system_admin';
+
   // Only show search if user is admin or if the feature is not admin-only
   const showSearch = searchable && (!adminOnly || isAdmin);
-  
+
   const filteredData = React.useMemo(() => {
     if (!showSearch || !searchQuery || !searchField) return data;
-    
+
     return data.filter((item: any) => {
       const fieldValue = item[searchField]?.toString().toLowerCase();
       return fieldValue?.includes(searchQuery.toLowerCase());
     });
   }, [data, searchQuery, showSearch, searchField]);
-  
+
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -79,14 +79,14 @@ export function DataTable<TData, TValue>({
       {showSearch && (
         <div className="flex items-center">
           <Input
-            placeholder={`Search by ${searchField || "name"}...`}
+            placeholder={`Search by ${searchField || 'name'}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
           />
         </div>
       )}
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -96,12 +96,16 @@ export function DataTable<TData, TValue>({
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : (
                       <div
-                        className={header.column.getCanSort() ? "cursor-pointer select-none flex items-center" : ""}
+                        className={
+                          header.column.getCanSort()
+                            ? 'cursor-pointer select-none flex items-center'
+                            : ''
+                        }
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                         {header.column.getCanSort() && (
                           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -118,13 +122,13 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -143,23 +147,26 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing{" "}
+          Showing{' '}
           <strong>
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-          </strong>{" "}
-          to{" "}
+            {table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+              1}
+          </strong>{' '}
+          to{' '}
           <strong>
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length,
             )}
-          </strong>{" "}
+          </strong>{' '}
           of <strong>{table.getFilteredRowModel().rows.length}</strong> results
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"

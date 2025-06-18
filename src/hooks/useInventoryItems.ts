@@ -27,13 +27,17 @@ export interface InventoryItem {
   locationName?: string;
 }
 
-export type NewInventoryItem = Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'categoryName' | 'locationName'>;
+export type NewInventoryItem = Omit<
+  InventoryItem,
+  'id' | 'createdAt' | 'updatedAt' | 'categoryName' | 'locationName'
+>;
 
 // Add filter and sort types
 export interface InventoryFilters {
   categoryId?: string | 'all';
   locationId?: string | 'all';
   condition?: string | 'all';
+  isConsumable?: boolean | 'all'; // Added isConsumable filter
 }
 
 export interface InventorySort {
@@ -48,7 +52,10 @@ export function useInventoryItems() {
   const { currentAssociation } = useAssociation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<InventoryFilters>({});
-  const [sort, setSort] = useState<InventorySort>({ field: 'name', direction: 'asc' });
+  const [sort, setSort] = useState<InventorySort>({
+    field: 'name',
+    direction: 'asc',
+  });
 
   const fetchItems = useCallback(async () => {
     if (!currentAssociation) return;
@@ -57,11 +64,13 @@ export function useInventoryItems() {
     try {
       let query = supabase
         .from('items')
-        .select(`
+        .select(
+          `
           *,
           categories(name),
           locations(name)
-        `)
+        `,
+        )
         .eq('association_id', currentAssociation.id);
 
       // Apply filters
@@ -74,18 +83,23 @@ export function useInventoryItems() {
       if (filters.condition && filters.condition !== 'all') {
         query = query.eq('condition', filters.condition);
       }
+      if (filters.isConsumable !== undefined && filters.isConsumable !== 'all') { // Added isConsumable filter logic
+        query = query.eq('is_consumable', filters.isConsumable);
+      }
 
       // Apply sorting - Handle joined fields sorting client-side for simplicity
       const sortField = sort.field;
       if (sortField !== 'categoryName' && sortField !== 'locationName') {
-        query = query.order(sortField as string, { ascending: sort.direction === 'asc' });
+        query = query.order(sortField as string, {
+          ascending: sort.direction === 'asc',
+        });
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      let formattedItems = data.map(item => ({
+      let formattedItems = data.map((item: any) => ({
         id: item.id,
         name: item.name,
         description: item.description,
@@ -106,19 +120,20 @@ export function useInventoryItems() {
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         categoryName: item.categories?.name || 'N/A',
-        locationName: item.locations?.name || 'N/A'
+        locationName: item.locations?.name || 'N/A',
       }));
 
       // Apply search filter client-side
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
-        formattedItems = formattedItems.filter(item =>
-          item.name.toLowerCase().includes(lowerSearchTerm) ||
-          item.description?.toLowerCase().includes(lowerSearchTerm) ||
-          item.serialNumber?.toLowerCase().includes(lowerSearchTerm) ||
-          item.barcode?.toLowerCase().includes(lowerSearchTerm) ||
-          item.categoryName?.toLowerCase().includes(lowerSearchTerm) ||
-          item.locationName?.toLowerCase().includes(lowerSearchTerm)
+        formattedItems = formattedItems.filter(
+          (item) =>
+            item.name.toLowerCase().includes(lowerSearchTerm) ||
+            item.description?.toLowerCase().includes(lowerSearchTerm) ||
+            item.serialNumber?.toLowerCase().includes(lowerSearchTerm) ||
+            item.barcode?.toLowerCase().includes(lowerSearchTerm) ||
+            item.categoryName?.toLowerCase().includes(lowerSearchTerm) ||
+            item.locationName?.toLowerCase().includes(lowerSearchTerm),
         );
       }
 
@@ -133,14 +148,13 @@ export function useInventoryItems() {
         });
       }
 
-
       setItems(formattedItems);
     } catch (error: any) {
       console.error('Error fetching items:', error);
       toast({
         title: 'Error',
         description: 'Failed to load inventory items.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -161,7 +175,7 @@ export function useInventoryItems() {
       toast({
         title: 'Error',
         description: 'No association selected.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return null;
     }
@@ -169,43 +183,41 @@ export function useInventoryItems() {
     try {
       const now = new Date().toISOString();
       const id = crypto.randomUUID();
-      
-      const { error } = await supabase
-        .from('items')
-        .insert({
-          id,
-          name: newItem.name,
-          description: newItem.description,
-          serial_number: newItem.serialNumber,
-          barcode: newItem.barcode,
-          condition: newItem.condition,
-          category_id: newItem.categoryId,
-          location_id: newItem.locationId,
-          is_consumable: newItem.isConsumable,
-          quantity: newItem.quantity,
-          minimum_quantity: newItem.minimumQuantity,
-          purchase_price: newItem.purchasePrice,
-          purchase_date: newItem.purchaseDate,
-          warranty_expiration: newItem.warrantyExpiration,
-          image: newItem.image,
-          notes: newItem.notes, // Added notes to insert
-          association_id: currentAssociation.id,
-          created_at: now,
-          updated_at: now
-        });
+
+      const { error } = await supabase.from('items').insert({
+        id,
+        name: newItem.name,
+        description: newItem.description,
+        serial_number: newItem.serialNumber,
+        barcode: newItem.barcode,
+        condition: newItem.condition,
+        category_id: newItem.categoryId,
+        location_id: newItem.locationId,
+        is_consumable: newItem.isConsumable,
+        quantity: newItem.quantity,
+        minimum_quantity: newItem.minimumQuantity,
+        purchase_price: newItem.purchasePrice,
+        purchase_date: newItem.purchaseDate,
+        warranty_expiration: newItem.warrantyExpiration,
+        image: newItem.image,
+        notes: newItem.notes, // Added notes to insert
+        association_id: currentAssociation.id,
+        created_at: now,
+        updated_at: now,
+      });
 
       if (error) throw error;
-      
+
       // Fetch the newly created item with joined category and location names
       await fetchItems();
-      
+
       return true;
     } catch (error: any) {
       console.error('Error creating item:', error);
       toast({
         title: 'Error',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return false;
     }
@@ -214,23 +226,33 @@ export function useInventoryItems() {
   const updateItem = async (id: string, updates: Partial<NewInventoryItem>) => {
     try {
       const dbUpdates: Record<string, any> = {
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Map the camelCase properties to snake_case for the database
       if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.description !== undefined) dbUpdates.description = updates.description;
-      if (updates.serialNumber !== undefined) dbUpdates.serial_number = updates.serialNumber;
+      if (updates.description !== undefined)
+        dbUpdates.description = updates.description;
+      if (updates.serialNumber !== undefined)
+        dbUpdates.serial_number = updates.serialNumber;
       if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
-      if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
-      if (updates.categoryId !== undefined) dbUpdates.category_id = updates.categoryId;
-      if (updates.locationId !== undefined) dbUpdates.location_id = updates.locationId;
-      if (updates.isConsumable !== undefined) dbUpdates.is_consumable = updates.isConsumable;
+      if (updates.condition !== undefined)
+        dbUpdates.condition = updates.condition;
+      if (updates.categoryId !== undefined)
+        dbUpdates.category_id = updates.categoryId;
+      if (updates.locationId !== undefined)
+        dbUpdates.location_id = updates.locationId;
+      if (updates.isConsumable !== undefined)
+        dbUpdates.is_consumable = updates.isConsumable;
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
-      if (updates.minimumQuantity !== undefined) dbUpdates.minimum_quantity = updates.minimumQuantity;
-      if (updates.purchasePrice !== undefined) dbUpdates.purchase_price = updates.purchasePrice;
-      if (updates.purchaseDate !== undefined) dbUpdates.purchase_date = updates.purchaseDate;
-      if (updates.warrantyExpiration !== undefined) dbUpdates.warranty_expiration = updates.warrantyExpiration;
+      if (updates.minimumQuantity !== undefined)
+        dbUpdates.minimum_quantity = updates.minimumQuantity;
+      if (updates.purchasePrice !== undefined)
+        dbUpdates.purchase_price = updates.purchasePrice;
+      if (updates.purchaseDate !== undefined)
+        dbUpdates.purchase_date = updates.purchaseDate;
+      if (updates.warrantyExpiration !== undefined)
+        dbUpdates.warranty_expiration = updates.warrantyExpiration;
       if (updates.image !== undefined) dbUpdates.image = updates.image;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes; // Added notes to update
 
@@ -243,14 +265,14 @@ export function useInventoryItems() {
 
       // Refresh the items list
       await fetchItems();
-      
+
       return true;
     } catch (error: any) {
       console.error('Error updating item:', error);
       toast({
         title: 'Error',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return false;
     }
@@ -258,21 +280,18 @@ export function useInventoryItems() {
 
   const deleteItem = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('items')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('items').delete().eq('id', id);
 
       if (error) throw error;
 
-      setItems(prev => prev.filter(item => item.id !== id));
+      setItems((prev) => prev.filter((item) => item.id !== id));
       return true;
     } catch (error: any) {
       console.error('Error deleting item:', error);
       toast({
         title: 'Error',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return false;
     }
@@ -290,6 +309,6 @@ export function useInventoryItems() {
     filters,
     setFilters,
     sort,
-    setSort
+    setSort,
   };
 }

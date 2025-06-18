@@ -16,40 +16,54 @@ const createSupabaseClient = (url, key) => {
     const client = createClient(url, key, {
       auth: {
         persistSession: true,
-        storageKey: 'konbase-supabase-auth'
+        storageKey: 'konbase-supabase-auth',
+      },
+      realtime: {
+        // Disable realtime to avoid WebSocket mask function errors
+        params: {
+          eventsPerSecond: 2,
+        },
+        // Use polling instead of WebSocket for now
+        transport: 'websocket',
+        timeout: 20000,
+        heartbeatIntervalMs: 30000,
       },
       global: {
         // Add global error handler for fetch requests
         fetch: (url, options) => {
           return fetch(url, options)
-            .then(response => {
+            .then((response) => {
               if (response.status === 404 && url.includes('execute_sql')) {
                 // Log specific error for execute_sql RPC endpoint
                 if (isDebugModeEnabled()) {
-                  logDebug('execute_sql RPC endpoint not found (404)', { url }, 'error');
+                  logDebug(
+                    'execute_sql RPC endpoint not found (404)',
+                    { url },
+                    'error',
+                  );
                 }
                 // Transform to a proper error object with status code
-                return response.json().then(data => {
+                return response.json().then((data) => {
                   throw { status: 404, message: 'Not Found', details: data };
                 });
               }
               return response;
             })
-            .catch(error => {
+            .catch((error) => {
               // Log all fetch errors in debug mode
               if (isDebugModeEnabled()) {
                 logDebug('Supabase fetch error', { error, url }, 'error');
               }
               throw error;
             });
-        }
-      }
+        },
+      },
     });
 
-    // Set up realtime connection monitoring
-    if (client.realtime) {
-      setupRealtimeMonitoring(client);
-    }
+    // Temporarily disable realtime connection monitoring to avoid WebSocket errors
+    // if (client.realtime) {
+    //   setupRealtimeMonitoring(client);
+    // }
 
     return client;
   } catch (error) {
@@ -65,19 +79,19 @@ const setupRealtimeMonitoring = (client) => {
   if (now - lastConnectionAttempt < connectionRetryDelay) {
     return;
   }
-  
+
   lastConnectionAttempt = now;
-  
+
   try {
     const channel = client.channel('system-health');
-    
+
     channel
       .on('system', { event: 'disconnect' }, () => {
         realtimeConnected = false;
         if (isDebugModeEnabled()) {
           logDebug('Supabase realtime disconnected', null, 'warn');
         }
-        
+
         // Try to reconnect after a delay
         setTimeout(() => {
           try {
@@ -92,7 +106,11 @@ const setupRealtimeMonitoring = (client) => {
       .subscribe((status) => {
         realtimeConnected = status === 'SUBSCRIBED';
         if (isDebugModeEnabled()) {
-          logDebug(`Supabase realtime status: ${status}`, null, realtimeConnected ? 'info' : 'warn');
+          logDebug(
+            `Supabase realtime status: ${status}`,
+            null,
+            realtimeConnected ? 'info' : 'warn',
+          );
         }
       });
   } catch (error) {
@@ -108,7 +126,7 @@ const initClient = () => {
   if (supabaseClient) {
     return supabaseClient;
   }
-  
+
   // First try to get from config store
   const config = loadConfig();
   if (config?.url && config?.key) {
@@ -120,21 +138,25 @@ const initClient = () => {
     supabaseClient = createSupabaseClient(config.url, config.key);
     return supabaseClient;
   }
-  
+
   // If no stored config, try environment variables
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (supabaseUrl && supabaseAnonKey) {
     if (isDebugModeEnabled()) {
-      logDebug('Initializing Supabase client from environment variables', null, 'info');
+      logDebug(
+        'Initializing Supabase client from environment variables',
+        null,
+        'info',
+      );
     } else {
       console.log('Initializing Supabase client from environment variables');
     }
     supabaseClient = createSupabaseClient(supabaseUrl, supabaseAnonKey);
     return supabaseClient;
   }
-  
+
   console.error('No Supabase credentials found for client');
   return null;
 };

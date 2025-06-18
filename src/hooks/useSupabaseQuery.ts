@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { logDebug } from '@/utils/debug';
 
@@ -12,7 +11,7 @@ import { logDebug } from '@/utils/debug';
 export function useSupabaseQuery<T>(
   key: string | string[],
   queryFn: () => Promise<{ data: T | null; error: any }>,
-  options: any = {}
+  options: any = {},
 ) {
   return useQuery({
     queryKey: Array.isArray(key) ? key : [key],
@@ -20,22 +19,34 @@ export function useSupabaseQuery<T>(
       const start = performance.now();
       try {
         const { data, error } = await queryFn();
-        
+
         if (error) {
-          logDebug(`Error in useSupabaseQuery (${Array.isArray(key) ? key.join('.') : key})`, error, 'error');
+          logDebug(
+            `Error in useSupabaseQuery (${Array.isArray(key) ? key.join('.') : key})`,
+            error,
+            'error',
+          );
           throw error;
         }
-        
+
         const duration = Math.round(performance.now() - start);
-        logDebug(`Supabase query (${Array.isArray(key) ? key.join('.') : key}) completed in ${duration}ms`, null, 'info');
-        
+        logDebug(
+          `Supabase query (${Array.isArray(key) ? key.join('.') : key}) completed in ${duration}ms`,
+          null,
+          'info',
+        );
+
         return data as T;
       } catch (error) {
-        logDebug(`Exception in useSupabaseQuery (${Array.isArray(key) ? key.join('.') : key})`, error, 'error');
+        logDebug(
+          `Exception in useSupabaseQuery (${Array.isArray(key) ? key.join('.') : key})`,
+          error,
+          'error',
+        );
         throw error;
       }
     },
-    ...options
+    ...options,
   });
 }
 
@@ -46,7 +57,7 @@ export function useAssociationData<T>(
   queryName: string,
   associationId: string | undefined | null,
   fetchFn: (id: string) => Promise<{ data: T | null; error: any }>,
-  options: any = {}
+  options: any = {},
 ) {
   return useSupabaseQuery<T>(
     [queryName, associationId || 'none'],
@@ -58,8 +69,8 @@ export function useAssociationData<T>(
     },
     {
       enabled: !!associationId,
-      ...options
-    }
+      ...options,
+    },
   );
 }
 

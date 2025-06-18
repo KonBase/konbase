@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,8 +7,20 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { UserRoleType } from '@/types/user';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { handleError } from '@/utils/debug';
 
@@ -20,7 +34,10 @@ const ROLE_OPTIONS: { label: string; value: UserRoleType }[] = [
   { label: 'Admin', value: 'admin' },
 ];
 
-export function AddUserToAssociation({ associationId, onUserAdded }: AddUserToAssociationProps) {
+export function AddUserToAssociation({
+  associationId,
+  onUserAdded,
+}: AddUserToAssociationProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRoleType>('member');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +77,7 @@ export function AddUserToAssociation({ associationId, onUserAdded }: AddUserToAs
       // Reset form
       setEmail('');
       setRole('member');
-      
+
       // Callback
       if (onUserAdded) onUserAdded();
     } catch (error: any) {
@@ -93,7 +110,7 @@ export function AddUserToAssociation({ associationId, onUserAdded }: AddUserToAs
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <Select

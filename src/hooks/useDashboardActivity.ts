@@ -8,16 +8,18 @@ export const useDashboardActivity = (currentAssociation: any) => {
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<any>(null);
   const [requestTimestamp, setRequestTimestamp] = useState<number | null>(null);
-  const [responseTimestamp, setResponseTimestamp] = useState<number | null>(null);
+  const [responseTimestamp, setResponseTimestamp] = useState<number | null>(
+    null,
+  );
   const isFetchingRef = useRef(false);
   const cachedDataRef = useRef<any[]>([]);
 
   // Query to fetch recent activity data with optimized staleTime and cache settings
-  const { 
-    data: activityData, 
-    error: activityError, 
-    isLoading: activityLoading, 
-    refetch: refetchActivity 
+  const {
+    data: activityData,
+    error: activityError,
+    isLoading: activityLoading,
+    refetch: refetchActivity,
   } = useQuery({
     queryKey: ['dashboard-activity', currentAssociation?.id],
     queryFn: async () => {
@@ -26,17 +28,17 @@ export const useDashboardActivity = (currentAssociation: any) => {
         if (isFetchingRef.current) {
           return cachedDataRef.current;
         }
-        
+
         // If no association is selected, return empty array immediately
         if (!currentAssociation?.id) {
           return [];
         }
-        
+
         isFetchingRef.current = true;
-        
+
         // Log the query start (only in debug mode)
         setRequestTimestamp(Date.now());
-        
+
         // Fetch recent activity data (last 30 days)
         let query = supabase
           .from('audit_logs')
@@ -45,21 +47,21 @@ export const useDashboardActivity = (currentAssociation: any) => {
           .eq('entity_id', currentAssociation.id)
           .order('created_at', { ascending: false })
           .limit(10);
-        
+
         const { data: activityData, error: activityError } = await query;
-        
+
         setResponseTimestamp(Date.now());
-        
+
         if (activityError) {
           setLastError(activityError);
           throw activityError;
         }
-        
+
         // Update our cached reference
         if (activityData) {
           cachedDataRef.current = activityData;
         }
-        
+
         return activityData || [];
       } catch (error) {
         setResponseTimestamp(Date.now());
@@ -77,32 +79,32 @@ export const useDashboardActivity = (currentAssociation: any) => {
     enabled: !!currentAssociation?.id,
     retry: 1, // Limit retries to prevent excessive queries
   });
-  
+
   // Safe getter for activity data with error checking
   const safeRecentActivity = useMemo(() => {
     if (activityError) {
       return [];
     }
-    
+
     // Check if we have valid data
     if (activityData && Array.isArray(activityData)) {
       return activityData;
     }
-    
+
     return [];
   }, [activityData, activityError]);
-  
+
   // Function to handle retry with tracking
   const handleRetry = useCallback(() => {
     // Prevent retry if already fetching
     if (isFetchingRef.current) return;
-    
-    setRetryCount(prev => prev + 1);
+
+    setRetryCount((prev) => prev + 1);
     setRequestTimestamp(Date.now());
     setResponseTimestamp(null);
     return refetchActivity();
   }, [refetchActivity]);
-  
+
   return {
     activityData,
     activityError,
@@ -116,7 +118,7 @@ export const useDashboardActivity = (currentAssociation: any) => {
     requestInfo: {
       requestTimestamp,
       responseTimestamp,
-      retryCount
-    }
+      retryCount,
+    },
   };
 };

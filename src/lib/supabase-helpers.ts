@@ -5,7 +5,9 @@ import { supabase } from '@/lib/supabase';
  * @returns A boolean indicating whether the user is authenticated
  */
 export const isAuthenticated = async (): Promise<boolean> => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session !== null;
 };
 
@@ -14,7 +16,9 @@ export const isAuthenticated = async (): Promise<boolean> => {
  * @returns The user ID if authenticated, null otherwise
  */
 export const getCurrentUserId = async (): Promise<string | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session?.user?.id || null;
 };
 
@@ -28,16 +32,16 @@ export const createAssociation = async (associationData: any) => {
     if (!userId) {
       throw new Error('You must be logged in to create an association');
     }
-    
+
     // If authenticated, proceed with the insert
     const { data, error } = await supabase
       .from('associations')
       .insert(associationData)
       .select()
       .single();
-      
+
     if (error) throw error;
-    
+
     // After successful creation, add the current user as an admin member
     const { error: memberError } = await supabase
       .from('association_members')
@@ -55,21 +59,19 @@ export const createAssociation = async (associationData: any) => {
       .eq('id', userId);
 
     if (profileError) throw profileError; // Error occurs here
-    
+
     // Log this action in audit_logs
-    await supabase
-      .from('audit_logs')
-      .insert({
-        action: 'create_association',
-        entity: 'associations',
-        entity_id: data.id,
-        user_id: userId,
-        changes: { role: 'admin', association_created: true }
-      });
-    
+    await supabase.from('audit_logs').insert({
+      action: 'create_association',
+      entity: 'associations',
+      entity_id: data.id,
+      user_id: userId,
+      changes: { role: 'admin', association_created: true },
+    });
+
     return { data };
   } catch (error) {
-    console.error("Error creating association:", error);
+    console.error('Error creating association:', error);
     return { error };
   }
 };

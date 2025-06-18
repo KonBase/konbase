@@ -8,11 +8,13 @@ export function getSupabaseClient(): SupabaseClient<Database> {
     return supabaseInstance;
   }
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL or Anon Key is missing from environment variables.');
+    throw new Error(
+      'Supabase URL or Anon Key is missing from environment variables.',
+    );
   }
 
   console.log('Initializing Supabase client...'); // Add log for debugging

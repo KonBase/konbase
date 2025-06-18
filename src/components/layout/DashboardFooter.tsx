@@ -1,10 +1,12 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { useMobileDetect } from '@/hooks/useMobileDetect';
 
 const DashboardFooter: React.FC = () => {
   const { isMobile } = useMobileDetect();
-  
+
   return (
     <footer className="border-t py-4 bg-background">
       <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
@@ -13,17 +15,23 @@ const DashboardFooter: React.FC = () => {
           {!isMobile && <span className="hidden md:inline">·</span>}
           <div>Open Source Supply Chain Management</div>
         </div>
-        
+
         <div className={`flex gap-4 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-          <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/terms"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             Terms
           </Link>
-          <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/privacy"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             Privacy
           </Link>
-          <a 
-            href="https://github.com/KonBase/KonBase" 
-            target="_blank" 
+          <a
+            href="https://github.com/KonBase/KonBase"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >

@@ -1,8 +1,9 @@
+'use client';
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { SidebarItem } from './navItems';
+import type { SidebarItem } from './navItems';
 
 interface MenuItemProps {
   item: SidebarItem;
@@ -12,17 +13,17 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({ item, collapsed, isActive }) => {
   const isItemActive = isActive(item.path);
-  
+
   return (
     <Link
-      to={item.path}
+      href={item.path}
       className={cn(
-        collapsed 
-          ? "flex items-center justify-center p-2 my-2 rounded-md"
-          : "flex items-center px-3 py-2 text-sm rounded-md",
+        collapsed
+          ? 'flex items-center justify-center p-2 my-2 rounded-md'
+          : 'flex items-center px-3 py-2 text-sm rounded-md',
         isItemActive
-          ? "bg-accent text-accent-foreground"
-          : "text-foreground hover:bg-accent/50"
+          ? 'bg-accent text-accent-foreground'
+          : 'text-foreground hover:bg-accent/50',
       )}
       title={collapsed ? item.title : undefined}
     >

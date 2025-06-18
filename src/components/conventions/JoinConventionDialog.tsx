@@ -1,11 +1,13 @@
+'use client';
+
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +25,7 @@ interface JoinConventionDialogProps {
 export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
 }) => {
   const [inviteCode, setInviteCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +45,10 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
 
     try {
       // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error('Not authenticated');
 
@@ -53,9 +58,9 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         .select('*')
         .eq('code', inviteCode.trim())
         .maybeSingle();
-      
+
       if (inviteError) throw inviteError;
-      
+
       if (!invitation) {
         toast({
           title: 'Invalid Code',
@@ -64,9 +69,12 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         });
         return;
       }
-      
+
       // Check if the invitation is expired
-      if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
+      if (
+        invitation.expires_at &&
+        new Date(invitation.expires_at) < new Date()
+      ) {
         toast({
           title: 'Expired Code',
           description: 'This invitation code has expired',
@@ -74,9 +82,12 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         });
         return;
       }
-      
+
       // Check if the invitation has uses remaining
-      if (invitation.uses_remaining !== null && invitation.uses_remaining <= 0) {
+      if (
+        invitation.uses_remaining !== null &&
+        invitation.uses_remaining <= 0
+      ) {
         toast({
           title: 'Used Code',
           description: 'This invitation code has already been used',
@@ -84,7 +95,7 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         });
         return;
       }
-      
+
       // Check if user is already a member of this convention
       const { data: existingAccess, error: accessCheckError } = await supabase
         .from('convention_access')
@@ -92,9 +103,9 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         .eq('convention_id', invitation.convention_id)
         .eq('user_id', user.id)
         .maybeSingle();
-        
+
       if (accessCheckError) throw accessCheckError;
-      
+
       if (existingAccess) {
         toast({
           title: 'Already a Member',
@@ -103,7 +114,7 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
         });
         return;
       }
-      
+
       // Add user to convention_access
       const { error: accessError } = await supabase
         .from('convention_access')
@@ -111,29 +122,29 @@ export const JoinConventionDialog: React.FC<JoinConventionDialogProps> = ({
           convention_id: invitation.convention_id,
           user_id: user.id,
           role: invitation.role,
-          invitation_code: invitation.code
+          invitation_code: invitation.code,
         });
-      
+
       if (accessError) throw accessError;
-      
+
       // Decrement uses remaining if applicable
       if (invitation.uses_remaining !== null) {
         const { error: updateError } = await supabase
           .from('convention_invitations')
           .update({ uses_remaining: invitation.uses_remaining - 1 })
           .eq('id', invitation.id);
-          
-        if (updateError) console.error('Error updating invitation uses:', updateError);
+
+        if (updateError)
+          console.error('Error updating invitation uses:', updateError);
       }
-      
+
       toast({
         title: 'Success',
         description: 'You have joined the convention successfully',
       });
-      
+
       onSuccess();
       handleClose();
-      
     } catch (error: any) {
       console.error('Error joining convention:', error);
       toast({

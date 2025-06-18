@@ -1,26 +1,26 @@
 /**
  * Log debug information with optional context data
- * 
+ *
  * @param message The message to log
  * @param data Optional data to include with the log
  * @param level Log level (info, warn, error)
  */
 export const logDebug = (
-  message: string, 
-  data: any = null, 
-  level: 'info' | 'warn' | 'error' = 'info'
+  message: string,
+  data: any = null,
+  level: 'info' | 'warn' | 'error' = 'info',
 ) => {
   // Only log in development or if debug mode is enabled
-  const isDev = import.meta.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === 'development';
   const isDebugEnabled = localStorage.getItem('konbase_debug_mode') === 'true';
-  
+
   if (!isDev && !isDebugEnabled) return;
 
   const logObject = {
     timestamp: new Date().toISOString(),
     message,
     data,
-    level
+    level,
   };
 
   switch (level) {

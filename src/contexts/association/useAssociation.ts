@@ -1,4 +1,3 @@
-
 import { useContext } from 'react';
 import { AssociationContext } from './AssociationProvider';
 import { AssociationContextType } from './AssociationTypes';
@@ -8,10 +7,12 @@ import { AssociationContextType } from './AssociationTypes';
  */
 export const useAssociation = (): AssociationContextType => {
   const context = useContext(AssociationContext);
-  
+
   if (context === undefined) {
-    throw new Error('useAssociation must be used within an AssociationProvider');
+    throw new Error(
+      'useAssociation must be used within an AssociationProvider',
+    );
   }
-  
+
   return context;
 };

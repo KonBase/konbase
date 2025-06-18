@@ -1,13 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useAssociation } from '@/contexts/AssociationContext';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,14 +45,14 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { 
-  PlusCircle, 
-  Trash, 
-  Edit, 
-  Copy, 
-  Package, 
+import {
+  PlusCircle,
+  Trash,
+  Edit,
+  Copy,
+  Package,
   Loader2,
-  BoxIcon
+  BoxIcon,
 } from 'lucide-react';
 
 // Types for our equipment sets
@@ -92,7 +89,7 @@ interface InventoryItem {
 const EquipmentSetManager: React.FC = () => {
   const { currentAssociation } = useAssociation();
   const { toast } = useToast();
-  
+
   const [equipmentSets, setEquipmentSets] = useState<EquipmentSet[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,21 +97,21 @@ const EquipmentSetManager: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentSetId, setCurrentSetId] = useState<string | null>(null);
   const [setItems, setSetItems] = useState<EquipmentSetItem[]>([]);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    is_template: false
+    is_template: false,
   });
-  
+
   // New item form state
   const [newItemForm, setNewItemForm] = useState({
     inventory_item_id: '',
     quantity: 1,
-    notes: ''
+    notes: '',
   });
-  
+
   // Fetch equipment sets and inventory items
   useEffect(() => {
     if (currentAssociation) {
@@ -122,25 +119,25 @@ const EquipmentSetManager: React.FC = () => {
       fetchInventoryItems();
     }
   }, [currentAssociation]);
-  
+
   const fetchEquipmentSets = async () => {
     if (!currentAssociation) return;
-    
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('equipment_sets')
         .select('*, equipment_set_items(count)')
         .eq('association_id', currentAssociation.id);
-      
+
       if (error) throw error;
-      
+
       // Format the data to include items count
-      const formattedSets = data.map(set => ({
+      const formattedSets = data.map((set) => ({
         ...set,
-        items_count: set.equipment_set_items[0]?.count || 0
+        items_count: set.equipment_set_items[0]?.count || 0,
       }));
-      
+
       setEquipmentSets(formattedSets);
     } catch (error: any) {
       console.error('Error fetching equipment sets:', error);
@@ -153,30 +150,32 @@ const EquipmentSetManager: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   const fetchInventoryItems = async () => {
     if (!currentAssociation) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('inventory_items')
-        .select(`
+        .select(
+          `
           id, 
           name,
           category_id, 
           categories(name)
-        `)
+        `,
+        )
         .eq('association_id', currentAssociation.id);
-      
+
       if (error) throw error;
-      
-      const formattedItems = data.map(item => ({
+
+      const formattedItems = data.map((item: any) => ({
         id: item.id,
         name: item.name,
         category_id: item.category_id,
-        category_name: item.categories?.name
+        category_name: item.categories?.name,
       }));
-      
+
       setInventoryItems(formattedItems);
     } catch (error: any) {
       console.error('Error fetching inventory items:', error);
@@ -187,29 +186,31 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const fetchSetItems = async (setId: string) => {
     try {
       const { data, error } = await supabase
         .from('equipment_set_items')
-        .select(`
+        .select(
+          `
           *,
           inventory_items(name, categories(name))
-        `)
+        `,
+        )
         .eq('equipment_set_id', setId);
-      
+
       if (error) throw error;
-      
-      const formattedItems = data.map(item => ({
+
+      const formattedItems = data.map((item) => ({
         id: item.id,
         equipment_set_id: item.equipment_set_id,
         inventory_item_id: item.inventory_item_id,
         quantity: item.quantity,
         notes: item.notes,
         item_name: item.inventory_items?.name,
-        item_category: item.inventory_items?.categories?.name
+        item_category: item.inventory_items?.categories?.name,
       }));
-      
+
       setSetItems(formattedItems);
     } catch (error: any) {
       console.error('Error fetching set items:', error);
@@ -220,10 +221,10 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const handleCreateSet = async () => {
     if (!currentAssociation) return;
-    
+
     if (!formData.name.trim()) {
       toast({
         title: 'Validation Error',
@@ -232,7 +233,7 @@ const EquipmentSetManager: React.FC = () => {
       });
       return;
     }
-    
+
     setIsCreating(true);
     try {
       const now = new Date().toISOString();
@@ -244,34 +245,30 @@ const EquipmentSetManager: React.FC = () => {
           association_id: currentAssociation.id,
           created_at: now,
           updated_at: now,
-          is_template: formData.is_template
+          is_template: formData.is_template,
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       toast({
         title: 'Success',
         description: 'Equipment set created successfully',
       });
-      
+
       // Add the new set to our state
-      setEquipmentSets([
-        ...equipmentSets, 
-        { ...data, items_count: 0 }
-      ]);
-      
+      setEquipmentSets([...equipmentSets, { ...data, items_count: 0 }]);
+
       // Reset form
       setFormData({
         name: '',
         description: '',
-        is_template: false
+        is_template: false,
       });
-      
+
       // Close dialog
       setIsEditDialogOpen(false);
-      
     } catch (error: any) {
       console.error('Error creating equipment set:', error);
       toast({
@@ -283,10 +280,10 @@ const EquipmentSetManager: React.FC = () => {
       setIsCreating(false);
     }
   };
-  
+
   const handleAddItemToSet = async () => {
     if (!currentSetId || !newItemForm.inventory_item_id) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('equipment_set_items')
@@ -294,16 +291,18 @@ const EquipmentSetManager: React.FC = () => {
           equipment_set_id: currentSetId,
           inventory_item_id: newItemForm.inventory_item_id,
           quantity: newItemForm.quantity,
-          notes: newItemForm.notes || null
+          notes: newItemForm.notes || null,
         })
-        .select(`
+        .select(
+          `
           *,
           inventory_items(name, categories(name))
-        `)
+        `,
+        )
         .single();
-      
+
       if (error) throw error;
-      
+
       // Add new item to the list
       const newItem: EquipmentSetItem = {
         id: data.id,
@@ -312,25 +311,27 @@ const EquipmentSetManager: React.FC = () => {
         quantity: data.quantity,
         notes: data.notes,
         item_name: data.inventory_items?.name,
-        item_category: data.inventory_items?.categories?.name
+        item_category: data.inventory_items?.categories?.name,
       };
-      
+
       setSetItems([...setItems, newItem]);
-      
+
       // Update the set count in the list
-      setEquipmentSets(equipmentSets.map(set => 
-        set.id === currentSetId 
-          ? { ...set, items_count: (set.items_count || 0) + 1 }
-          : set
-      ));
-      
+      setEquipmentSets(
+        equipmentSets.map((set) =>
+          set.id === currentSetId
+            ? { ...set, items_count: (set.items_count || 0) + 1 }
+            : set,
+        ),
+      );
+
       // Reset form
       setNewItemForm({
         inventory_item_id: '',
         quantity: 1,
-        notes: ''
+        notes: '',
       });
-      
+
       toast({
         title: 'Success',
         description: 'Item added to equipment set',
@@ -344,28 +345,30 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const handleRemoveItemFromSet = async (itemId: string) => {
     if (!currentSetId) return;
-    
+
     try {
       const { error } = await supabase
         .from('equipment_set_items')
         .delete()
         .eq('id', itemId);
-      
+
       if (error) throw error;
-      
+
       // Remove item from the list
-      setSetItems(setItems.filter(item => item.id !== itemId));
-      
+      setSetItems(setItems.filter((item) => item.id !== itemId));
+
       // Update the set count in the list
-      setEquipmentSets(equipmentSets.map(set => 
-        set.id === currentSetId 
-          ? { ...set, items_count: Math.max(0, (set.items_count || 0) - 1) }
-          : set
-      ));
-      
+      setEquipmentSets(
+        equipmentSets.map((set) =>
+          set.id === currentSetId
+            ? { ...set, items_count: Math.max(0, (set.items_count || 0) - 1) }
+            : set,
+        ),
+      );
+
       toast({
         title: 'Success',
         description: 'Item removed from equipment set',
@@ -379,7 +382,7 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const handleDeleteSet = async (setId: string) => {
     try {
       // First delete all items in the set
@@ -387,20 +390,20 @@ const EquipmentSetManager: React.FC = () => {
         .from('equipment_set_items')
         .delete()
         .eq('equipment_set_id', setId);
-      
+
       if (itemsError) throw itemsError;
-      
+
       // Then delete the set itself
       const { error } = await supabase
         .from('equipment_sets')
         .delete()
         .eq('id', setId);
-      
+
       if (error) throw error;
-      
+
       // Update local state
-      setEquipmentSets(equipmentSets.filter(set => set.id !== setId));
-      
+      setEquipmentSets(equipmentSets.filter((set) => set.id !== setId));
+
       toast({
         title: 'Success',
         description: 'Equipment set deleted successfully',
@@ -414,21 +417,21 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const handleEditSet = (set: EquipmentSet) => {
     setCurrentSetId(set.id);
     fetchSetItems(set.id);
     setFormData({
       name: set.name,
       description: set.description || '',
-      is_template: set.is_template || false
+      is_template: set.is_template || false,
     });
     setIsEditDialogOpen(true);
   };
-  
+
   const handleUpdateSet = async () => {
     if (!currentSetId || !formData.name.trim()) return;
-    
+
     try {
       const { error } = await supabase
         .from('equipment_sets')
@@ -436,29 +439,31 @@ const EquipmentSetManager: React.FC = () => {
           name: formData.name,
           description: formData.description,
           is_template: formData.is_template,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', currentSetId);
-      
+
       if (error) throw error;
-      
+
       // Update local state
-      setEquipmentSets(equipmentSets.map(set => 
-        set.id === currentSetId
-          ? { 
-              ...set, 
-              name: formData.name,
-              description: formData.description,
-              is_template: formData.is_template 
-            }
-          : set
-      ));
-      
+      setEquipmentSets(
+        equipmentSets.map((set) =>
+          set.id === currentSetId
+            ? {
+                ...set,
+                name: formData.name,
+                description: formData.description,
+                is_template: formData.is_template,
+              }
+            : set,
+        ),
+      );
+
       toast({
         title: 'Success',
         description: 'Equipment set updated successfully',
       });
-      
+
       setIsEditDialogOpen(false);
     } catch (error: any) {
       console.error('Error updating equipment set:', error);
@@ -469,10 +474,10 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const handleDuplicateSet = async (set: EquipmentSet) => {
     if (!currentAssociation) return;
-    
+
     try {
       // 1. Create the new set
       const now = new Date().toISOString();
@@ -484,43 +489,43 @@ const EquipmentSetManager: React.FC = () => {
           association_id: currentAssociation.id,
           created_at: now,
           updated_at: now,
-          is_template: set.is_template
+          is_template: set.is_template,
         })
         .select()
         .single();
-      
+
       if (setError) throw setError;
-      
+
       // 2. Fetch all items in the original set
       const { data: setItems, error: itemsError } = await supabase
         .from('equipment_set_items')
         .select('*')
         .eq('equipment_set_id', set.id);
-      
+
       if (itemsError) throw itemsError;
-      
+
       // 3. Create new items for the duplicate set
       if (setItems && setItems.length > 0) {
-        const newItems = setItems.map(item => ({
+        const newItems = setItems.map((item) => ({
           equipment_set_id: newSet.id,
           inventory_item_id: item.inventory_item_id,
           quantity: item.quantity,
-          notes: item.notes
+          notes: item.notes,
         }));
-        
+
         const { error: insertError } = await supabase
           .from('equipment_set_items')
           .insert(newItems);
-        
+
         if (insertError) throw insertError;
       }
-      
+
       // 4. Update local state
       setEquipmentSets([
-        ...equipmentSets, 
-        { ...newSet, items_count: set.items_count || 0 }
+        ...equipmentSets,
+        { ...newSet, items_count: set.items_count || 0 },
       ]);
-      
+
       toast({
         title: 'Success',
         description: 'Equipment set duplicated successfully',
@@ -534,26 +539,30 @@ const EquipmentSetManager: React.FC = () => {
       });
     }
   };
-  
+
   const openCreateDialog = () => {
     setCurrentSetId(null);
     setFormData({
       name: '',
       description: '',
-      is_template: false
+      is_template: false,
     });
     setSetItems([]);
     setIsEditDialogOpen(true);
   };
-  
+
   // Sorted inventory items by category
   const sortedInventoryItems = [...inventoryItems].sort((a, b) => {
     if (!a.category_name && b.category_name) return 1;
     if (a.category_name && !b.category_name) return -1;
-    if (!a.category_name && !b.category_name) return a.name.localeCompare(b.name);
-    return a.category_name!.localeCompare(b.category_name!) || a.name.localeCompare(b.name);
+    if (!a.category_name && !b.category_name)
+      return a.name.localeCompare(b.name);
+    return (
+      a.category_name!.localeCompare(b.category_name!) ||
+      a.name.localeCompare(b.name)
+    );
   });
-  
+
   return (
     <div className="space-y-6">
       <Card>
@@ -595,7 +604,7 @@ const EquipmentSetManager: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {equipmentSets.map(set => (
+                  {equipmentSets.map((set) => (
                     <TableRow key={set.id}>
                       <TableCell className="font-medium">{set.name}</TableCell>
                       <TableCell>{set.items_count} items</TableCell>
@@ -608,15 +617,15 @@ const EquipmentSetManager: React.FC = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleEditSet(set)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleDuplicateSet(set)}
                           >
@@ -624,8 +633,8 @@ const EquipmentSetManager: React.FC = () => {
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="text-destructive hover:text-destructive"
                               >
@@ -634,10 +643,13 @@ const EquipmentSetManager: React.FC = () => {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Equipment Set</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  Delete Equipment Set
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete this equipment set?
-                                  This action cannot be undone and will remove all items in this set.
+                                  Are you sure you want to delete this equipment
+                                  set? This action cannot be undone and will
+                                  remove all items in this set.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -661,7 +673,7 @@ const EquipmentSetManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Edit/Create Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -670,40 +682,43 @@ const EquipmentSetManager: React.FC = () => {
               {currentSetId ? 'Edit Equipment Set' : 'Create Equipment Set'}
             </DialogTitle>
             <DialogDescription>
-              {currentSetId 
+              {currentSetId
                 ? 'Update the equipment set details and manage items'
-                : 'Create a new equipment set to group items together'
-              }
+                : 'Create a new equipment set to group items together'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Set Name</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Enter set name"
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="description">Description (Optional)</Label>
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Describe this equipment set"
                 rows={3}
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="is_template"
                 checked={formData.is_template}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setFormData({ ...formData, is_template: checked as boolean })
                 }
               />
@@ -712,34 +727,38 @@ const EquipmentSetManager: React.FC = () => {
               </Label>
             </div>
           </div>
-          
+
           {currentSetId && (
             <>
               <div className="border-t pt-4">
                 <h3 className="text-lg font-medium mb-4">Items in this Set</h3>
-                
+
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="col-span-3 md:col-span-1">
                     <Label htmlFor="item">Item</Label>
                     <Select
                       value={newItemForm.inventory_item_id}
-                      onValueChange={(value) => 
-                        setNewItemForm({ ...newItemForm, inventory_item_id: value })
+                      onValueChange={(value) =>
+                        setNewItemForm({
+                          ...newItemForm,
+                          inventory_item_id: value,
+                        })
                       }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select an item" />
                       </SelectTrigger>
                       <SelectContent>
-                        {sortedInventoryItems.map(item => (
+                        {sortedInventoryItems.map((item) => (
                           <SelectItem key={item.id} value={item.id}>
-                            {item.name} {item.category_name && `(${item.category_name})`}
+                            {item.name}{' '}
+                            {item.category_name && `(${item.category_name})`}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="quantity">Quantity</Label>
                     <Input
@@ -747,28 +766,31 @@ const EquipmentSetManager: React.FC = () => {
                       type="number"
                       min={1}
                       value={newItemForm.quantity}
-                      onChange={(e) => 
-                        setNewItemForm({ 
-                          ...newItemForm, 
-                          quantity: parseInt(e.target.value) || 1 
+                      onChange={(e) =>
+                        setNewItemForm({
+                          ...newItemForm,
+                          quantity: parseInt(e.target.value) || 1,
                         })
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="notes">Notes (Optional)</Label>
                     <Input
                       id="notes"
                       value={newItemForm.notes}
-                      onChange={(e) => 
-                        setNewItemForm({ ...newItemForm, notes: e.target.value })
+                      onChange={(e) =>
+                        setNewItemForm({
+                          ...newItemForm,
+                          notes: e.target.value,
+                        })
                       }
                       placeholder="Optional notes"
                     />
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     onClick={handleAddItemToSet}
                     disabled={!newItemForm.inventory_item_id}
                     className="col-span-3"
@@ -777,7 +799,7 @@ const EquipmentSetManager: React.FC = () => {
                     Add Item
                   </Button>
                 </div>
-                
+
                 {setItems.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -790,7 +812,7 @@ const EquipmentSetManager: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {setItems.map(item => (
+                      {setItems.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>{item.item_name}</TableCell>
                           <TableCell>{item.item_category || 'None'}</TableCell>
@@ -815,15 +837,20 @@ const EquipmentSetManager: React.FC = () => {
                 ) : (
                   <div className="text-center py-6 border rounded-md">
                     <Package className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">No items in this set yet</p>
+                    <p className="text-muted-foreground">
+                      No items in this set yet
+                    </p>
                   </div>
                 )}
               </div>
             </>
           )}
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
             {currentSetId ? (
@@ -834,7 +861,7 @@ const EquipmentSetManager: React.FC = () => {
               <Button onClick={handleCreateSet} disabled={isCreating}>
                 {isCreating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Creating...
                   </>
                 ) : (

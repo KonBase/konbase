@@ -1,43 +1,50 @@
-
 /* Mobile optimizations */
 
 /* Better touch targets */
 @media (max-width: 768px) {
   /* Improve touch target sizes */
-  button, a, input[type="button"], input[type="submit"], .interactive {
+  button,
+  a,
+  input[type='button'],
+  input[type='submit'],
+  .interactive {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Increase spacing between interactive elements */
-  .btn-group > *, .touch-group > * {
+  .btn-group > *,
+  .touch-group > * {
     margin-right: 8px;
     margin-bottom: 8px;
   }
-  
+
   /* Optimize tables for mobile */
   table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   /* Larger form controls */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px; /* Prevent zoom on iOS */
     padding: 10px 12px;
   }
-  
+
   /* Disable pull-to-refresh on iOS */
-  html, body {
+  html,
+  body {
     overscroll-behavior-y: contain;
   }
-  
+
   /* Improve scrolling performance */
   * {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Better truncation for long text on mobile */
   .truncate-mobile {
     max-width: 200px;
@@ -45,17 +52,17 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   /* More comfortable spacing for mobile */
   .mobile-spacing {
     padding: 16px 12px;
   }
-  
+
   /* Stack elements vertically on mobile */
   .mobile-stack {
     flex-direction: column;
   }
-  
+
   /* Hide on small screens */
   .hide-mobile {
     display: none;
@@ -70,7 +77,9 @@
 
 /* Reduce motion for better performance */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -112,7 +121,11 @@
 
 /* Improved focus states for accessibility */
 @media (max-width: 768px) {
-  a:focus, button:focus, input:focus, select:focus, textarea:focus {
+  a:focus,
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
     outline: 3px solid rgba(66, 153, 225, 0.6);
     outline-offset: 2px;
   }
@@ -136,11 +149,11 @@
     padding-left: 12px;
     padding-right: 12px;
   }
-  
+
   .logo-container {
     flex: 0 0 auto;
   }
-  
+
   .actions-container {
     margin-left: auto;
   }

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -17,12 +19,12 @@ interface DebugModeToggleProps {
  * A component that allows users to toggle debug mode on/off
  * Supports different visual variants and sizes
  */
-const DebugModeToggle: React.FC<DebugModeToggleProps> = ({ 
-  isDebugMode, 
+const DebugModeToggle: React.FC<DebugModeToggleProps> = ({
+  isDebugMode,
   toggleDebugMode,
   variant = 'link',
   size = 'sm',
-  className = ''
+  className = '',
 }) => {
   // Directly sync with localStorage when toggled
   const handleToggle = () => {
@@ -33,9 +35,9 @@ const DebugModeToggle: React.FC<DebugModeToggleProps> = ({
   switch (variant) {
     case 'button':
       return (
-        <Button 
-          size={size === 'lg' ? 'default' : 'sm'} 
-          variant={isDebugMode ? 'default' : 'outline'} 
+        <Button
+          size={size === 'lg' ? 'default' : 'sm'}
+          variant={isDebugMode ? 'default' : 'outline'}
           onClick={handleToggle}
           className={className}
         >
@@ -52,7 +54,7 @@ const DebugModeToggle: React.FC<DebugModeToggleProps> = ({
           )}
         </Button>
       );
-    
+
     case 'switch':
       return (
         <div className={`flex items-center justify-between ${className}`}>
@@ -65,19 +67,19 @@ const DebugModeToggle: React.FC<DebugModeToggleProps> = ({
               Show additional debugging information
             </p>
           </div>
-          <Switch 
-            id="debug-mode" 
-            checked={isDebugMode} 
+          <Switch
+            id="debug-mode"
+            checked={isDebugMode}
             onCheckedChange={handleToggle}
           />
         </div>
       );
-      
+
     case 'link':
     default:
       return (
-        <button 
-          onClick={handleToggle} 
+        <button
+          onClick={handleToggle}
           className={`flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors underline ${className}`}
         >
           {isDebugMode ? (

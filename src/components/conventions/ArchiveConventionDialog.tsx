@@ -1,5 +1,16 @@
+'use client';
+
 import React from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Archive } from 'lucide-react';
 import { Convention } from '@/types/convention';
@@ -12,7 +23,11 @@ interface ArchiveConventionDialogProps {
   trigger?: React.ReactNode;
 }
 
-const ArchiveConventionDialog = ({ convention, onArchived, trigger }: ArchiveConventionDialogProps) => {
+const ArchiveConventionDialog = ({
+  convention,
+  onArchived,
+  trigger,
+}: ArchiveConventionDialogProps) => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -29,7 +44,7 @@ Status: ${convention.status}
 Created: ${new Date(convention.created_at).toLocaleDateString()}
 Last Updated: ${new Date(convention.updated_at).toLocaleDateString()}
     `.trim();
-    
+
     // Create blob and download
     const blob = new Blob([conventionText], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
@@ -44,33 +59,32 @@ Last Updated: ${new Date(convention.updated_at).toLocaleDateString()}
 
   const handleArchive = async () => {
     setIsLoading(true);
-    
+
     try {
       // Update convention status to archived
       const { error } = await supabase
         .from('conventions')
         .update({ status: 'archived' })
         .eq('id', convention.id);
-      
+
       if (error) throw error;
-      
+
       // Export convention data
       exportToTxt();
-      
+
       toast({
-        title: "Convention archived",
-        description: `${convention.name} has been archived successfully.`
+        title: 'Convention archived',
+        description: `${convention.name} has been archived successfully.`,
       });
-      
+
       if (onArchived) onArchived();
       setIsOpen(false);
-      
     } catch (error: any) {
-      console.error("Error archiving convention:", error);
+      console.error('Error archiving convention:', error);
       toast({
-        title: "Error archiving convention",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive"
+        title: 'Error archiving convention',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -82,8 +96,8 @@ Last Updated: ${new Date(convention.updated_at).toLocaleDateString()}
       {trigger ? (
         <span onClick={() => setIsOpen(true)}>{trigger}</span>
       ) : (
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setIsOpen(true)}
           disabled={convention.status === 'archived'}
         >
@@ -91,14 +105,15 @@ Last Updated: ${new Date(convention.updated_at).toLocaleDateString()}
           {convention.status === 'archived' ? 'Archived' : 'Archive'}
         </Button>
       )}
-      
+
       <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Convention</AlertDialogTitle>
             <AlertDialogDescription>
-              This will archive the convention "{convention.name}" and export its data to a text file.
-              Archived conventions are read-only and cannot be modified.
+              This will archive the convention "{convention.name}" and export
+              its data to a text file. Archived conventions are read-only and
+              cannot be modified.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

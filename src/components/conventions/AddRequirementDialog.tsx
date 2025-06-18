@@ -1,13 +1,36 @@
+'use client';
+
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,7 +42,9 @@ interface AddRequirementDialogProps {
 }
 
 const requirementSchema = z.object({
-  name: z.string().min(2, { message: "Requirement name must be at least 2 characters" }),
+  name: z
+    .string()
+    .min(2, { message: 'Requirement name must be at least 2 characters' }),
   description: z.string().nullable().optional(),
   priority: z.enum(['high', 'medium', 'low']),
   notes: z.string().nullable().optional(),
@@ -33,7 +58,7 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof requirementSchema>>({
     resolver: zodResolver(requirementSchema),
     defaultValues: {
@@ -47,9 +72,9 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof requirementSchema>) => {
     if (!conventionId) {
       toast({
-        title: "Error",
-        description: "Convention ID is missing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Convention ID is missing',
+        variant: 'destructive',
       });
       return;
     }
@@ -57,10 +82,13 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
     setIsLoading(true);
     try {
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError) throw userError;
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase.from('convention_requirements').insert({
         convention_id: conventionId,
@@ -75,7 +103,7 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
       if (error) throw error;
 
       toast({
-        title: "Requirement added",
+        title: 'Requirement added',
         description: `${values.name} has been added successfully`,
       });
 
@@ -83,11 +111,11 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
       onRequirementAdded();
       onClose();
     } catch (error: any) {
-      console.error("Error adding requirement:", error);
+      console.error('Error adding requirement:', error);
       toast({
-        title: "Error adding requirement",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error adding requirement',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -113,7 +141,10 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
                 <FormItem>
                   <FormLabel>Requirement Name*</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Extra chairs for main hall" {...field} />
+                    <Input
+                      placeholder="e.g., Extra chairs for main hall"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,11 +158,11 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Provide details about this requirement" 
+                    <Textarea
+                      placeholder="Provide details about this requirement"
                       className="min-h-[100px]"
-                      {...field} 
-                      value={field.value || ''} 
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -145,7 +176,10 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Priority*</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
@@ -172,10 +206,10 @@ export const AddRequirementDialog: React.FC<AddRequirementDialogProps> = ({
                 <FormItem>
                   <FormLabel>Additional Notes</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Any additional information or context" 
-                      {...field} 
-                      value={field.value || ''} 
+                    <Textarea
+                      placeholder="Any additional information or context"
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />

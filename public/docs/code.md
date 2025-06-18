@@ -16,7 +16,7 @@ KonBase is built on a modern web application architecture that combines React fo
 
 ```
 ┌────────────────────┐      ┌───────────────────┐
-│  Vite Application  │◄────►│ Supabase Backend  │
+│  Next.js App       │◄────►│ Supabase Backend  │
 │                    │      │                   │
 │ - Components       │      │ - PostgreSQL DB   │
 │ - State Management │      │ - Authentication  │
@@ -29,6 +29,7 @@ KonBase is built on a modern web application architecture that combines React fo
 ### Technology Stack
 
 #### Frontend
+
 - **React 18+**: Component-based UI library
 - **TypeScript**: Static typing for improved code quality and developer experience
 - **React Router**: Navigation and routing
@@ -39,6 +40,7 @@ KonBase is built on a modern web application architecture that combines React fo
 - **Emotion**: CSS-in-JS styling solution
 
 #### Backend (via Supabase)
+
 - **PostgreSQL**: Relational database with Row Level Security
 - **Supabase Auth**: Authentication and authorization
 - **Supabase Storage**: File and image storage
@@ -46,11 +48,12 @@ KonBase is built on a modern web application architecture that combines React fo
 - **Supabase Realtime**: Real-time data subscriptions
 
 #### Development Tools
-- **Vite**: Fast build tooling
-- **ESLint**: Code linting
+
+- **Next.js**: Full-stack React framework with App Router
+- **ESLint**: Code quality and linting
 - **Prettier**: Code formatting
 - **Vitest**: Unit testing framework
-- **Cypress**: End-to-end testing
+- **Playwright**: End-to-end testing
 
 ## Code Organization
 
@@ -99,6 +102,7 @@ The authentication system leverages Supabase Auth for user management, implement
   - Guest (read-only access)
 
 Role enforcement is implemented via:
+
 - React route guards (`AuthGuard`, `RoleGuard` components)
 - Server-side Row Level Security policies
 - Custom Supabase functions for permission checks
@@ -108,33 +112,36 @@ Role enforcement is implemented via:
 The Association Module serves as the foundation of KonBase, providing organizational structure:
 
 #### Key Components:
+
 - `AssociationProfile.tsx`: Association information management
 - `AssociationMembers.tsx`: Member listing and management
 - InviteMemberDialog.tsx: Member invitation functionality
 - MemberManager.tsx: Role assignment and member administration
 
 #### Key Features:
+
 - Association creation and configuration
 - Member invitation and role assignment
 - Multi-association support for users
 - Organization hierarchy management
 
 #### Data Structure:
+
 Associations are stored in the `associations` table with relationship tables for membership tracking:
 
 ```typescript
 // Simplified database structure
 associations: {
-  id: string
-  name: string
-  description: string
-  contact_email: string
-  contact_phone: string
-  address: string
-  website: string
-  logo: string
-  created_at: string
-  updated_at: string
+  id: string;
+  name: string;
+  description: string;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
+  website: string;
+  logo: string;
+  created_at: string;
+  updated_at: string;
 }
 ```
 
@@ -143,6 +150,7 @@ associations: {
 The Inventory module handles all equipment tracking and management:
 
 #### Key Components:
+
 - InventoryList.tsx: Main inventory view
 - `ItemCategories.tsx`: Category management
 - `ItemLocations.tsx`: Location management
@@ -150,6 +158,7 @@ The Inventory module handles all equipment tracking and management:
 - `EquipmentSets.tsx`: Equipment grouping functionality
 
 #### Key Features:
+
 - Equipment categorization with hierarchical categories
 - Location tracking with nested locations
 - Item check-in/check-out functionality
@@ -158,44 +167,45 @@ The Inventory module handles all equipment tracking and management:
 - Consumables management
 
 #### Data Structure:
+
 Inventory data spans multiple tables with relationships:
 
 ```typescript
 items: {
-  id: string
-  association_id: string
-  name: string
-  description: string
-  category_id: string
-  location_id: string
-  barcode: string
-  serial_number: string
-  condition: string
-  is_consumable: boolean
-  quantity: number
-  minimum_quantity: number
-  purchase_date: string
-  purchase_price: number
-  warranty_expiration: string
-  image: string
-  notes: string
+  id: string;
+  association_id: string;
+  name: string;
+  description: string;
+  category_id: string;
+  location_id: string;
+  barcode: string;
+  serial_number: string;
+  condition: string;
+  is_consumable: boolean;
+  quantity: number;
+  minimum_quantity: number;
+  purchase_date: string;
+  purchase_price: number;
+  warranty_expiration: string;
+  image: string;
+  notes: string;
 }
 
 categories: {
-  id: string
-  association_id: string
-  name: string
-  description: string
-  parent_id: string
+  id: string;
+  association_id: string;
+  name: string;
+  description: string;
+  parent_id: string;
 }
 
 locations: {
-  id: string
-  association_id: string 
-  name: string
-  description: string
-  parent_id: string
-  is_room: boolean
+  id: string;
+  association_id: string;
+  name: string;
+  description: string;
+  parent_id: string;
+  is_room: boolean;
 }
 ```
 
@@ -204,6 +214,7 @@ locations: {
 The Convention module facilitates event planning and execution:
 
 #### Key Components:
+
 - ConventionsList.tsx: Convention directory
 - ConventionDetails.tsx: Convention information
 - ConventionRequirements.tsx: Equipment requirements
@@ -213,6 +224,7 @@ The Convention module facilitates event planning and execution:
 - ConventionTemplates.tsx: Reusable convention templates
 
 #### Key Features:
+
 - Convention creation and scheduling
 - Location and room mapping
 - Equipment allocation and tracking
@@ -222,54 +234,55 @@ The Convention module facilitates event planning and execution:
 - Template creation for recurring events
 
 #### Data Structure:
+
 Convention data utilizes a network of related tables:
 
 ```typescript
 conventions: {
-  id: string
-  association_id: string
-  name: string
-  description: string
-  start_date: string
-  end_date: string
-  location: string
-  status: string  // planned, active, completed, archived
-  created_at: string
-  updated_at: string
+  id: string;
+  association_id: string;
+  name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  status: string; // planned, active, completed, archived
+  created_at: string;
+  updated_at: string;
 }
 
 requirements: {
-  id: string
-  convention_id: string
-  name: string
-  description: string
-  quantity: number
-  category_id: string
-  location_id: string
-  requested_by: string
-  status: string
-  created_at: string
-  updated_at: string
+  id: string;
+  convention_id: string;
+  name: string;
+  description: string;
+  quantity: number;
+  category_id: string;
+  location_id: string;
+  requested_by: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 convention_locations: {
-  id: string
-  convention_id: string
-  name: string
-  description: string
-  parent_id: string
+  id: string;
+  convention_id: string;
+  name: string;
+  description: string;
+  parent_id: string;
 }
 
 movements: {
-  id: string
-  item_id: string
-  from_location_id: string
-  to_location_id: string
-  quantity: number
-  movement_type: string
-  convention_id: string
-  user_id: string
-  notes: string
+  id: string;
+  item_id: string;
+  from_location_id: string;
+  to_location_id: string;
+  quantity: number;
+  movement_type: string;
+  convention_id: string;
+  user_id: string;
+  notes: string;
 }
 ```
 
@@ -278,26 +291,29 @@ movements: {
 The Communication module enables real-time interaction between users:
 
 #### Key Components:
+
 - ChatModule.tsx: Real-time chat functionality
 - `ChatPage.tsx`: Dedicated chat interface
 
 #### Key Features:
+
 - Real-time messaging between association members
 - User presence tracking
 - Message history
 - Online status indicators
 
 #### Data Structure:
+
 Communication relies on Supabase real-time capabilities:
 
 ```typescript
 chat_messages: {
-  id: string
-  association_id: string
-  sender_id: string
-  sender_name: string
-  message: string
-  created_at: string
+  id: string;
+  association_id: string;
+  sender_id: string;
+  sender_name: string;
+  message: string;
+  created_at: string;
 }
 ```
 
@@ -306,10 +322,12 @@ chat_messages: {
 The Reporting module provides insights into inventory and convention data:
 
 #### Key Components:
+
 - ReportsList.tsx: Available reports
 - Dashboard widgets for key metrics
 
 #### Key Features:
+
 - Inventory status reporting
 - Convention equipment usage tracking
 - Movement history reports
@@ -320,15 +338,18 @@ The Reporting module provides insights into inventory and convention data:
 KonBase implements a hybrid state management approach:
 
 ### Global State
+
 - **AuthContext**: User authentication and profile information
 - **AssociationContext**: Current association and member information
 - **ThemeContext**: UI theme preferences
 
 ### Server State
+
 - **React Query**: Data fetching, caching, and state management
 - Custom hooks for specific data operations (e.g., `useAssociationMembers`, `useCategories`)
 
 ### Local Component State
+
 - React's useState and useReducer for component-specific state
 - Form state management via React Hook Form
 
@@ -358,17 +379,20 @@ KonBase implements a hybrid state management approach:
 KonBase implements a comprehensive security architecture:
 
 ### Authentication Layer
+
 - Token-based JWT authentication via Supabase Auth
 - Session management
 - Optional two-factor authentication
 
 ### Authorization Layer
+
 - Row Level Security (RLS) policies in PostgreSQL
 - Role-based permissions:
   - System-level roles (super_admin)
   - Association-level roles (admin, manager, member, guest)
 
 ### Data Protection
+
 - Server-side validation using security-definer functions
 - Client-side input validation with Zod schema validation
 - Protection against common web vulnerabilities
@@ -376,14 +400,14 @@ KonBase implements a comprehensive security architecture:
 
 ```typescript
 audit_logs: {
-  id: string
-  action: string
-  entity: string
-  entity_id: string
-  user_id: string
-  changes: Json
-  created_at: string
-  ip_address: string
+  id: string;
+  action: string;
+  entity: string;
+  entity_id: string;
+  user_id: string;
+  changes: Json;
+  created_at: string;
+  ip_address: string;
 }
 ```
 
@@ -392,18 +416,24 @@ audit_logs: {
 KonBase includes several utility modules that support the application:
 
 ### CSV Import/Export
+
 The csvExport.ts module facilitates data import and export:
+
 - Template generation for CSV imports
 - Data transformation for import operations
 - Export functionality for inventory and other data
 
 ### Type-Safe Supabase Operations
+
 The useTypeSafeSupabase.ts hook provides type-safe database operations:
+
 - Strongly-typed table queries
 - Error handling and query building
 
 ### Debugging Utilities
+
 The debug.ts module includes utilities for development and troubleshooting:
+
 - Configurable log levels
 - Error tracking
 - Performance monitoring
@@ -413,11 +443,13 @@ The debug.ts module includes utilities for development and troubleshooting:
 KonBase implements a robust error handling system:
 
 ### Components
+
 - ErrorBoundary.tsx: React error boundary for catching and displaying component errors
 - Toast notifications for user feedback
 - Form validation error display
 
 ### Strategies
+
 - Graceful degradation on network failures
 - User-friendly error messages
 - Detailed error logging for debugging

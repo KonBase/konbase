@@ -1,3 +1,4 @@
+'use client';
 
 import React, { useState } from 'react';
 import DebugModeToggle from '@/components/dashboard/DebugModeToggle';
@@ -33,55 +34,59 @@ const DashboardDebugPanel: React.FC<DashboardDebugPanelProps> = ({
   handleRetry,
   retryCount,
   loadTime = 0,
-  requestInfo
+  requestInfo,
 }) => {
   const [activeTab, setActiveTab] = useState('general');
-  
+
   return (
     <div className="mt-8">
-      <DebugModeToggle 
-        isDebugMode={isDebugMode} 
-        toggleDebugMode={toggleDebugMode} 
+      <DebugModeToggle
+        isDebugMode={isDebugMode}
+        toggleDebugMode={toggleDebugMode}
       />
-      
+
       {isDebugMode && (
         <div className="space-y-4">
-          <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+          <Tabs
+            defaultValue="general"
+            value={activeTab}
+            onValueChange={setActiveTab}
+          >
             <TabsList className="w-full">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="general">
-              <DebugPanel 
+              <DebugPanel
                 networkStatus={networkStatus.status}
                 testConnection={networkStatus.testConnection}
                 isTestingConnection={networkStatus.isTestingConnection}
                 lastTestedAt={networkStatus.lastTestedAt}
                 testResults={networkStatus.testResults}
-                userData={{ 
+                userData={{
                   userId: user?.id,
-                  associationId: currentAssociation?.id
+                  associationId: currentAssociation?.id,
                 }}
                 errorData={lastError}
                 onRetry={handleRetry}
                 requestInfo={{
                   retryCount,
                   requestTimestamp: requestInfo?.requestTimestamp,
-                  responseTimestamp: requestInfo?.responseTimestamp
+                  responseTimestamp: requestInfo?.responseTimestamp,
                 }}
               />
             </TabsContent>
-            
+
             <TabsContent value="performance">
-              <DashboardPerformanceDebug 
+              <DashboardPerformanceDebug
                 isVisible={activeTab === 'performance'}
                 networkStatus={networkStatus}
                 loadTime={loadTime}
                 requestInfo={{
                   retryCount,
                   requestTimestamp: requestInfo?.requestTimestamp,
-                  responseTimestamp: requestInfo?.responseTimestamp
+                  responseTimestamp: requestInfo?.responseTimestamp,
                 }}
               />
             </TabsContent>

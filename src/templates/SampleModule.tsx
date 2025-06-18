@@ -1,5 +1,9 @@
 import React from 'react';
-import { KonbaseModule, ModuleDashboardComponent, ModuleNavigationItem } from '../types/modules';
+import {
+  KonbaseModule,
+  ModuleDashboardComponent,
+  ModuleNavigationItem,
+} from '../types/modules';
 
 // Extend the Window interface to include supabaseClient
 declare global {
@@ -33,22 +37,28 @@ const SampleModule: KonbaseModule = {
   author: 'Konbase Team',
   requires: [],
   permissions: ['read:inventory'],
-  
+
   // Lifecycle methods
   onRegister: async () => {
     console.log('Sample module registered');
   },
-  
+
   onEnable: async () => {
     console.log('Sample module enabled');
-    
+
     // Add debugging for authentication methods
     try {
       const supabase = window.supabaseClient || globalThis.supabaseClient;
       if (supabase?.auth) {
         console.log('Available auth methods:', Object.keys(supabase.auth));
-        console.log('Sign in method:', typeof supabase.auth.signIn === 'function' ? 'signIn' : 
-                                     typeof supabase.auth.signInWithPassword === 'function' ? 'signInWithPassword' : 'not found');
+        console.log(
+          'Sign in method:',
+          typeof supabase.auth.signIn === 'function'
+            ? 'signIn'
+            : typeof supabase.auth.signInWithPassword === 'function'
+              ? 'signInWithPassword'
+              : 'not found',
+        );
       } else {
         console.warn('Supabase auth not available');
       }
@@ -56,11 +66,11 @@ const SampleModule: KonbaseModule = {
       console.error('Error checking auth methods:', error);
     }
   },
-  
+
   onDisable: async () => {
     console.log('Sample module disabled');
   },
-  
+
   // UI components
   getDashboardComponents: () => {
     const components: ModuleDashboardComponent[] = [
@@ -68,12 +78,12 @@ const SampleModule: KonbaseModule = {
         title: 'Sample Module',
         moduleId: 'sample-module',
         component: () => <SampleDashboardComponent />,
-        priority: 10
-      }
+        priority: 10,
+      },
     ];
     return components;
   },
-  
+
   getNavigationItems: () => {
     const items: ModuleNavigationItem[] = [
       {
@@ -82,12 +92,12 @@ const SampleModule: KonbaseModule = {
         label: 'Sample Module',
         path: '/sample-module',
         icon: <Activity />,
-        order: 100
-      }
+        order: 100,
+      },
     ];
     return items;
   },
-  
+
   // Database migrations
   getDatabaseMigrations: () => {
     return [
@@ -113,11 +123,11 @@ const SampleModule: KonbaseModule = {
               )
             ));
         `,
-        runOnEnable: true
-      }
+        runOnEnable: true,
+      },
     ];
   },
-  
+
   // Configuration schema
   getConfigurationSchema: () => {
     return {
@@ -125,16 +135,16 @@ const SampleModule: KonbaseModule = {
         enableFeatureX: {
           type: 'boolean',
           title: 'Enable Feature X',
-          default: false
+          default: false,
         },
         apiKey: {
           type: 'string',
           title: 'API Key',
-          format: 'password'
-        }
-      }
+          format: 'password',
+        },
+      },
     };
-  }
+  },
 };
 
 export default SampleModule;

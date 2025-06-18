@@ -1,15 +1,28 @@
+'use client';
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from '@/lib/navigation';
 
 interface LogoutButtonProps {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  size?: "default" | "sm" | "lg" | "icon";
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-const LogoutButton = ({ variant = "ghost", size = "default" }: LogoutButtonProps) => {
+const LogoutButton = ({
+  variant = 'ghost',
+  size = 'default',
+}: LogoutButtonProps) => {
+  const router = useRouter();
   const { signOut } = useAuth();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -18,6 +31,7 @@ const LogoutButton = ({ variant = "ghost", size = "default" }: LogoutButtonProps
     try {
       setIsLoggingOut(true);
       await signOut();
+      router.push('/login');
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out.',
@@ -35,7 +49,7 @@ const LogoutButton = ({ variant = "ghost", size = "default" }: LogoutButtonProps
   };
 
   return (
-    <Button 
+    <Button
       onClick={handleLogout}
       variant={variant}
       size={size}

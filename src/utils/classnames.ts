@@ -1,6 +1,6 @@
 /**
  * A utility for conditionally joining CSS class names together
- * 
+ *
  * @example
  * classNames('foo', 'bar'); // => 'foo bar'
  * classNames('foo', { bar: true }); // => 'foo bar'

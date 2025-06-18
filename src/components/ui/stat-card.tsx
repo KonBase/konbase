@@ -1,11 +1,10 @@
-
-import { cn } from "@/lib/utils";
-import React from "react";
+import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  description?: React.ReactNode;  // Update: Changed from string to ReactNode
+  description?: React.ReactNode; // Update: Changed from string to ReactNode
   icon?: React.ReactNode;
   trend?: {
     value: number;
@@ -23,7 +22,12 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm p-6", className)}>
+    <div
+      className={cn(
+        'rounded-lg border bg-card text-card-foreground shadow-sm p-6',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
         {icon && <div className="text-muted-foreground">{icon}</div>}
@@ -33,15 +37,17 @@ export function StatCard({
         {trend && (
           <span
             className={cn(
-              "inline-flex items-center text-xs font-medium",
-              trend.positive ? "text-green-600" : "text-red-600"
+              'inline-flex items-center text-xs font-medium',
+              trend.positive ? 'text-green-600' : 'text-red-600',
             )}
           >
-            {trend.positive ? "↑" : "↓"} {trend.value}%
+            {trend.positive ? '↑' : '↓'} {trend.value}%
           </span>
         )}
       </div>
-      {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+      {description && (
+        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+      )}
     </div>
   );
 }

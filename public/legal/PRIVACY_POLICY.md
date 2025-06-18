@@ -1,6 +1,6 @@
 # Privacy and Cookie Policy
 
-*Last Updated: April 23, 2025*
+_Last Updated: April 23, 2025_
 
 ## 1. Introduction
 

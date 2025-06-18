@@ -1,9 +1,18 @@
+'use client';
+
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase';
@@ -11,11 +20,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth';
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'Association name must be at least 2 characters.' }),
+  name: z
+    .string()
+    .min(2, { message: 'Association name must be at least 2 characters.' }),
   description: z.string().optional(),
-  contact_email: z.string().email({ message: 'Please enter a valid email address.' }),
+  contact_email: z
+    .string()
+    .email({ message: 'Please enter a valid email address.' }),
   contact_phone: z.string().optional(),
-  website: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  website: z
+    .string()
+    .url({ message: 'Please enter a valid URL.' })
+    .optional()
+    .or(z.literal('')),
   address: z.string().optional(),
 });
 
@@ -90,9 +107,9 @@ const AssociationForm = ({ onSuccess }: AssociationFormProps) => {
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           role: 'admin',
-          association_id: associationData.id 
+          association_id: associationData.id,
         })
         .eq('id', user.id);
 
@@ -119,7 +136,8 @@ const AssociationForm = ({ onSuccess }: AssociationFormProps) => {
       console.error('Error creating association:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create association. Please try again.',
+        description:
+          error.message || 'Failed to create association. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -170,7 +188,11 @@ const AssociationForm = ({ onSuccess }: AssociationFormProps) => {
               <FormItem>
                 <FormLabel>Contact Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="contact@example.com" type="email" {...field} />
+                  <Input
+                    placeholder="contact@example.com"
+                    type="email"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -29,6 +29,7 @@ We welcome contributions to KonBase! Here's how you can help:
 ### Commit Messages
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
 - `feat:` for new features
 - `fix:` for bug fixes
 - `docs:` for documentation

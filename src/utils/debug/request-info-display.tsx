@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface RequestInfoDisplayProps {
@@ -17,22 +16,35 @@ interface RequestInfoDisplayProps {
 export const RequestInfoDisplay: React.FC<RequestInfoDisplayProps> = ({
   userData,
   requestInfo,
-  networkStatus
+  networkStatus,
 }) => {
   return (
     <div className="font-mono text-xs bg-background p-2 rounded border overflow-auto max-h-[200px]">
       <p>Network: {networkStatus}</p>
       {userData?.userId && <p>User ID: {userData.userId}</p>}
-      {userData?.associationId && <p>Association ID: {userData.associationId}</p>}
-      {requestInfo?.retryCount !== undefined && <p>Retry Count: {requestInfo.retryCount}</p>}
+      {userData?.associationId && (
+        <p>Association ID: {userData.associationId}</p>
+      )}
+      {requestInfo?.retryCount !== undefined && (
+        <p>Retry Count: {requestInfo.retryCount}</p>
+      )}
       {requestInfo?.requestTimestamp && (
-        <p>Request Time: {new Date(requestInfo.requestTimestamp).toLocaleTimeString()}</p>
+        <p>
+          Request Time:{' '}
+          {new Date(requestInfo.requestTimestamp).toLocaleTimeString()}
+        </p>
       )}
       {requestInfo?.responseTimestamp && (
-        <p>Response Time: {new Date(requestInfo.responseTimestamp).toLocaleTimeString()}</p>
+        <p>
+          Response Time:{' '}
+          {new Date(requestInfo.responseTimestamp).toLocaleTimeString()}
+        </p>
       )}
       {requestInfo?.requestTimestamp && requestInfo?.responseTimestamp && (
-        <p>Duration: {requestInfo.responseTimestamp - requestInfo.requestTimestamp}ms</p>
+        <p>
+          Duration:{' '}
+          {requestInfo.responseTimestamp - requestInfo.requestTimestamp}ms
+        </p>
       )}
     </div>
   );

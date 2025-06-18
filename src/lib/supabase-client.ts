@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -14,7 +14,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Log the available authentication methods to help with debugging
 console.log('Available Supabase auth methods:', Object.keys(supabase.auth));
-console.log('Supabase version compatibility check:', 
-  typeof supabase.auth.signInWithPassword === 'function' ? 'v2+' : 'unknown');
+console.log(
+  'Supabase version compatibility check:',
+  typeof supabase.auth.signInWithPassword === 'function' ? 'v2+' : 'unknown',
+);
 
 export default supabase;

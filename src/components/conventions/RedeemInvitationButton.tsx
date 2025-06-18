@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
 import { TicketPlus } from 'lucide-react';
@@ -24,10 +26,7 @@ const RedeemInvitationButton: React.FC<RedeemInvitationButtonProps> = ({
 
   return (
     <>
-      <Button 
-        onClick={() => setIsDialogOpen(true)}
-        {...props}
-      >
+      <Button onClick={() => setIsDialogOpen(true)} {...props}>
         {showIcon && <TicketPlus className="mr-2 h-4 w-4" />}
         {label}
       </Button>

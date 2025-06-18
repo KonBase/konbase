@@ -1,44 +1,46 @@
+'use client';
+
 import React, { useState } from 'react';
-import { 
-  InventoryItem, 
-  NewInventoryItem, 
-  InventoryFilters, 
-  InventorySort 
+import {
+  InventoryItem,
+  NewInventoryItem,
+  InventoryFilters,
+  InventorySort,
 } from '@/hooks/useInventoryItems';
 import { Category } from '@/hooks/useCategories'; // Assuming Category type exists
 import { Location } from '@/hooks/useLocations'; // Assuming Location type exists
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,7 +60,10 @@ interface InventoryItemsComponentProps {
   items: InventoryItem[];
   loading: boolean;
   createItem: (item: NewInventoryItem) => Promise<boolean | null>;
-  updateItem: (id: string, updates: Partial<NewInventoryItem>) => Promise<boolean | null>;
+  updateItem: (
+    id: string,
+    updates: Partial<NewInventoryItem>,
+  ) => Promise<boolean | null>;
   deleteItem: (id: string) => Promise<boolean | null>;
   categories: Category[];
   locations: Location[];
@@ -74,13 +79,13 @@ interface InventoryItemsComponentProps {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
+  name: z.string().min(1, { message: 'Name is required' }),
   description: z.string().optional(),
   serialNumber: z.string().optional(),
   barcode: z.string().optional(),
-  condition: z.string().min(1, { message: "Condition is required" }),
-  categoryId: z.string().min(1, { message: "Category is required" }),
-  locationId: z.string().min(1, { message: "Location is required" }),
+  condition: z.string().min(1, { message: 'Condition is required' }),
+  categoryId: z.string().min(1, { message: 'Category is required' }),
+  locationId: z.string().min(1, { message: 'Location is required' }),
   isConsumable: z.boolean().default(false),
   quantity: z.number().positive().optional().nullable(),
   minimumQuantity: z.number().positive().optional().nullable(),
@@ -88,12 +93,13 @@ const formSchema = z.object({
   purchasePrice: z.number().min(0).optional().nullable(), // Renamed from unitPrice
   warrantyExpiration: z.string().optional().nullable(),
   notes: z.string().optional(),
-  image: z.string().optional().nullable()
+  image: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Use React.FC and destructure props
+const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({
+  // Use React.FC and destructure props
   items,
   loading,
   createItem,
@@ -143,8 +149,8 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       purchasePrice: null, // Renamed
       warrantyExpiration: null,
       notes: '',
-      image: null
-    }
+      image: null,
+    },
   });
 
   const editForm = useForm<FormValues>({
@@ -168,7 +174,7 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       purchasePrice: null,
       warrantyExpiration: null,
       notes: '',
-      image: null
+      image: null,
     });
     setIsAddDialogOpen(true);
   };
@@ -190,7 +196,7 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       purchasePrice: item.purchasePrice, // Renamed
       warrantyExpiration: item.warrantyExpiration,
       notes: (item as any).notes || '', // Assuming notes might exist but not in type yet
-      image: item.image
+      image: item.image,
     });
     setIsEditDialogOpen(true);
   };
@@ -203,7 +209,11 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
   const handleCreateItem = async (values: FormValues) => {
     try {
       if (!currentAssociation) {
-        toast({ title: "Error", description: "No association selected", variant: "destructive" });
+        toast({
+          title: 'Error',
+          description: 'No association selected',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -229,14 +239,18 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       const success = await createItem(newItem);
       if (success) {
         setIsAddDialogOpen(false);
-        toast({ title: "Success", description: "Item created successfully" });
+        toast({ title: 'Success', description: 'Item created successfully' });
         // refreshItems(); // Refresh is handled by the hook after successful creation
       } else {
         // Error toast is handled within the hook
       }
     } catch (error) {
-      console.error("Error creating item:", error);
-      toast({ title: "Error", description: "Failed to create item", variant: "destructive" });
+      console.error('Error creating item:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create item',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -265,14 +279,18 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       const success = await updateItem(currentItem.id, updates);
       if (success) {
         setIsEditDialogOpen(false);
-        toast({ title: "Success", description: "Item updated successfully" });
+        toast({ title: 'Success', description: 'Item updated successfully' });
         // refreshItems(); // Refresh is handled by the hook after successful update
       } else {
         // Error toast is handled within the hook
       }
     } catch (error) {
-      console.error("Error updating item:", error);
-      toast({ title: "Error", description: "Failed to update item", variant: "destructive" });
+      console.error('Error updating item:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update item',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -283,21 +301,28 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
       const success = await deleteItem(currentItem.id);
       if (success) {
         setIsDeleteDialogOpen(false);
-        toast({ title: "Success", description: "Item deleted successfully" });
+        toast({ title: 'Success', description: 'Item deleted successfully' });
         // refreshItems(); // Refresh is handled by the hook after successful deletion
       } else {
         // Error toast is handled within the hook
       }
     } catch (error) {
-      console.error("Error deleting item:", error);
-      toast({ title: "Error", description: "Failed to delete item", variant: "destructive" });
+      console.error('Error deleting item:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete item',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleSort = (field: keyof InventoryItem | 'categoryName' | 'locationName') => {
+  const handleSort = (
+    field: keyof InventoryItem | 'categoryName' | 'locationName',
+  ) => {
     setSort({
       field,
-      direction: sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc'
+      direction:
+        sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc',
     });
   };
 
@@ -312,9 +337,15 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
   // Check if categories or locations are missing (handled by parent now)
   // if (categories.length === 0 || locations.length === 0) { ... }
 
-  const renderSortIcon = (field: keyof InventoryItem | 'categoryName' | 'locationName') => {
+  const renderSortIcon = (
+    field: keyof InventoryItem | 'categoryName' | 'locationName',
+  ) => {
     if (sort.field === field) {
-      return <ArrowUpDown className={`ml-2 h-4 w-4 inline-block ${sort.direction === 'desc' ? 'rotate-180' : ''}`} />;
+      return (
+        <ArrowUpDown
+          className={`ml-2 h-4 w-4 inline-block ${sort.direction === 'desc' ? 'rotate-180' : ''}`}
+        />
+      );
     }
     return <ArrowUpDown className="ml-2 h-4 w-4 inline-block opacity-30" />;
   };
@@ -347,14 +378,19 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
         <div className="flex gap-2 w-full md:w-auto flex-wrap">
           <Select
             value={filters.categoryId || 'all'}
-            onValueChange={(value) => setFilters({ ...filters, categoryId: value === 'all' ? undefined : value })}
+            onValueChange={(value) =>
+              setFilters({
+                ...filters,
+                categoryId: value === 'all' ? undefined : value,
+              })
+            }
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
@@ -364,14 +400,19 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
 
           <Select
             value={filters.locationId || 'all'}
-            onValueChange={(value) => setFilters({ ...filters, locationId: value === 'all' ? undefined : value })}
+            onValueChange={(value) =>
+              setFilters({
+                ...filters,
+                locationId: value === 'all' ? undefined : value,
+              })
+            }
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Location" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {locations.map(location => (
+              {locations.map((location) => (
                 <SelectItem key={location.id} value={location.id}>
                   {location.name}
                 </SelectItem>
@@ -381,7 +422,12 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
 
           <Select
             value={filters.condition || 'all'}
-            onValueChange={(value) => setFilters({ ...filters, condition: value === 'all' ? undefined : value })}
+            onValueChange={(value) =>
+              setFilters({
+                ...filters,
+                condition: value === 'all' ? undefined : value,
+              })
+            }
           >
             <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Condition" />
@@ -446,10 +492,19 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     <Package2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-lg font-medium">No items found</p>
                     <p className="text-sm text-muted-foreground">
-                      {searchTerm || Object.values(filters).some(v => v) ? "No items match your criteria." : "Start by adding your first inventory item."}
+                      {searchTerm || Object.values(filters).some((v) => v)
+                        ? 'No items match your criteria.'
+                        : 'Start by adding your first inventory item.'}
                     </p>
-                    {!searchTerm && !Object.values(filters).some(v => v) && (
-                      <Button size="sm" className="mt-4" onClick={openAddDialog} disabled={categories.length === 0 || locations.length === 0}>
+                    {!searchTerm && !Object.values(filters).some((v) => v) && (
+                      <Button
+                        size="sm"
+                        className="mt-4"
+                        onClick={openAddDialog}
+                        disabled={
+                          categories.length === 0 || locations.length === 0
+                        }
+                      >
                         Add Item
                       </Button>
                     )}
@@ -462,17 +517,27 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     <TableCell>{item.categoryName || 'N/A'}</TableCell>
                     <TableCell>{item.locationName || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={
-                        item.condition === 'new' ? 'default' :
-                        item.condition === 'good' ? 'secondary' :
-                        item.condition === 'fair' ? 'outline' :
-                        item.condition === 'poor' || item.condition === 'damaged' || item.condition === 'retired' ? 'destructive' :
-                        'outline'
-                      }>
+                      <Badge
+                        variant={
+                          item.condition === 'new'
+                            ? 'default'
+                            : item.condition === 'good'
+                              ? 'secondary'
+                              : item.condition === 'fair'
+                                ? 'outline'
+                                : item.condition === 'poor' ||
+                                    item.condition === 'damaged' ||
+                                    item.condition === 'retired'
+                                  ? 'destructive'
+                                  : 'outline'
+                        }
+                      >
                         {item.condition || 'N/A'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{item.isConsumable ? (item.quantity ?? 'N/A') : '-'}</TableCell>
+                    <TableCell>
+                      {item.isConsumable ? (item.quantity ?? 'N/A') : '-'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">
                         {item.isConsumable ? 'Consumable' : 'Asset'}
@@ -480,10 +545,18 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(item)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDeleteDialog(item)}
+                        >
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>
@@ -502,12 +575,16 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
           <DialogHeader>
             <DialogTitle>Add New Item</DialogTitle>
             <DialogDescription>
-              Add a new item to your inventory. Fields marked with * are required.
+              Add a new item to your inventory. Fields marked with * are
+              required.
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleCreateItem)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleCreateItem)}
+              className="space-y-6"
+            >
               <ScrollArea className="h-[60vh] max-h-[600px] pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Form Fields (Similar structure for Add and Edit) */}
@@ -517,7 +594,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Item Name *</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -529,14 +608,17 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map(category => (
+                            {categories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
                               </SelectItem>
@@ -554,14 +636,17 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Location *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select location" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {locations.map(location => (
+                            {locations.map((location) => (
                               <SelectItem key={location.id} value={location.id}>
                                 {location.name}
                               </SelectItem>
@@ -579,7 +664,10 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Condition *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select condition" />
@@ -620,14 +708,15 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                         <div className="space-y-1 leading-none">
                           <FormLabel>Consumable Item</FormLabel>
                           <FormDescription>
-                            Check if this item is tracked by quantity (e.g., screws, paper).
+                            Check if this item is tracked by quantity (e.g.,
+                            screws, paper).
                           </FormDescription>
                         </div>
                       </FormItem>
                     )}
                   />
 
-                  {form.watch("isConsumable") && (
+                  {form.watch('isConsumable') && (
                     <>
                       <FormField
                         control={form.control}
@@ -641,7 +730,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                                 min="0"
                                 {...field}
                                 value={field.value ?? ''} // Handle null
-                                onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ''
+                                      ? null
+                                      : Number(e.target.value),
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -660,10 +755,18 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                                 min="0"
                                 {...field}
                                 value={field.value ?? ''} // Handle null
-                                onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ''
+                                      ? null
+                                      : Number(e.target.value),
+                                  )
+                                }
                               />
                             </FormControl>
-                            <FormDescription>Low stock alert threshold.</FormDescription>
+                            <FormDescription>
+                              Low stock alert threshold.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -677,7 +780,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Serial Number</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -689,7 +794,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Barcode</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -701,7 +808,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Purchase Date</FormLabel>
-                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -720,7 +833,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                             min="0"
                             {...field}
                             value={field.value ?? ''} // Handle null for display
-                            onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ''
+                                  ? null
+                                  : parseFloat(e.target.value),
+                              )
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -734,7 +853,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Warranty Expiration</FormLabel>
-                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -747,7 +872,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel>Description</FormLabel>
-                        <FormControl><Textarea {...field} value={field.value || ""} className="min-h-[80px]" /></FormControl>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ''}
+                            className="min-h-[80px]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -759,7 +890,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel>Notes</FormLabel>
-                        <FormControl><Textarea {...field} value={field.value || ""} className="min-h-[80px]" /></FormControl>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ''}
+                            className="min-h-[80px]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -768,11 +905,15 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
               </ScrollArea>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Creating..." : "Create Item"}
+                  {form.formState.isSubmitting ? 'Creating...' : 'Create Item'}
                 </Button>
               </DialogFooter>
             </form>
@@ -791,7 +932,10 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
           </DialogHeader>
 
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleUpdateItem)} className="space-y-6">
+            <form
+              onSubmit={editForm.handleSubmit(handleUpdateItem)}
+              className="space-y-6"
+            >
               <ScrollArea className="h-[60vh] max-h-[600px] pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Form Fields (Re-use structure from Add Dialog) */}
@@ -801,7 +945,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Item Name *</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -813,14 +959,17 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map(category => (
+                            {categories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
                               </SelectItem>
@@ -838,14 +987,17 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Location *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select location" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {locations.map(location => (
+                            {locations.map((location) => (
                               <SelectItem key={location.id} value={location.id}>
                                 {location.name}
                               </SelectItem>
@@ -863,7 +1015,10 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Condition *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select condition" />
@@ -910,7 +1065,7 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     )}
                   />
 
-                  {editForm.watch("isConsumable") && (
+                  {editForm.watch('isConsumable') && (
                     <>
                       <FormField
                         control={editForm.control}
@@ -924,7 +1079,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                                 min="0"
                                 {...field}
                                 value={field.value ?? ''}
-                                onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ''
+                                      ? null
+                                      : Number(e.target.value),
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -943,10 +1104,18 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                                 min="0"
                                 {...field}
                                 value={field.value ?? ''}
-                                onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ''
+                                      ? null
+                                      : Number(e.target.value),
+                                  )
+                                }
                               />
                             </FormControl>
-                            <FormDescription>Low stock alert threshold.</FormDescription>
+                            <FormDescription>
+                              Low stock alert threshold.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -960,7 +1129,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Serial Number</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -972,7 +1143,9 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Barcode</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -984,7 +1157,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Purchase Date</FormLabel>
-                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1003,7 +1182,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                             min="0"
                             {...field}
                             value={field.value ?? ''} // Handle null for display
-                            onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ''
+                                  ? null
+                                  : parseFloat(e.target.value),
+                              )
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -1017,7 +1202,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Warranty Expiration</FormLabel>
-                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1029,7 +1220,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel>Description</FormLabel>
-                        <FormControl><Textarea {...field} value={field.value || ""} className="min-h-[80px]" /></FormControl>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ''}
+                            className="min-h-[80px]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1041,7 +1238,13 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel>Notes</FormLabel>
-                        <FormControl><Textarea {...field} value={field.value || ""} className="min-h-[80px]" /></FormControl>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ''}
+                            className="min-h-[80px]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1050,11 +1253,20 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
               </ScrollArea>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                <Button
+                  type="submit"
+                  disabled={editForm.formState.isSubmitting}
+                >
+                  {editForm.formState.isSubmitting
+                    ? 'Saving...'
+                    : 'Save Changes'}
                 </Button>
               </DialogFooter>
             </form>
@@ -1068,7 +1280,8 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this item? This action cannot be undone.
+              Are you sure you want to delete this item? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -1082,7 +1295,10 @@ const InventoryItemsComponent: React.FC<InventoryItemsComponentProps> = ({ // Us
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>

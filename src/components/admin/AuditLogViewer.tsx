@@ -1,3 +1,4 @@
+'use client';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -25,7 +26,7 @@ interface AuditLog {
   changes: any;
   created_at: string;
   ip_address: string | null;
-  user_name?: string;  // Joined from profiles
+  user_name?: string; // Joined from profiles
 }
 
 export function AuditLogViewer() {
@@ -36,7 +37,7 @@ export function AuditLogViewer() {
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 10;
   const { toast } = useToast();
-  
+
   const fetchLogs = async () => {
     setLoading(true);
     try {
@@ -44,25 +45,25 @@ export function AuditLogViewer() {
       const { count, error: countError } = await supabase
         .from('audit_logs')
         .select('*', { count: 'exact', head: true });
-      
+
       if (countError) throw countError;
-      
+
       setTotalPages(Math.ceil((count || 0) / perPage));
-      
+
       // Get logs with user information - fixed the join query
       const { data: auditLogsData, error: logsError } = await supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .range((page - 1) * perPage, page * perPage - 1);
-      
+
       if (logsError) throw logsError;
-      
+
       // Separately fetch user profiles for each log to avoid the relationship error
       const formattedLogs: AuditLog[] = await Promise.all(
         auditLogsData.map(async (log) => {
           let userName = 'Unknown User';
-          
+
           // Get user profile info if user_id exists
           if (log.user_id) {
             const { data: profileData } = await supabase
@@ -70,19 +71,20 @@ export function AuditLogViewer() {
               .select('name, email')
               .eq('id', log.user_id)
               .single();
-              
+
             if (profileData) {
-              userName = profileData.name || profileData.email || 'Unknown User';
+              userName =
+                profileData.name || profileData.email || 'Unknown User';
             }
           }
-          
+
           return {
             ...log,
-            user_name: userName
+            user_name: userName,
           };
-        })
+        }),
       );
-      
+
       setLogs(formattedLogs);
     } catch (error: any) {
       console.error('Error fetching audit logs:', error);
@@ -95,26 +97,28 @@ export function AuditLogViewer() {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchLogs();
   }, [page]);
-  
-  const filteredLogs = logs.filter(log => 
-    log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (log.user_name && log.user_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    log.entity_id.toLowerCase().includes(searchQuery.toLowerCase())
+
+  const filteredLogs = logs.filter(
+    (log) =>
+      log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.user_name &&
+        log.user_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      log.entity_id.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-  
+
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss');
   };
-  
+
   // Helper to format the changes JSON
   const formatChanges = (changes: any) => {
     if (!changes) return 'No changes recorded';
-    
+
     try {
       return Object.entries(changes)
         .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -123,7 +127,7 @@ export function AuditLogViewer() {
       return JSON.stringify(changes);
     }
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -136,16 +140,20 @@ export function AuditLogViewer() {
             className="pl-10"
           />
         </div>
-        <Button variant="outline" onClick={() => fetchLogs()}>Refresh</Button>
+        <Button variant="outline" onClick={() => fetchLogs()}>
+          Refresh
+        </Button>
       </div>
-      
+
       {loading ? (
         <div className="space-y-2">
-          {Array(3).fill(0).map((_, i) => (
-            <div key={i} className="flex justify-between p-2 animate-pulse">
-              <Skeleton className="h-5 w-full" />
-            </div>
-          ))}
+          {Array(3)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="flex justify-between p-2 animate-pulse">
+                <Skeleton className="h-5 w-full" />
+              </div>
+            ))}
         </div>
       ) : (
         <>
@@ -191,16 +199,16 @@ export function AuditLogViewer() {
               </TableBody>
             </Table>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <div className="text-sm text-muted-foreground">
               Page {page} of {totalPages}
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1}
               >
                 Previous
@@ -208,7 +216,9 @@ export function AuditLogViewer() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={page === totalPages}
               >
                 Next

@@ -1,10 +1,10 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
@@ -29,13 +29,14 @@ serve(async (req) => {
       {
         auth: {
           persistSession: false,
-        }
-      }
+        },
+      },
     );
 
     // Use the JWT to get the user ID
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+    const { data: userData, error: userError } =
+      await supabaseAdmin.auth.getUser(token);
+
     if (userError || !userData) {
       throw new Error(userError?.message || 'Failed to get user data');
     }
@@ -63,29 +64,29 @@ serve(async (req) => {
     }
 
     console.log('2FA disabled successfully for user:', userId);
-    
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: '2FA has been successfully disabled'
+        message: '2FA has been successfully disabled',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+        status: 200,
+      },
     );
   } catch (error) {
     console.error('Error disabling 2FA:', error.message);
-    
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+        status: 400,
+      },
     );
   }
 });

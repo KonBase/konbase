@@ -1,25 +1,37 @@
-
 import React from 'react';
-import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import NextLink from 'next/link';
 import { cn } from '@/lib/utils';
 
-export interface LinkProps extends RouterLinkProps {
+export interface LinkProps {
+  href: string;
   className?: string;
+  children: React.ReactNode;
+  replace?: boolean;
+  onClick?: () => void;
 }
 
 const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, href, replace, onClick, ...props }, ref) => {
     return (
-      <RouterLink
-        className={cn('text-primary underline-offset-4 hover:underline', className)}
+      <NextLink
+        href={href}
+        className={cn(
+          'text-primary underline-offset-4 hover:underline',
+          className,
+        )}
+        replace={replace}
+        onClick={onClick}
         ref={ref}
         {...props}
       >
         {children}
-      </RouterLink>
+      </NextLink>
     );
-  }
+  },
 );
 Link.displayName = 'Link';
 
 export { Link };
+
+// Create aliases for backward compatibility with React Router
+export const RouterLink = Link;

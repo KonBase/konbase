@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -29,7 +30,7 @@ const DashboardError: React.FC<DashboardErrorProps> = ({
   user,
   currentAssociation,
   lastError,
-  retryCount
+  retryCount,
 }) => {
   return (
     <div className="container mx-auto py-6 space-y-4">
@@ -40,27 +41,24 @@ const DashboardError: React.FC<DashboardErrorProps> = ({
           There was a problem loading your dashboard data. Please try again.
         </AlertDescription>
       </Alert>
-      
-      <LoadingError 
-        error={error} 
-        retry={handleRetry} 
+
+      <LoadingError error={error} retry={handleRetry} />
+
+      <DebugModeToggle
+        isDebugMode={isDebugMode}
+        toggleDebugMode={toggleDebugMode}
       />
-      
-      <DebugModeToggle 
-        isDebugMode={isDebugMode} 
-        toggleDebugMode={toggleDebugMode} 
-      />
-      
+
       {isDebugMode && (
-        <DebugPanel 
+        <DebugPanel
           networkStatus={networkStatus.status}
           testConnection={networkStatus.testConnection}
           isTestingConnection={networkStatus.isTestingConnection}
           lastTestedAt={networkStatus.lastTestedAt}
           testResults={networkStatus.testResults}
-          userData={{ 
+          userData={{
             userId: user?.id,
-            associationId: currentAssociation?.id
+            associationId: currentAssociation?.id,
           }}
           errorData={error}
           onRetry={handleRetry}

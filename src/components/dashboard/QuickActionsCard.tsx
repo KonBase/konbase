@@ -1,6 +1,13 @@
+'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 const QuickActionsCard: React.FC = () => {
   return (
@@ -11,7 +18,9 @@ const QuickActionsCard: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Access your most common tasks quickly</p>
+          <p className="text-sm text-muted-foreground">
+            Access your most common tasks quickly
+          </p>
         </div>
       </CardContent>
     </Card>

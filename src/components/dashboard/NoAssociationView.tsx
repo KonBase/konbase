@@ -1,5 +1,14 @@
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+'use client';
+
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const NoAssociationView = () => {
@@ -8,15 +17,19 @@ const NoAssociationView = () => {
       <CardHeader>
         <CardTitle>No Association Found</CardTitle>
         <CardDescription>
-          You are not currently part of any association. Join one or create a new one to get started.
+          You are not currently part of any association. Join one or create a
+          new one to get started.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p>Associations allow you to manage inventory and conventions collaboratively.</p>
+        <p>
+          Associations allow you to manage inventory and conventions
+          collaboratively.
+        </p>
       </CardContent>
       <CardFooter>
         <Button asChild>
-          <Link to="/setup">Set Up Association</Link> 
+          <Link href="/setup">Set Up Association</Link>
         </Button>
       </CardFooter>
     </Card>

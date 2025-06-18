@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,10 @@ interface MobileMenuButtonProps {
   open: boolean;
 }
 
-const MobileMenuButton: React.FC<MobileMenuButtonProps> = ({ onOpenChange, open }) => {
+const MobileMenuButton: React.FC<MobileMenuButtonProps> = ({
+  onOpenChange,
+  open,
+}) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>

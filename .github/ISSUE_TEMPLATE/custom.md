@@ -1,7 +1,7 @@
 ---
 name: General Issue
 about: Open a general issue or question
-title: "[General]: "
+title: '[General]: '
 labels: question
 assignees: ''
 ---

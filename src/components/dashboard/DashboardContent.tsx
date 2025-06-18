@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+
 import DashboardOverviewSection from '@/components/dashboard/DashboardOverviewSection';
 import AssociationManagementSection from '@/components/dashboard/AssociationManagementSection';
 import ConventionManagementSection from '@/components/dashboard/ConventionManagementSection';
@@ -52,18 +54,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   lastError,
   retryCount,
   loadTime,
-  requestInfo
+  requestInfo,
 }) => {
   const isHome = true;
   const { toast } = useToast();
-  
+
   // Show a toast when in debug mode to indicate loading time
   useEffect(() => {
     if (isDebugMode && loadTime && loadTime > 0) {
       toast({
-        title: "Dashboard loaded",
+        title: 'Dashboard loaded',
         description: `Loading time: ${loadTime}ms`,
-        variant: "default",
+        variant: 'default',
       });
     }
   }, [isDebugMode, loadTime, toast]);
@@ -71,14 +73,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 space-y-8">
-        <DashboardHeader 
-          currentAssociation={currentAssociation} 
-          user={user} 
-          isHome={isHome} 
-        />
+
 
         <ErrorBoundary>
-          <DashboardOverviewSection 
+          <DashboardOverviewSection
             currentAssociation={currentAssociation}
             isLoadingActivity={isLoadingActivity}
             recentActivity={safeRecentActivity}
@@ -86,15 +84,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             handleRetry={handleRetry}
           />
         </ErrorBoundary>
-        
+
         <ErrorBoundary>
-          <AssociationManagementSection onShowLocationManager={onShowLocationManager} />
+          <AssociationManagementSection
+            onShowLocationManager={onShowLocationManager}
+          />
         </ErrorBoundary>
-        
+
         <ErrorBoundary>
           <ConventionManagementSection />
         </ErrorBoundary>
-        
+
         <ErrorBoundary>
           <ModuleProvider>
             <DashboardModulesSection />

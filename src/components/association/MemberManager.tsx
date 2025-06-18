@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AssociationMember } from '@/hooks/useAssociationMembers';
@@ -11,31 +13,39 @@ interface MemberManagerProps {
   associationId: string;
   members: AssociationMember[];
   loading: boolean;
-  onUpdateRole: (memberId: string, role: UserRoleType) => Promise<{ success: boolean, error?: any }>;
-  onRemoveMember: (memberId: string) => Promise<{ success: boolean, error?: any }>;
+  onUpdateRole: (
+    memberId: string,
+    role: UserRoleType,
+  ) => Promise<{ success: boolean; error?: any }>;
+  onRemoveMember: (
+    memberId: string,
+  ) => Promise<{ success: boolean; error?: any }>;
   onInviteMember?: () => void;
   minimal?: boolean;
 }
 
-const MemberManager = ({ 
-  members, 
-  loading, 
-  onUpdateRole, 
-  onRemoveMember, 
+const MemberManager = ({
+  members,
+  loading,
+  onUpdateRole,
+  onRemoveMember,
   onInviteMember,
-  minimal = false
+  minimal = false,
 }: MemberManagerProps) => {
-  
   const handleUpdateRole = async (memberId: string, role: UserRoleType) => {
     await onUpdateRole(memberId, role);
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
-    if (confirm(`Are you sure you want to remove ${memberName} from the association?`)) {
+    if (
+      confirm(
+        `Are you sure you want to remove ${memberName} from the association?`,
+      )
+    ) {
       await onRemoveMember(memberId);
     }
   };
-  
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -53,10 +63,10 @@ const MemberManager = ({
         ) : minimal ? (
           <MemberListMinimal members={members} />
         ) : (
-          <MemberList 
-            members={members} 
-            onUpdateRole={handleUpdateRole} 
-            onRemoveMember={handleRemoveMember} 
+          <MemberList
+            members={members}
+            onUpdateRole={handleUpdateRole}
+            onRemoveMember={handleRemoveMember}
           />
         )}
       </CardContent>

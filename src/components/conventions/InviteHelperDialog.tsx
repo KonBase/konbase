@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -17,7 +19,14 @@ import { UserPlus, Copy } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Convention } from '@/types/convention';
 import { format } from 'date-fns';
 
@@ -27,12 +36,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const InviteHelperDialog = ({ 
+export const InviteHelperDialog = ({
   convention,
-  onInviteSent 
-}: { 
-  convention: Convention,
-  onInviteSent?: () => void 
+  onInviteSent,
+}: {
+  convention: Convention;
+  onInviteSent?: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,24 +60,27 @@ const InviteHelperDialog = ({
 
     try {
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-      
+
       const { error } = await supabase.from('convention_invitations').insert({
         code,
         convention_id: convention.id,
         created_by: (await supabase.auth.getUser()).data.user?.id,
-        expires_at: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-        uses_remaining: 1
+        expires_at: format(
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          "yyyy-MM-dd'T'HH:mm:ssXXX",
+        ),
+        uses_remaining: 1,
       });
-      
+
       if (error) throw error;
-      
+
       setInviteCode(code);
-      
+
       toast({
         title: 'Invitation Generated',
         description: `Invitation code created for ${values.email}.`,
       });
-      
+
       if (onInviteSent) onInviteSent();
     } catch (error: any) {
       console.error('Error generating invitation:', error);
@@ -81,7 +93,7 @@ const InviteHelperDialog = ({
       setIsLoading(false);
     }
   };
-  
+
   const copyInviteCode = () => {
     if (inviteCode) {
       navigator.clipboard.writeText(inviteCode);
@@ -91,17 +103,20 @@ const InviteHelperDialog = ({
       });
     }
   };
-  
+
   const resetForm = () => {
     setInviteCode(null);
     form.reset();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) resetForm();
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) resetForm();
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -115,10 +130,13 @@ const InviteHelperDialog = ({
             Invite someone to help with "{convention.name}".
           </DialogDescription>
         </DialogHeader>
-        
+
         {!inviteCode ? (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleGenerateInvite)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleGenerateInvite)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="email"
@@ -132,9 +150,14 @@ const InviteHelperDialog = ({
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  disabled={isLoading}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
@@ -154,12 +177,12 @@ const InviteHelperDialog = ({
                 </Button>
               </div>
             </div>
-            
+
             <p className="text-sm text-muted-foreground">
-              This code is valid for 7 days and can be used once.
-              Share it with the helper to allow them to access this convention.
+              This code is valid for 7 days and can be used once. Share it with
+              the helper to allow them to access this convention.
             </p>
-            
+
             <DialogFooter>
               <Button type="button" onClick={() => setIsOpen(false)}>
                 Done

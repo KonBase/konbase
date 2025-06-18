@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +28,7 @@ export function SuperAdminElevationButton() {
       toast({
         title: 'Security Code Required',
         description: 'Please enter the security code',
-        variant: "destructive",
+        variant: 'destructive',
       });
       return;
     }
@@ -34,12 +36,15 @@ export function SuperAdminElevationButton() {
     setIsProcessing(true);
     try {
       // Call the Supabase edge function with proper authorization
-      const { error } = await supabase.functions.invoke('elevate-to-super-admin', {
-        body: { securityCode },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
+      const { error } = await supabase.functions.invoke(
+        'elevate-to-super-admin',
+        {
+          body: { securityCode },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
         },
-      });
+      );
 
       if (error) throw new Error(error.message);
 
@@ -47,11 +52,11 @@ export function SuperAdminElevationButton() {
       toast({
         title: 'Elevation Successful',
         description: 'You now have super admin privileges.',
-        variant: "default",
+        variant: 'default',
       });
-      
+
       setIsDialogOpen(false);
-      
+
       // Refresh the page to update permissions, but add a query param to show a success message
       window.location.href = '/admin?elevation=success';
     } catch (error: any) {
@@ -59,7 +64,7 @@ export function SuperAdminElevationButton() {
       toast({
         title: 'Elevation Failed',
         description: error.message || 'An unknown error occurred',
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsProcessing(false);
@@ -68,7 +73,11 @@ export function SuperAdminElevationButton() {
 
   return (
     <>
-      <Button variant="destructive" onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto whitespace-nowrap">
+      <Button
+        variant="destructive"
+        onClick={() => setIsDialogOpen(true)}
+        className="w-full sm:w-auto whitespace-nowrap"
+      >
         <ShieldAlert className="mr-2 h-4 w-4" />
         Elevate to Super Admin
       </Button>
@@ -78,10 +87,11 @@ export function SuperAdminElevationButton() {
           <DialogHeader>
             <DialogTitle>Super Admin Elevation</DialogTitle>
             <DialogDescription>
-              This is a high-security operation. Please enter the security code provided by your system administrator.
+              This is a high-security operation. Please enter the security code
+              provided by your system administrator.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Input
@@ -99,18 +109,18 @@ export function SuperAdminElevationButton() {
               <span>This action will be logged and audited</span>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsDialogOpen(false)}
               disabled={isProcessing}
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleElevation} 
+            <Button
+              variant="destructive"
+              onClick={handleElevation}
               disabled={isProcessing || !securityCode.trim()}
             >
               {isProcessing ? 'Processing...' : 'Confirm Elevation'}

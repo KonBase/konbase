@@ -2,7 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.types';
 import { loadConfig, isConfigured } from '@/lib/config-store'; // Import loadConfig and isConfigured
 
-let dynamicSupabaseClient: ReturnType<typeof createClient<Database>> | null = null;
+let dynamicSupabaseClient: ReturnType<typeof createClient<Database>> | null =
+  null;
 
 export const getDynamicSupabaseClient = () => {
   if (dynamicSupabaseClient) {

@@ -1,11 +1,12 @@
 # Logs
-logs
+/logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.specstory/
 
 node_modules
 dist
@@ -25,9 +26,16 @@ dist-ssr
 coverage/
 .vscode/
 .cursor/
+.next/
 
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+# SpecStory explanation file
+.specstory/.what-is-this.md
+# SpecStory project identity file
+.specstory/.project.json
+# SpecStory copilot-instructions.md backup files
+.specstory/ai_rules_backups/*

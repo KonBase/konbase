@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
@@ -5,31 +6,48 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ConventionFormData } from '@/types/convention';
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
-  description: z.string().optional(),
-  start_date: z.date({
-    required_error: 'Please select a start date',
-  }),
-  end_date: z.date({
-    required_error: 'Please select an end date',
-  }).refine(date => date > new Date(), {
-    message: "End date must be in the future",
-  }),
-  location: z.string().optional(),
-}).refine(data => data.end_date > data.start_date, {
-  message: "End date must be after start date",
-  path: ["end_date"],
-});
+const formSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, { message: 'Name must be at least 2 characters long' }),
+    description: z.string().optional(),
+    start_date: z.date({
+      required_error: 'Please select a start date',
+    }),
+    end_date: z
+      .date({
+        required_error: 'Please select an end date',
+      })
+      .refine((date) => date > new Date(), {
+        message: 'End date must be in the future',
+      }),
+    location: z.string().optional(),
+  })
+  .refine((data) => data.end_date > data.start_date, {
+    message: 'End date must be after start date',
+    path: ['end_date'],
+  });
 
 interface ConventionFormProps {
   onSubmit: (data: ConventionFormData) => void;
@@ -37,14 +55,19 @@ interface ConventionFormProps {
   defaultValues?: Partial<ConventionFormData>;
 }
 
-const ConventionForm = ({ onSubmit, isLoading = false, defaultValues }: ConventionFormProps) => {
+const ConventionForm = ({
+  onSubmit,
+  isLoading = false,
+  defaultValues,
+}: ConventionFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultValues?.name || '',
       description: defaultValues?.description || '',
       start_date: defaultValues?.start_date || new Date(),
-      end_date: defaultValues?.end_date || new Date(Date.now() + 24 * 60 * 60 * 1000),
+      end_date:
+        defaultValues?.end_date || new Date(Date.now() + 24 * 60 * 60 * 1000),
       location: defaultValues?.location || '',
     },
   });
@@ -85,7 +108,10 @@ const ConventionForm = ({ onSubmit, isLoading = false, defaultValues }: Conventi
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter a description (optional)" {...field} />
+                <Textarea
+                  placeholder="Enter a description (optional)"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,12 +131,12 @@ const ConventionForm = ({ onSubmit, isLoading = false, defaultValues }: Conventi
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          'w-full text-left font-normal',
+                          !field.value && 'text-muted-foreground',
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP")
+                          format(field.value, 'PPP')
                         ) : (
                           <span>Pick a date</span>
                         )}
@@ -144,12 +170,12 @@ const ConventionForm = ({ onSubmit, isLoading = false, defaultValues }: Conventi
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          'w-full text-left font-normal',
+                          !field.value && 'text-muted-foreground',
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP")
+                          format(field.value, 'PPP')
                         ) : (
                           <span>Pick a date</span>
                         )}
@@ -179,7 +205,10 @@ const ConventionForm = ({ onSubmit, isLoading = false, defaultValues }: Conventi
             <FormItem>
               <FormLabel>Location</FormLabel>
               <FormControl>
-                <Input placeholder="Enter convention location (optional)" {...field} />
+                <Input
+                  placeholder="Enter convention location (optional)"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

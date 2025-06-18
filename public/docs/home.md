@@ -24,12 +24,14 @@ KonBase was created to solve the complex logistical challenges faced by conventi
 ## Core Features
 
 ### Association Management
+
 - Create and manage organizational profiles
 - Role-based permissions (Admins, Managers, Members, Guests)
 - Member directory and invitation system
 - Multi-association support for users involved in multiple communities
 
 ### Inventory Management
+
 - Comprehensive equipment tracking
 - Categories and classification system
 - Location and storage management
@@ -37,6 +39,7 @@ KonBase was created to solve the complex logistical challenges faced by conventi
 - Maintenance scheduling and history
 
 ### Convention Planning
+
 - Multi-day event creation and templates
 - Program and schedule management
 - Room and resource allocation
@@ -44,6 +47,7 @@ KonBase was created to solve the complex logistical challenges faced by conventi
 - Real-time updates and notifications
 
 ### User Experience
+
 - Intuitive, responsive interface
 - Real-time collaborative features
 - Customizable dashboards
@@ -51,6 +55,7 @@ KonBase was created to solve the complex logistical challenges faced by conventi
 - Dark and light mode support
 
 ### Reporting and Analytics
+
 - Equipment utilization metrics
 - Convention performance insights
 - Staff participation tracking
@@ -60,6 +65,7 @@ KonBase was created to solve the complex logistical challenges faced by conventi
 ## Technical Foundation
 
 KonBase is built on modern web technologies:
+
 - React frontend with Material-UI components
 - Supabase for backend database and authentication
 - Real-time data synchronization
@@ -69,6 +75,7 @@ KonBase is built on modern web technologies:
 ## Getting Started
 
 New users can:
+
 1. Create an account
 2. Join an existing association or create a new one
 3. Set up inventory categories and items

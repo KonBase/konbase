@@ -1,17 +1,20 @@
-
 import { format, parse } from 'date-fns';
 
 export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
 export type TimeFormat = '12' | '24';
 
-export const dateFormats: DateFormat[] = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
+export const dateFormats: DateFormat[] = [
+  'MM/DD/YYYY',
+  'DD/MM/YYYY',
+  'YYYY-MM-DD',
+];
 export const timeFormats: TimeFormat[] = ['12', '24'];
 
 export function formatDate(date: Date, formatString: DateFormat): string {
   const formatMap: Record<DateFormat, string> = {
     'MM/DD/YYYY': 'MM/dd/yyyy',
     'DD/MM/YYYY': 'dd/MM/yyyy',
-    'YYYY-MM-DD': 'yyyy-MM-dd'
+    'YYYY-MM-DD': 'yyyy-MM-dd',
   };
 
   return format(date, formatMap[formatString]);
@@ -20,13 +23,17 @@ export function formatDate(date: Date, formatString: DateFormat): string {
 export function formatTime(date: Date, formatString: TimeFormat): string {
   const formatMap: Record<TimeFormat, string> = {
     '12': 'h:mm a',
-    '24': 'HH:mm'
+    '24': 'HH:mm',
   };
 
   return format(date, formatMap[formatString]);
 }
 
-export function formatDateTime(date: Date, dateFormat: DateFormat, timeFormat: TimeFormat): string {
+export function formatDateTime(
+  date: Date,
+  dateFormat: DateFormat,
+  timeFormat: TimeFormat,
+): string {
   return `${formatDate(date, dateFormat)} ${formatTime(date, timeFormat)}`;
 }
 
@@ -34,7 +41,7 @@ export function parseDate(dateString: string, formatString: DateFormat): Date {
   const formatMap: Record<DateFormat, string> = {
     'MM/DD/YYYY': 'MM/dd/yyyy',
     'DD/MM/YYYY': 'dd/MM/yyyy',
-    'YYYY-MM-DD': 'yyyy-MM-dd'
+    'YYYY-MM-DD': 'yyyy-MM-dd',
   };
 
   return parse(dateString, formatMap[formatString], new Date());
@@ -65,7 +72,8 @@ export function useDateTimeFormat() {
     setTimeFormat,
     formatDate: (date: Date) => formatDate(date, getDateFormat()),
     formatTime: (date: Date) => formatTime(date, getTimeFormat()),
-    formatDateTime: (date: Date) => formatDateTime(date, getDateFormat(), getTimeFormat()),
-    parseDate: (dateString: string) => parseDate(dateString, getDateFormat())
+    formatDateTime: (date: Date) =>
+      formatDateTime(date, getDateFormat(), getTimeFormat()),
+    parseDate: (dateString: string) => parseDate(dateString, getDateFormat()),
   };
 }

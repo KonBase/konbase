@@ -2,7 +2,6 @@
   <img src="./public/uploads/1.svg" alt="KonBase Logo" width="300" />
 </div>
 
-
 <p align="center">
   <a href="https://github.com/KonBase/KonBase/stargazers">
     <img src="https://img.shields.io/github/stars/KonBase/konbase-open-source" alt="Stars" />
@@ -33,6 +32,7 @@ KonBase is a comprehensive inventory and convention management system built for 
 ## Key Features
 
 ### Association Management Module
+
 - Association registration and profile management
 - Inventory management with categorization and location tracking
 - User management with permission levels
@@ -42,6 +42,7 @@ KonBase is a comprehensive inventory and convention management system built for 
 - Local backup capabilities
 
 ### Convention Management Module
+
 - Create convention from association template
 - Equipment issuing and return tracking
 - Consumable items tracking
@@ -52,6 +53,7 @@ KonBase is a comprehensive inventory and convention management system built for 
 - Post-convention archiving
 
 ### Security Features
+
 - Role-based access control
 - Super-admin role with full system access
 - Enhanced security for log files
@@ -63,6 +65,7 @@ KonBase is a comprehensive inventory and convention management system built for 
 KonBase is built using modern web technologies:
 
 ### Frontend
+
 - **React** - A JavaScript library for building user interfaces
 - **TypeScript** - Static typing for better developer experience
 - **Vite** - Next generation frontend tooling
@@ -74,6 +77,7 @@ KonBase is built using modern web technologies:
 - **Recharts** - Data visualization components
 
 ### Backend
+
 - **Supabase** - Open source Firebase alternative
   - PostgreSQL database
   - Authentication
@@ -83,6 +87,7 @@ KonBase is built using modern web technologies:
 - **Tanstack Query** - Asynchronous state management
 
 ### Deployment
+
 - **GitHub Pages** - For static site hosting
 - **GitHub Actions** - CI/CD for automatic deployment
 
@@ -103,23 +108,27 @@ KonBase is built using modern web technologies:
 ### Installation
 
 1. Clone the repository
+
    ```
    git clone https://github.com/ShiroLuxferre/KonBase.git
    cd konbase
    ```
 
 2. Install dependencies
+
    ```
    npm install
    ```
 
 3. Create an `.env` file with your Supabase credentials
+
    ```
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
 4. Start the development server
+
    ```
    npm run dev
    ```
@@ -138,35 +147,43 @@ This project uses Supabase as its backend. To connect your local development env
 
 2.  **Log in to Supabase:**
     Open your terminal (Powershell in your case) and log in to your Supabase account:
+
     ```powershell
     supabase login
     ```
+
     This will open a browser window for authentication.
 
 3.  **Link your Project:**
     Navigate to the root directory of this project (`konbase-open-source`) in your terminal and link it to your remote Supabase project:
+
     ```powershell
     supabase link --project-ref YOUR_PROJECT_REF
     ```
+
     Replace `YOUR_PROJECT_REF` with your actual Supabase project reference ID. You can find this in your Supabase project's dashboard URL (e.g., `https://app.supabase.com/project/YOUR_PROJECT_REF`) or in Project Settings -> General.
 
 4.  **Set up Environment Variables:**
     The application needs your Supabase Project URL and Anon Key to communicate with the backend.
-    *   Create a `.env` file in the root of the project if it doesn't exist.
-    *   Add the following lines to the `.env` file:
 
-        ```dotenv
-        VITE_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
-        VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-        ```
-    *   Replace `YOUR_SUPABASE_PROJECT_URL` and `YOUR_SUPABASE_ANON_KEY` with the actual values from your Supabase project dashboard (Project Settings -> API).
+    - Create a `.env` file in the root of the project if it doesn't exist.
+    - Add the following lines to the `.env` file:
+
+      ```dotenv
+      NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+      ```
+
+    - Replace `YOUR_SUPABASE_PROJECT_URL` and `YOUR_SUPABASE_ANON_KEY` with the actual values from your Supabase project dashboard (Project Settings -> API).
 
 5.  **(Optional) Pull Remote Database Changes:**
-    If you have made changes to your remote database schema *after* linking, you might want to pull those changes to keep your local `supabase/migrations` folder in sync (though this project currently uses `schema.sql` for initial setup):
+    If you have made changes to your remote database schema _after_ linking, you might want to pull those changes to keep your local `supabase/migrations` folder in sync (though this project currently uses `schema.sql` for initial setup):
+
     ```powershell
     supabase db pull
     ```
-    *Note: Be cautious with this command if you have local migration files you haven't applied remotely.*
+
+    _Note: Be cautious with this command if you have local migration files you haven't applied remotely._
 
 6.  **Run the Application:**
     You should now be able to run the application locally, and it will connect to your remote Supabase instance.
@@ -185,13 +202,13 @@ Since the first-time setup wizard has been removed, follow these steps to set up
 5.  Paste the content into the SQL Editor.
 6.  Run the query. This will create all necessary tables, roles, functions, and RLS policies.
 7.  **Grant Super Admin:**
-    *   Sign up a user for your application (this will be your super admin).
-    *   Find the `user_id` (UUID) of this user in the Supabase Dashboard under Authentication -> Users.
-    *   Open the `super_admin.sql` file in this project.
-    *   Replace the placeholder `'YOUR_USER_ID_HERE'` with the actual `user_id`.
-    *   Go back to the Supabase **SQL Editor** and create another **"New query"**.
-    *   Copy the modified content of `super_admin.sql` and paste it into the editor.
-    *   Run the query.
+    - Sign up a user for your application (this will be your super admin).
+    - Find the `user_id` (UUID) of this user in the Supabase Dashboard under Authentication -> Users.
+    - Open the `super_admin.sql` file in this project.
+    - Replace the placeholder `'YOUR_USER_ID_HERE'` with the actual `user_id`.
+    - Go back to the Supabase **SQL Editor** and create another **"New query"**.
+    - Copy the modified content of `super_admin.sql` and paste it into the editor.
+    - Run the query.
 
 Your database is now set up and connected to the application.
 
@@ -226,6 +243,7 @@ We welcome contributions to KonBase! Here's how you can help:
 ### Commit Messages
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
 - `feat:` for new features
 - `fix:` for bug fixes
 - `docs:` for documentation

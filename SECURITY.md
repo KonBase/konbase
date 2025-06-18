@@ -18,12 +18,15 @@ We strive to acknowledge reports within 48 hours and will work to address verifi
 ## Authentication and Authorization
 
 ### Authentication Methods
+
 - Email/password with strong password requirements
 - OAuth providers (Google, Microsoft)
 - Two-Factor Authentication (2FA) via TOTP
 
 ### Role-Based Access Control
+
 KonBase implements comprehensive role-based access control:
+
 - **Super Admin**: Complete system access with administrative privileges
 - **Admin**: Association management and user administration capabilities
 - **Manager**: Equipment and convention management permissions
@@ -31,6 +34,7 @@ KonBase implements comprehensive role-based access control:
 - **Guest**: Limited read-only access
 
 ### Security Features
+
 - Enforced 2FA for administrative accounts
 - Email verification requirements
 - Configurable session timeouts
@@ -39,16 +43,19 @@ KonBase implements comprehensive role-based access control:
 ## Data Protection
 
 ### Database Security
+
 - Row Level Security (RLS) implemented via Supabase PostgreSQL policies
 - Secure function-based access control for cross-table operations
 - Security-definer functions to enforce permission boundaries
 
 ### File Storage
+
 - Strict file size limitations (default 2MB)
 - MIME type restrictions for uploaded files
 - Secure bucket policies for user-specific content
 
 ### Encryption
+
 - Encrypted data at rest via Supabase
 - HTTPS required for all communications
 - Secure token handling for authentication
@@ -82,6 +89,7 @@ KonBase is committed to maintaining security best practices by:
 ## Security Roadmap
 
 We continuously work to enhance security. Planned enhancements include:
+
 - Advanced threat detection
 - Enhanced audit capabilities
 - Additional authentication options

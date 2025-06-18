@@ -1,12 +1,35 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,9 +52,15 @@ interface Location {
 }
 
 const consumableSchema = z.object({
-  item_id: z.string().min(1, { message: "Please select an item" }),
-  allocated_quantity: z.coerce.number().int().positive({ message: "Quantity must be positive" }),
-  used_quantity: z.coerce.number().int().min(0, { message: "Used quantity cannot be negative" }),
+  item_id: z.string().min(1, { message: 'Please select an item' }),
+  allocated_quantity: z.coerce
+    .number()
+    .int()
+    .positive({ message: 'Quantity must be positive' }),
+  used_quantity: z.coerce
+    .number()
+    .int()
+    .min(0, { message: 'Used quantity cannot be negative' }),
   location_id: z.string().nullable().optional(),
 });
 
@@ -45,7 +74,7 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
   const [items, setItems] = useState<Item[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof consumableSchema>>({
     resolver: zodResolver(consumableSchema),
     defaultValues: {
@@ -60,14 +89,14 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
   useEffect(() => {
     const fetchConsumableItems = async () => {
       if (!isOpen) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('items')
           .select('id, name, barcode')
           .eq('is_consumable', true)
           .order('name');
-        
+
         if (error) throw error;
         setItems(data || []);
       } catch (error: any) {
@@ -87,14 +116,14 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
   useEffect(() => {
     const fetchLocations = async () => {
       if (!isOpen || !conventionId) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('convention_locations')
           .select('id, name')
           .eq('convention_id', conventionId)
           .order('name');
-        
+
         if (error) throw error;
         setLocations(data || []);
       } catch (error: any) {
@@ -113,9 +142,9 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof consumableSchema>) => {
     if (!conventionId) {
       toast({
-        title: "Error",
-        description: "Convention ID is missing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Convention ID is missing',
+        variant: 'destructive',
       });
       return;
     }
@@ -146,26 +175,24 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
         if (error) throw error;
 
         toast({
-          title: "Consumable updated",
-          description: "The consumable allocation has been updated",
+          title: 'Consumable updated',
+          description: 'The consumable allocation has been updated',
         });
       } else {
         // Create new allocation
-        const { error } = await supabase
-          .from('convention_consumables')
-          .insert({
-            convention_id: conventionId,
-            item_id: values.item_id,
-            allocated_quantity: values.allocated_quantity,
-            used_quantity: values.used_quantity,
-            location_id: values.location_id,
-          });
+        const { error } = await supabase.from('convention_consumables').insert({
+          convention_id: conventionId,
+          item_id: values.item_id,
+          allocated_quantity: values.allocated_quantity,
+          used_quantity: values.used_quantity,
+          location_id: values.location_id,
+        });
 
         if (error) throw error;
 
         toast({
-          title: "Consumable added",
-          description: "The consumable has been allocated to the convention",
+          title: 'Consumable added',
+          description: 'The consumable has been allocated to the convention',
         });
       }
 
@@ -173,11 +200,11 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
       onConsumableAdded();
       onClose();
     } catch (error: any) {
-      console.error("Error adding consumable:", error);
+      console.error('Error adding consumable:', error);
       toast({
-        title: "Error adding consumable",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error adding consumable',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -264,8 +291,8 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value || undefined}
                   >
                     <FormControl>

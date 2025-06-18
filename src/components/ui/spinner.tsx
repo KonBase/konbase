@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
@@ -10,38 +9,40 @@ interface SpinnerProps {
   loadingText?: string;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({ 
-  size = 'md', 
-  className, 
+export const Spinner: React.FC<SpinnerProps> = ({
+  size = 'md',
+  className,
   color = 'primary',
-  loadingText
+  loadingText,
 }) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
     lg: 'h-8 w-8',
-    xl: 'h-12 w-12'
+    xl: 'h-12 w-12',
   };
 
   const colorClasses = {
     primary: 'text-primary',
     secondary: 'text-secondary',
-    destructive: 'text-destructive'
+    destructive: 'text-destructive',
   };
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <Loader2 
+      <Loader2
         data-testid="loading-spinner"
         className={cn(
-          `animate-spin`, 
-          colorClasses[color], 
-          sizeClasses[size], 
-          className
-        )} 
+          `animate-spin`,
+          colorClasses[color],
+          sizeClasses[size],
+          className,
+        )}
       />
       {loadingText && (
-        <span className="mt-2 text-sm text-muted-foreground">{loadingText}</span>
+        <span className="mt-2 text-sm text-muted-foreground">
+          {loadingText}
+        </span>
       )}
     </div>
   );
@@ -52,9 +53,10 @@ export const LoadingError: React.FC<{
   error: any;
   retry?: () => void;
 }> = ({ error, retry }) => {
-  const errorMessage = typeof error === 'string' 
-    ? error 
-    : error?.message || 'An error occurred while loading data';
+  const errorMessage =
+    typeof error === 'string'
+      ? error
+      : error?.message || 'An error occurred while loading data';
 
   return (
     <div className="flex flex-col items-center justify-center p-4 text-center">
@@ -62,7 +64,7 @@ export const LoadingError: React.FC<{
         <span className="font-semibold">Error:</span> {errorMessage}
       </div>
       {retry && (
-        <button 
+        <button
           onClick={retry}
           className="px-4 py-2 mt-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >

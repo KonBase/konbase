@@ -1,4 +1,3 @@
-
 // Association type definition
 export interface Association {
   id: string;

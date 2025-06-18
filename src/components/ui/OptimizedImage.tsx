@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
-interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface OptimizedImageProps
+  extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   mobileSrc?: string;
@@ -28,29 +29,34 @@ export function OptimizedImage({
   ...props
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
-  
+
   // Use intersection observer for lazy loading
   useEffect(() => {
     if (!lazyLoad) return;
-    
-    const imgEl = document.querySelector(`[data-src="${src}"]`) as HTMLImageElement;
+
+    const imgEl = document.querySelector(
+      `[data-src="${src}"]`,
+    ) as HTMLImageElement;
     if (!imgEl) return;
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const target = entry.target as HTMLImageElement;
-          if (target.dataset.src) {
-            target.src = target.dataset.src;
-            delete target.dataset.src;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const target = entry.target as HTMLImageElement;
+            if (target.dataset.src) {
+              target.src = target.dataset.src;
+              delete target.dataset.src;
+            }
+            observer.unobserve(target);
           }
-          observer.unobserve(target);
-        }
-      });
-    }, { rootMargin: '200px' });
-    
+        });
+      },
+      { rootMargin: '200px' },
+    );
+
     observer.observe(imgEl);
-    
+
     return () => {
       if (imgEl) observer.unobserve(imgEl);
     };
@@ -67,7 +73,7 @@ export function OptimizedImage({
           type="image/webp"
         />
       )}
-      
+
       {/* WebP for desktop */}
       {webpSrc && (
         <source
@@ -76,7 +82,7 @@ export function OptimizedImage({
           type="image/webp"
         />
       )}
-      
+
       {/* JPEG/PNG for mobile */}
       {mobileSrc && (
         <source
@@ -85,20 +91,25 @@ export function OptimizedImage({
           media="(max-width: 768px)"
         />
       )}
-      
+
       {/* Main image */}
       <img
-        src={lazyLoad ? placeholderSrc || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E' : src}
+        src={
+          lazyLoad
+            ? placeholderSrc ||
+              'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E'
+            : src
+        }
         data-src={lazyLoad ? src : undefined}
         alt={alt}
         width={width}
         height={height}
-        loading={lazyLoad ? "lazy" : "eager"}
+        loading={lazyLoad ? 'lazy' : 'eager'}
         onLoad={() => setLoaded(true)}
         className={cn(
-          "transition-opacity duration-300",
-          !loaded && lazyLoad ? "opacity-0" : "opacity-100",
-          className
+          'transition-opacity duration-300',
+          !loaded && lazyLoad ? 'opacity-0' : 'opacity-100',
+          className,
         )}
         {...props}
       />

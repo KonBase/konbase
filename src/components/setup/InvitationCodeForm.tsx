@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -14,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -33,7 +35,7 @@ interface InvitationCodeFormProps {
 const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,9 +48,9 @@ const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       toast({
-        title: "Authentication error",
-        description: "You must be logged in to use an invitation code.",
-        variant: "destructive",
+        title: 'Authentication error',
+        description: 'You must be logged in to use an invitation code.',
+        variant: 'destructive',
       });
       return;
     }
@@ -56,33 +58,35 @@ const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
     setIsLoading(true);
     try {
       logDebug('Validating invitation code', { code: values.invitationCode });
-      
+
       // Find the invitation
       const { data: invitationData, error: invitationError } = await supabase
         .from('association_invitations')
         .select('*')
         .eq('code', values.invitationCode)
         .single();
-      
+
       if (invitationError) {
         if (invitationError.code === 'PGRST116') {
-          throw new Error('Invalid invitation code. Please check and try again.');
+          throw new Error(
+            'Invalid invitation code. Please check and try again.',
+          );
         }
         throw invitationError;
       }
-      
+
       if (!invitationData) {
         throw new Error('Invalid invitation code. Please check and try again.');
       }
-      
+
       // Check if invitation has expired
       const now = new Date();
       const expiresAt = new Date(invitationData.expires_at);
-      
+
       if (now > expiresAt) {
         throw new Error('This invitation code has expired.');
       }
-      
+
       // Create association member entry
       const { error: memberError } = await supabase
         .from('association_members')
@@ -98,24 +102,24 @@ const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
         }
         throw memberError;
       }
-      
+
       toast({
-        title: "Success!",
-        description: "You have successfully joined the association.",
+        title: 'Success!',
+        description: 'You have successfully joined the association.',
       });
 
       if (onSuccess) {
         onSuccess();
       } else {
         // Redirect to dashboard
-        navigate('/dashboard');
+        router.push('/dashboard');
       }
     } catch (error: any) {
       handleError(error, 'InvitationCodeForm.onSubmit');
       toast({
-        title: "Error",
-        description: error.message || "Failed to process invitation code.",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to process invitation code.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -135,7 +139,8 @@ const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
                 <Input placeholder="Enter your invitation code" {...field} />
               </FormControl>
               <FormDescription>
-                Please enter the invitation code you received from your association admin.
+                Please enter the invitation code you received from your
+                association admin.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -147,7 +152,7 @@ const InvitationCodeForm = ({ onSuccess }: InvitationCodeFormProps) => {
               <Spinner className="mr-2" /> Joining...
             </span>
           ) : (
-            "Join Association"
+            'Join Association'
           )}
         </Button>
       </form>

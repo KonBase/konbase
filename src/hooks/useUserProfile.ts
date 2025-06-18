@@ -18,7 +18,9 @@ export interface UserProfile {
 
 // Hook to get and update the user profile
 export const useUserProfile = () => {
-  const { user } = useAuth();
+  const authContext = useAuth(); // Call useAuth to get the context value
+  const user = authContext?.user; // Safely access user
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -26,6 +28,7 @@ export const useUserProfile = () => {
   // Fetch the user profile
   const fetchProfile = useCallback(async () => {
     if (!user) {
+      // Check if user exists (from authContext)
       setProfile(null);
       setLoading(false);
       return;
@@ -47,7 +50,9 @@ export const useUserProfile = () => {
       setProfile(data as UserProfile);
     } catch (err) {
       console.error('Error fetching profile:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+      setError(
+        err instanceof Error ? err : new Error('Unknown error occurred'),
+      );
     } finally {
       setLoading(false);
     }
@@ -61,7 +66,7 @@ export const useUserProfile = () => {
 
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -74,11 +79,16 @@ export const useUserProfile = () => {
       }
 
       // Ensure proper typing with UserProfile
-      setProfile(prev => prev ? { ...prev, ...(data as UserProfile) } : (data as UserProfile));
+      setProfile((prev) =>
+        prev ? { ...prev, ...(data as UserProfile) } : (data as UserProfile),
+      );
       return { ...(data as UserProfile), success: true, error: null };
     } catch (err) {
       console.error('Error updating profile:', err);
-      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      };
     } finally {
       setLoading(false);
     }
@@ -101,6 +111,6 @@ export const useUserProfile = () => {
     updateProfile,
     updateProfileImage,
     refreshProfile: fetchProfile,
-    user
+    user, // Return user for convenience, though it's from useAuth
   };
 };

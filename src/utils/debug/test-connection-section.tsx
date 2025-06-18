@@ -17,7 +17,7 @@ export const TestConnectionSection: React.FC<TestConnectionSectionProps> = ({
   isTestingConnection,
   testConnection,
   lastTestedAt,
-  testResults
+  testResults,
 }) => {
   // Format time elapsed since last test
   const formatTimeElapsed = () => {
@@ -31,13 +31,19 @@ export const TestConnectionSection: React.FC<TestConnectionSectionProps> = ({
     <div className="flex flex-col gap-1">
       <div className="text-xs font-semibold flex justify-between items-center">
         <span>Connection Status</span>
-        <span className="text-muted-foreground">Last checked: {formatTimeElapsed()}</span>
+        <span className="text-muted-foreground">
+          Last checked: {formatTimeElapsed()}
+        </span>
       </div>
-      
+
       {testResults && (
-        <div className={`text-xs p-1 rounded ${testResults.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+        <div
+          className={`text-xs p-1 rounded ${testResults.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}
+        >
           <div className="flex justify-between">
-            <span>Connection test: {testResults.success ? 'Successful' : 'Failed'}</span>
+            <span>
+              Connection test: {testResults.success ? 'Successful' : 'Failed'}
+            </span>
             <span>{new Date(testResults.timestamp).toLocaleTimeString()}</span>
           </div>
           {testResults.error && (
@@ -47,16 +53,16 @@ export const TestConnectionSection: React.FC<TestConnectionSectionProps> = ({
           )}
         </div>
       )}
-      
+
       {testConnection && (
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={testConnection} 
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={testConnection}
           disabled={isTestingConnection}
           className="h-7 text-xs mt-2"
         >
-          <Wifi className="h-3 w-3 mr-1" /> 
+          <Wifi className="h-3 w-3 mr-1" />
           {isTestingConnection ? 'Testing...' : 'Test Connection'}
         </Button>
       )}

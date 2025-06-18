@@ -1,25 +1,25 @@
+'use client';
 
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
 
 const DashboardRedirectHandler: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
+  const router = useRouter();
+
   useEffect(() => {
     // Handle redirect from setupWizard if there's a 'completed' query param
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('completed') === 'true') {
       toast({
-        title: "Setup completed",
-        description: "Welcome to your dashboard!"
+        title: 'Setup completed',
+        description: 'Welcome to your dashboard!',
       });
       // Clear the query parameter
-      navigate('/dashboard', { replace: true });
+      router.replace('/dashboard');
     }
-  }, [location, navigate]);
-  
+  }, [router]);
+
   return null; // This component doesn't render anything
 };
 

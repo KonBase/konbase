@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import LocationManagerView from '@/components/dashboard/LocationManagerView';
@@ -10,13 +11,13 @@ interface DashboardLocationViewProps {
 
 const DashboardLocationView: React.FC<DashboardLocationViewProps> = ({
   currentAssociation,
-  onBack
+  onBack,
 }) => {
   return (
     <div className="container mx-auto py-6">
-      <LocationManagerView 
-        onBack={onBack} 
-        currentAssociation={currentAssociation} 
+      <LocationManagerView
+        onBack={onBack}
+        currentAssociation={currentAssociation}
       />
     </div>
   );

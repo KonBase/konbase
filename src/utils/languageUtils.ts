@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 
 export type Language = {
@@ -15,7 +14,11 @@ export const languages: Language[] = [
   { code: 'es-ES', name: 'Spanish', nativeName: 'Español' },
   { code: 'ja-JP', name: 'Japanese', nativeName: '日本語' },
   { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '中文(简体)' },
-  { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)' },
+  {
+    code: 'pt-BR',
+    name: 'Portuguese (Brazil)',
+    nativeName: 'Português (Brasil)',
+  },
   { code: 'ru-RU', name: 'Russian', nativeName: 'Русский' },
   { code: 'ko-KR', name: 'Korean', nativeName: '한국어' },
 ];
@@ -23,31 +26,34 @@ export const languages: Language[] = [
 // Simple translation cache
 const translationCache: Record<string, Record<string, string>> = {};
 
-export async function translateText(text: string, targetLang: string): Promise<string> {
+export async function translateText(
+  text: string,
+  targetLang: string,
+): Promise<string> {
   // Check if we're using English - if so, just return the original text
   if (targetLang.startsWith('en')) {
     return text;
   }
-  
+
   // Check cache first
   if (translationCache[targetLang]?.[text]) {
     return translationCache[targetLang][text];
   }
-  
+
   try {
     // In a real application, you would call a translation API here
     // For example: Google Translate, DeepL, Microsoft Translator, etc.
-    
+
     // This is a mock implementation for demonstration
     // In a production app, replace this with an actual API call
     const mockTranslated = await mockTranslation(text, targetLang);
-    
+
     // Cache the result
     if (!translationCache[targetLang]) {
       translationCache[targetLang] = {};
     }
     translationCache[targetLang][text] = mockTranslated;
-    
+
     return mockTranslated;
   } catch (error) {
     console.error('Translation error:', error);
@@ -56,33 +62,36 @@ export async function translateText(text: string, targetLang: string): Promise<s
 }
 
 // Mock translation function - replace with actual API in production
-async function mockTranslation(text: string, targetLang: string): Promise<string> {
+async function mockTranslation(
+  text: string,
+  targetLang: string,
+): Promise<string> {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   // Simple mock translations for demonstration
   const mockPhrases: Record<string, Record<string, string>> = {
     'fr-FR': {
-      'Settings': 'Paramètres',
-      'Account': 'Compte',
-      'Appearance': 'Apparence',
-      'Accessibility': 'Accessibilité',
-      'Notifications': 'Notifications',
-      'Security': 'Sécurité',
+      Settings: 'Paramètres',
+      Account: 'Compte',
+      Appearance: 'Apparence',
+      Accessibility: 'Accessibilité',
+      Notifications: 'Notifications',
+      Security: 'Sécurité',
       'Language & Region': 'Langue et région',
       'Save Changes': 'Enregistrer les modifications',
-      'Display Language': 'Langue d\'affichage',
+      'Display Language': "Langue d'affichage",
       'Date Format': 'Format de date',
-      'Time Format': 'Format de l\'heure',
+      'Time Format': "Format de l'heure",
       'Save Preferences': 'Enregistrer les préférences',
     },
     'de-DE': {
-      'Settings': 'Einstellungen',
-      'Account': 'Konto',
-      'Appearance': 'Aussehen',
-      'Accessibility': 'Barrierefreiheit',
-      'Notifications': 'Benachrichtigungen',
-      'Security': 'Sicherheit',
+      Settings: 'Einstellungen',
+      Account: 'Konto',
+      Appearance: 'Aussehen',
+      Accessibility: 'Barrierefreiheit',
+      Notifications: 'Benachrichtigungen',
+      Security: 'Sicherheit',
       'Language & Region': 'Sprache & Region',
       'Save Changes': 'Änderungen speichern',
       'Display Language': 'Anzeigesprache',
@@ -92,7 +101,7 @@ async function mockTranslation(text: string, targetLang: string): Promise<string
     },
     // Add more languages as needed
   };
-  
+
   return mockPhrases[targetLang]?.[text] || text;
 }
 
@@ -111,18 +120,18 @@ export function useTranslation() {
 
   const translate = async (text: string): Promise<string> => {
     if (language === 'en-US') return text;
-    
+
     if (translations[text]) return translations[text];
-    
+
     try {
       setIsLoading(true);
       const translated = await translateText(text, language);
-      
-      setTranslations(prev => ({
+
+      setTranslations((prev) => ({
         ...prev,
-        [text]: translated
+        [text]: translated,
       }));
-      
+
       return translated;
     } catch (error) {
       console.error('Translation error:', error);
@@ -142,6 +151,6 @@ export function useTranslation() {
     setLanguage,
     translate,
     t,
-    isLoading
+    isLoading,
   };
 }

@@ -1,8 +1,15 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { KonbaseModule, ModuleManifest, ModuleDashboardComponent, ModuleNavigationItem } from '../../types/modules';
+import {
+  KonbaseModule,
+  ModuleManifest,
+  ModuleDashboardComponent,
+} from '../../types/modules';
 import moduleRegistry from './ModuleRegistry';
 import moduleService from './ModuleService';
 import { logDebug } from '../../utils/debug/logger'; // Updated the path to the correct location
+import type { ModuleNavigationItem } from '@/types/modules';
 
 interface ModuleContextType {
   isInitialized: boolean;
@@ -31,20 +38,22 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [modules, setModules] = useState<KonbaseModule[]>([]);
   const [manifests, setManifests] = useState<ModuleManifest[]>([]);
-  const [dashboardComponents, setDashboardComponents] = useState<ModuleDashboardComponent[]>([]);
-  const [navigationItems, setNavigationItems] = useState<ModuleNavigationItem[]>([]);
+  const [dashboardComponents, setDashboardComponents] = useState<
+    ModuleDashboardComponent[]
+  >([]);
+  const [navigationItems, setNavigationItems] = useState<
+    ModuleNavigationItem[]
+  >([]);
 
   const refreshModuleState = () => {
-    const allModules = moduleRegistry.getAllModules();
-    const allManifests = moduleRegistry.getAllManifests();
-    setModules(allModules);
-    setManifests(allManifests);
+    const navItems: ModuleNavigationItem[] = [];
 
     // Collect dashboard components from enabled modules
     const components: ModuleDashboardComponent[] = [];
-    const navItems: ModuleNavigationItem[] = [];
 
-    allModules.forEach(module => {
+    const allModules = moduleRegistry.getAllModules();
+
+    allModules.forEach((module) => {
       if (moduleRegistry.isModuleEnabled(module.id)) {
         // Collect dashboard components if any
         if (module.getDashboardComponents) {
@@ -62,7 +71,7 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
 
     // Sort dashboard components by priority (descending)
     components.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-    
+
     // Sort navigation items by order (ascending)
     navItems.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -75,13 +84,17 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
       try {
         // Initialize the module system
         await moduleService.initialize();
-        
+
         // Update state with current modules
         refreshModuleState();
-        
+
         setIsInitialized(true);
       } catch (error) {
-        logDebug(`Error initializing module system: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+        logDebug(
+          `Error initializing module system: ${error instanceof Error ? error.message : String(error)}`,
+          null,
+          'error',
+        );
       }
     };
 
@@ -94,7 +107,7 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
     manifests,
     dashboardComponents,
     navigationItems,
-    refreshModuleState
+    refreshModuleState,
   };
 
   return (

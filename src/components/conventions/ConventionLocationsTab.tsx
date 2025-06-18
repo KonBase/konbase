@@ -1,5 +1,13 @@
+'use client';
+
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, BuildingIcon, Edit, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -7,47 +15,69 @@ import { useAssociation } from '@/contexts/AssociationContext';
 import { useToast } from '@/hooks/use-toast';
 import { ConventionLocation } from '@/types/convention';
 import { AddLocationDialog } from '@/components/conventions/AddLocationDialog';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ConventionLocationsTabProps {
   conventionId: string;
 }
 
-const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ conventionId }) => {
+const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({
+  conventionId,
+}) => {
   const { currentAssociation } = useAssociation();
   const [locations, setLocations] = useState<ConventionLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
-  const [locationToEdit, setLocationToEdit] = useState<ConventionLocation | null>(null);
+  const [locationToEdit, setLocationToEdit] =
+    useState<ConventionLocation | null>(null);
   const [canManageLocations, setCanManageLocations] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [locationToDelete, setLocationToDelete] = useState<ConventionLocation | null>(null);
+  const [locationToDelete, setLocationToDelete] =
+    useState<ConventionLocation | null>(null);
   const { toast } = useToast();
 
   const fetchLocations = useCallback(async () => {
     if (!conventionId || !currentAssociation) return;
-    
+
     setIsLoading(true);
     try {
-      console.log("Fetching locations for convention:", conventionId);
-      
+      console.log('Fetching locations for convention:', conventionId);
+
       // First check if user can manage this convention
-      const { data: canManageData, error: canManageError } = await supabase
-        .rpc('can_manage_convention', { p_convention_id: conventionId });
-      
+      const { data: canManageData, error: canManageError } = await supabase.rpc(
+        'can_manage_convention',
+        { p_convention_id: conventionId },
+      );
+
       if (canManageError) throw canManageError;
       setCanManageLocations(canManageData || false);
-      
+
       const { data, error } = await supabase
         .from('convention_locations')
         .select('*')
         .eq('convention_id', conventionId)
         .order('name');
-      
+
       if (error) throw error;
-      
-      console.log("Locations fetched:", data?.length || 0);
+
+      console.log('Locations fetched:', data?.length || 0);
       setLocations(data || []);
     } catch (error: any) {
       console.error('Error loading locations:', error);
@@ -66,7 +96,7 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
   }, [fetchLocations]);
 
   const handleLocationAdded = () => {
-    console.log("Location added/updated callback triggered");
+    console.log('Location added/updated callback triggered');
     fetchLocations();
   };
 
@@ -82,39 +112,40 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
 
   const confirmDeleteLocation = async () => {
     if (!locationToDelete || !conventionId) return;
-    
+
     try {
       // Check if location is used by equipment
       const { count, error: countError } = await supabase
         .from('convention_equipment')
         .select('*', { count: 'exact', head: true })
         .eq('location_id', locationToDelete.id);
-        
+
       if (countError) throw countError;
-      
+
       if (count && count > 0) {
         toast({
           title: 'Cannot delete location',
-          description: 'This location has equipment assigned to it. Please reassign or remove the equipment first.',
+          description:
+            'This location has equipment assigned to it. Please reassign or remove the equipment first.',
           variant: 'destructive',
         });
         setDeleteConfirmOpen(false);
         return;
       }
-      
+
       // Delete the location
       const { error } = await supabase
         .from('convention_locations')
         .delete()
         .eq('id', locationToDelete.id);
-        
+
       if (error) throw error;
-      
+
       toast({
         title: 'Location deleted',
         description: `${locationToDelete.name} has been deleted successfully.`,
       });
-      
+
       // Log the action
       await supabase.from('convention_logs').insert({
         convention_id: conventionId,
@@ -124,7 +155,7 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
         entity_id: locationToDelete.id,
         details: { name: locationToDelete.name },
       });
-      
+
       // Refresh locations
       fetchLocations();
     } catch (error: any) {
@@ -141,7 +172,7 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
 
   // Handle opening the location dialog
   const openAddLocationDialog = () => {
-    console.log("Opening add location dialog for convention:", conventionId);
+    console.log('Opening add location dialog for convention:', conventionId);
     setLocationToEdit(null);
     setIsAddLocationOpen(true);
   };
@@ -165,23 +196,35 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
       {/* Locations List Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><BuildingIcon className="h-5 w-5" /> Defined Locations</CardTitle>
-          <CardDescription>Rooms, halls, and areas used during this convention.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <BuildingIcon className="h-5 w-5" /> Defined Locations
+          </CardTitle>
+          <CardDescription>
+            Rooms, halls, and areas used during this convention.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">Loading locations...</span>
+              <span className="ml-2 text-muted-foreground">
+                Loading locations...
+              </span>
             </div>
           ) : locations.length === 0 ? (
             <div className="text-center py-10">
               <BuildingIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No Locations Added Yet</h3>
+              <h3 className="mt-4 text-lg font-semibold">
+                No Locations Added Yet
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Define specific locations used during the convention.
               </p>
-              <Button variant="default" className="mt-4" onClick={openAddLocationDialog}>
+              <Button
+                variant="default"
+                className="mt-4"
+                onClick={openAddLocationDialog}
+              >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add First Location
               </Button>
@@ -202,25 +245,31 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
                 <TableBody>
                   {locations.map((location) => (
                     <TableRow key={location.id}>
-                      <TableCell className="font-medium">{location.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {location.name}
+                      </TableCell>
                       <TableCell>{location.type || '—'}</TableCell>
-                      <TableCell className="text-right">{location.capacity || '—'}</TableCell>
+                      <TableCell className="text-right">
+                        {location.capacity || '—'}
+                      </TableCell>
                       <TableCell>{location.building || '—'}</TableCell>
-                      <TableCell className="max-w-md truncate">{location.description || '—'}</TableCell>
+                      <TableCell className="max-w-md truncate">
+                        {location.description || '—'}
+                      </TableCell>
                       <TableCell className="text-right">
                         {canManageLocations && (
                           <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditLocation(location)}
                             >
                               <Edit className="h-4 w-4" />
                               <span className="sr-only">Edit</span>
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteLocation(location)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -241,6 +290,7 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
       {/* Add/Edit Location Dialog */}
       <AddLocationDialog
         isOpen={isAddLocationOpen}
+        onOpenChange={setIsAddLocationOpen}
         onClose={handleCloseDialog}
         onLocationAdded={handleLocationAdded}
         conventionId={conventionId}
@@ -253,13 +303,16 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the location "{locationToDelete?.name}".
-              This action cannot be undone.
+              This will permanently delete the location "
+              {locationToDelete?.name}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteLocation} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={confirmDeleteLocation}
+              className="bg-destructive text-destructive-foreground"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -270,3 +323,6 @@ const ConventionLocationsTab: React.FC<ConventionLocationsTabProps> = ({ convent
 };
 
 export default ConventionLocationsTab;
+
+// Add named export as well
+export { ConventionLocationsTab };

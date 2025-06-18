@@ -1,10 +1,27 @@
+'use client';
+
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -18,25 +35,29 @@ interface UpdateConsumableUsageDialogProps {
 }
 
 const usageSchema = z.object({
-  used_quantity: z.coerce.number().int().min(0, { 
-    message: "Used quantity cannot be negative" 
-  }).refine((val) => {
-    // We'll validate against the allocated quantity in onSubmit
-    return true;
-  }, {
-    message: "Used quantity cannot exceed allocated quantity"
-  }),
+  used_quantity: z.coerce
+    .number()
+    .int()
+    .min(0, {
+      message: 'Used quantity cannot be negative',
+    })
+    .refine(
+      (val) => {
+        // We'll validate against the allocated quantity in onSubmit
+        return true;
+      },
+      {
+        message: 'Used quantity cannot exceed allocated quantity',
+      },
+    ),
 });
 
-export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogProps> = ({
-  isOpen,
-  onClose,
-  consumable,
-  onUsageUpdated,
-}) => {
+export const UpdateConsumableUsageDialog: React.FC<
+  UpdateConsumableUsageDialogProps
+> = ({ isOpen, onClose, consumable, onUsageUpdated }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof usageSchema>>({
     resolver: zodResolver(usageSchema),
     defaultValues: {
@@ -47,9 +68,9 @@ export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogPr
   const onSubmit = async (values: z.infer<typeof usageSchema>) => {
     // Validate that used quantity doesn't exceed allocated quantity
     if (values.used_quantity > consumable.allocated_quantity) {
-      form.setError("used_quantity", {
-        type: "manual",
-        message: "Used quantity cannot exceed allocated quantity"
+      form.setError('used_quantity', {
+        type: 'manual',
+        message: 'Used quantity cannot exceed allocated quantity',
       });
       return;
     }
@@ -66,18 +87,18 @@ export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogPr
       if (error) throw error;
 
       toast({
-        title: "Usage updated",
+        title: 'Usage updated',
         description: `Usage updated to ${values.used_quantity} items`,
       });
 
       onUsageUpdated();
       onClose();
     } catch (error: any) {
-      console.error("Error updating consumable usage:", error);
+      console.error('Error updating consumable usage:', error);
       toast({
-        title: "Error updating usage",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error updating usage',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -90,7 +111,8 @@ export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogPr
         <DialogHeader>
           <DialogTitle>Update Consumable Usage</DialogTitle>
           <DialogDescription>
-            Update the used quantity for {consumable.items?.name || 'this item'}.
+            Update the used quantity for {consumable.items?.name || 'this item'}
+            .
           </DialogDescription>
         </DialogHeader>
 
@@ -98,7 +120,9 @@ export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogPr
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <p className="text-sm font-medium">Item</p>
-              <p className="text-sm">{consumable.items?.name || 'Unknown Item'}</p>
+              <p className="text-sm">
+                {consumable.items?.name || 'Unknown Item'}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -113,10 +137,16 @@ export const UpdateConsumableUsageDialog: React.FC<UpdateConsumableUsageDialogPr
                 <FormItem>
                   <FormLabel>Used Quantity*</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max={consumable.allocated_quantity} {...field} />
+                    <Input
+                      type="number"
+                      min="0"
+                      max={consumable.allocated_quantity}
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
-                    How many have been used so far (max: {consumable.allocated_quantity})
+                    How many have been used so far (max:{' '}
+                    {consumable.allocated_quantity})
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

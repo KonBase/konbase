@@ -1,5 +1,13 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +36,10 @@ interface PendingInvitationsCardProps {
   onUpdate: () => void;
 }
 
-const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ conventionId, onUpdate }) => {
+const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({
+  conventionId,
+  onUpdate,
+}) => {
   const [invitations, setInvitations] = useState<ConventionInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -38,7 +49,8 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
     try {
       const { data, error } = await supabase
         .from('convention_invitations')
-        .select(`
+        .select(
+          `
           id,
           code,
           created_by,
@@ -48,7 +60,8 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
           uses_remaining,
           created_at,
           creator:profiles(name, email)
-        `)
+        `,
+        )
         .eq('convention_id', conventionId)
         .gt('uses_remaining', 0)
         .gt('expires_at', new Date().toISOString());
@@ -73,8 +86,15 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
     }
   }, [conventionId]);
 
-  const handleRemoveInvitation = async (invitationId: string, invitationCode: string) => {
-    if (!confirm(`Are you sure you want to revoke invitation code ${invitationCode}?`)) {
+  const handleRemoveInvitation = async (
+    invitationId: string,
+    invitationCode: string,
+  ) => {
+    if (
+      !confirm(
+        `Are you sure you want to revoke invitation code ${invitationCode}?`,
+      )
+    ) {
       return;
     }
 
@@ -90,7 +110,7 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
         title: 'Invitation Revoked',
         description: `Invitation code ${invitationCode} has been revoked.`,
       });
-      
+
       fetchInvitations(); // Refresh the list
       onUpdate(); // Notify parent component
     } catch (error: any) {
@@ -118,10 +138,21 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
       case 'staff':
         return <Badge variant="secondary">Staff</Badge>;
       case 'helper':
-        return <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Helper</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+          >
+            Helper
+          </Badge>
+        );
       case 'attendee':
       default:
-        return <Badge variant="outline" className="bg-muted">Attendee</Badge>;
+        return (
+          <Badge variant="outline" className="bg-muted">
+            Attendee
+          </Badge>
+        );
     }
   };
 
@@ -130,9 +161,16 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xl">Pending Invitations</CardTitle>
-          <CardDescription>Active invitation codes for this convention.</CardDescription>
+          <CardDescription>
+            Active invitation codes for this convention.
+          </CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchInvitations} className="h-8 w-8 p-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchInvitations}
+          className="h-8 w-8 p-0"
+        >
           <RefreshCw className="h-4 w-4" />
           <span className="sr-only">Refresh invitations</span>
         </Button>
@@ -145,39 +183,56 @@ const PendingInvitationsCard: React.FC<PendingInvitationsCardProps> = ({ convent
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No pending invitations found.</p>
-            <p className="text-sm text-muted-foreground mt-1">Create an invitation to invite people to this convention.</p>
+            <p className="text-muted-foreground">
+              No pending invitations found.
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create an invitation to invite people to this convention.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
             {invitations.map((invitation) => (
-              <div key={invitation.id} className="flex items-center justify-between p-3 border rounded-md bg-card">
+              <div
+                key={invitation.id}
+                className="flex items-center justify-between p-3 border rounded-md bg-card"
+              >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <code className="font-mono text-sm bg-muted px-1 py-0.5 rounded">{invitation.code}</code>
+                    <code className="font-mono text-sm bg-muted px-1 py-0.5 rounded">
+                      {invitation.code}
+                    </code>
                     {getRoleBadge(invitation.role)}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:gap-2 text-xs text-muted-foreground">
-                    <span>Created: {format(new Date(invitation.created_at), 'MMM d, yyyy')}</span>
+                    <span>
+                      Created:{' '}
+                      {format(new Date(invitation.created_at), 'MMM d, yyyy')}
+                    </span>
                     <span className="hidden sm:inline">•</span>
-                    <span>Expires: {format(new Date(invitation.expires_at), 'MMM d, yyyy')}</span>
+                    <span>
+                      Expires:{' '}
+                      {format(new Date(invitation.expires_at), 'MMM d, yyyy')}
+                    </span>
                     <span className="hidden sm:inline">•</span>
                     <span>Uses: {invitation.uses_remaining}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => copyInviteCode(invitation.code)}
                     aria-label={`Copy invitation code ${invitation.code}`}
                   >
                     Copy
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleRemoveInvitation(invitation.id, invitation.code)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      handleRemoveInvitation(invitation.id, invitation.code)
+                    }
                     aria-label={`Revoke invitation code ${invitation.code}`}
                   >
                     <TrashIcon className="h-4 w-4 text-destructive" />

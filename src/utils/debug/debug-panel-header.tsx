@@ -1,9 +1,14 @@
-
 import React from 'react';
 import { AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Wifi,
+  WifiOff,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 
 interface DebugPanelHeaderProps {
   networkStatus: 'online' | 'offline';
@@ -18,13 +23,16 @@ export const DebugPanelHeader: React.FC<DebugPanelHeaderProps> = ({
   isExpanded,
   setIsExpanded,
   errorCount,
-  isTestingConnection
+  isTestingConnection,
 }) => {
   return (
     <AlertTitle className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span>Debug Panel</span>
-        <Badge variant={networkStatus === 'online' ? 'outline' : 'destructive'} className="text-xs">
+        <Badge
+          variant={networkStatus === 'online' ? 'outline' : 'destructive'}
+          className="text-xs"
+        >
           {networkStatus === 'online' ? (
             <Wifi className="h-3 w-3 mr-1" />
           ) : (
@@ -33,13 +41,13 @@ export const DebugPanelHeader: React.FC<DebugPanelHeaderProps> = ({
           {networkStatus}
         </Badge>
         {errorCount > 3 && (
-          <Badge variant="warning" className="text-xs">
+          <Badge variant="destructive" className="text-xs">
             <AlertCircle className="h-3 w-3 mr-1" />
             Multiple Errors
           </Badge>
         )}
         {isTestingConnection && (
-          <Badge variant="info" className="text-xs animate-pulse">
+          <Badge variant="secondary" className="text-xs animate-pulse">
             Testing...
           </Badge>
         )}

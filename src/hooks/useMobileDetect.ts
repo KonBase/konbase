@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 interface DeviceInfo {
@@ -41,7 +40,7 @@ export function useMobileDetect(): DeviceInfo {
     const handleResize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       setDeviceInfo({
         isMobile: width < 640,
         isTablet: width >= 640 && width < 1024,
@@ -59,10 +58,10 @@ export function useMobileDetect(): DeviceInfo {
 
     // Add event listener for resize
     window.addEventListener('resize', handleResize);
-    
+
     // Add event listener for orientation change (mobile devices)
     window.addEventListener('orientationchange', handleResize);
-    
+
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);

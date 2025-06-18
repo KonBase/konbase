@@ -1,5 +1,13 @@
+'use client';
+
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 
 interface AuditLog {
@@ -17,14 +25,15 @@ interface RecentActivityCardProps {
   onRetry: () => void;
 }
 
-const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ 
-  isLoading, 
-  activities, 
-  error, 
-  onRetry 
+const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
+  isLoading,
+  activities,
+  error,
+  onRetry,
 }) => {
   // Extract the activities array whether it's a function or direct array
-  const activitiesData = typeof activities === 'function' ? activities() : activities;
+  const activitiesData =
+    typeof activities === 'function' ? activities() : activities;
 
   return (
     <Card>
@@ -38,20 +47,27 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
             <div className="flex justify-center">
               <Spinner size="sm" />
             </div>
-          ) : activitiesData && Array.isArray(activitiesData) && activitiesData.length > 0 ? (
+          ) : activitiesData &&
+            Array.isArray(activitiesData) &&
+            activitiesData.length > 0 ? (
             <ul className="space-y-2">
               {activitiesData.map((activity) => (
                 <li key={activity.id} className="text-sm">
-                  <span className="font-medium">{activity.action}</span>: {activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Unknown time'}
+                  <span className="font-medium">{activity.action}</span>:{' '}
+                  {activity.created_at
+                    ? new Date(activity.created_at).toLocaleString()
+                    : 'Unknown time'}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No recent activities to display</p>
+            <p className="text-sm text-muted-foreground">
+              No recent activities to display
+            </p>
           )}
-          
+
           {error && (
-            <button 
+            <button
               onClick={onRetry}
               className="text-xs text-primary underline"
             >

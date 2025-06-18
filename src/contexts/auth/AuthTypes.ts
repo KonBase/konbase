@@ -1,4 +1,3 @@
-
 import { Session, User } from '@supabase/supabase-js';
 import { UserRoleType } from '@/types/user';
 
@@ -39,5 +38,7 @@ export interface AuthContextType extends AuthState {
   checkRoleAccess: (role: UserRoleType) => Promise<boolean>;
   login: (email: string, password: string) => Promise<void>; // Alias for signIn
   logout: () => Promise<void>; // Alias for signOut
-  elevateToSuperAdmin: () => Promise<{success: boolean, message: string}>;
+  resetPassword: (email: string) => Promise<void>; // Add resetPassword method
+  elevateToSuperAdmin: () => Promise<{ success: boolean; message: string }>;
+  updateProfile: (updates: Partial<AuthUserProfile>) => Promise<void>;
 }

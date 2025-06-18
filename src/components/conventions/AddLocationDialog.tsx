@@ -1,13 +1,36 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -15,16 +38,21 @@ import { ConventionLocation } from '@/types/convention';
 
 interface AddLocationDialogProps {
   isOpen: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   onClose: () => void;
   conventionId: string;
   onLocationAdded: () => void;
+  location?: any;
   locationToEdit?: ConventionLocation | null;
+  onSuccess?: () => void;
 }
 
 const locationSchema = z.object({
-  name: z.string().min(2, { message: "Location name must be at least 2 characters" }),
+  name: z
+    .string()
+    .min(2, { message: 'Location name must be at least 2 characters' }),
   description: z.string().nullable().optional(),
-  type: z.string().min(1, { message: "Please select a location type" }),
+  type: z.string().min(1, { message: 'Please select a location type' }),
   capacity: z.coerce.number().int().positive().nullable().optional(),
   floor: z.string().nullable().optional(),
   building: z.string().nullable().optional(),
@@ -35,12 +63,12 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
   onClose,
   conventionId,
   onLocationAdded,
-  locationToEdit
+  locationToEdit,
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!locationToEdit;
-  
+
   const form = useForm<z.infer<typeof locationSchema>>({
     resolver: zodResolver(locationSchema),
     defaultValues: {
@@ -78,9 +106,9 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof locationSchema>) => {
     if (!conventionId) {
       toast({
-        title: "Error",
-        description: "Convention ID is missing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Convention ID is missing',
+        variant: 'destructive',
       });
       return;
     }
@@ -88,10 +116,13 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      console.log(`${isEditing ? "Updating" : "Creating"} location for convention:`, conventionId);
-      
+      console.log(
+        `${isEditing ? 'Updating' : 'Creating'} location for convention:`,
+        conventionId,
+      );
+
       let result;
-      
+
       if (isEditing) {
         // Update existing location
         result = await supabase
@@ -121,13 +152,16 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
           })
           .select();
       }
-      
+
       const { data, error } = result;
 
       if (error) throw error;
 
-      console.log(`Location ${isEditing ? "updated" : "added"} successfully:`, data);
-      
+      console.log(
+        `Location ${isEditing ? 'updated' : 'added'} successfully:`,
+        data,
+      );
+
       // Log this action to convention_logs
       const { data: userData } = await supabase.auth.getUser();
       try {
@@ -137,33 +171,36 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
           action: isEditing ? 'update' : 'create',
           entity_type: 'location',
           entity_id: isEditing ? locationToEdit.id : data[0]?.id,
-          details: { 
+          details: {
             name: values.name,
-            type: values.type
-          }
+            type: values.type,
+          },
         });
       } catch (logError) {
-        console.error("Error logging location action:", logError);
+        console.error('Error logging location action:', logError);
         // Don't throw here, this is a non-critical action
       }
 
       toast({
-        title: isEditing ? "Location updated" : "Location added",
-        description: `${values.name} has been ${isEditing ? "updated" : "added"} successfully`,
+        title: isEditing ? 'Location updated' : 'Location added',
+        description: `${values.name} has been ${isEditing ? 'updated' : 'added'} successfully`,
       });
 
       // Reset form after successful submission
       form.reset();
-      
+
       // Notify parent and close dialog
       onLocationAdded();
       onClose();
     } catch (error: any) {
-      console.error(`Error ${isEditing ? "updating" : "adding"} location:`, error);
+      console.error(
+        `Error ${isEditing ? 'updating' : 'adding'} location:`,
+        error,
+      );
       toast({
-        title: `Error ${isEditing ? "updating" : "adding"} location`,
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: `Error ${isEditing ? 'updating' : 'adding'} location`,
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -171,18 +208,23 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open && !isSubmitting) {
-        onClose();
-      }
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isSubmitting) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Location" : "Add New Location"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? 'Edit Location' : 'Add New Location'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? "Update the details of this convention location." 
-              : "Add a new room or area to your convention."}
+            {isEditing
+              ? 'Update the details of this convention location.'
+              : 'Add a new room or area to your convention.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -209,7 +251,11 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Brief description of the location" {...field} value={field.value || ''} />
+                    <Textarea
+                      placeholder="Brief description of the location"
+                      {...field}
+                      value={field.value || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -223,7 +269,10 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location Type*</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -251,7 +300,12 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
                   <FormItem>
                     <FormLabel>Capacity</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} value={field.value === null ? '' : field.value} />
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        value={field.value === null ? '' : field.value}
+                      />
                     </FormControl>
                     <FormDescription>Maximum number of people</FormDescription>
                     <FormMessage />
@@ -268,7 +322,11 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
                   <FormItem>
                     <FormLabel>Building</FormLabel>
                     <FormControl>
-                      <Input placeholder="Building A" {...field} value={field.value || ''} />
+                      <Input
+                        placeholder="Building A"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -282,7 +340,11 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
                   <FormItem>
                     <FormLabel>Floor</FormLabel>
                     <FormControl>
-                      <Input placeholder="1st Floor" {...field} value={field.value || ''} />
+                      <Input
+                        placeholder="1st Floor"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -291,17 +353,24 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = ({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditing ? "Updating..." : "Adding..."}
+                    {isEditing ? 'Updating...' : 'Adding...'}
                   </>
+                ) : isEditing ? (
+                  'Update Location'
                 ) : (
-                  isEditing ? "Update Location" : "Add Location"
+                  'Add Location'
                 )}
               </Button>
             </DialogFooter>

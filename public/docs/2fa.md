@@ -55,7 +55,7 @@ ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS two_factor_enabled boolean DEFAULT false NOT NULL;
 ```
 
-*(Adjust the table name (`profiles`) and linking column (`id`) if yours are different).*
+_(Adjust the table name (`profiles`) and linking column (`id`) if yours are different)._
 
 ## 2. Deploy Edge Functions
 
@@ -89,7 +89,9 @@ Here's a high-level overview of how your frontend application should interact wi
 1.  **Generate Secret**: When a user wants to enable 2FA, call the `generate-totp-secret` function. This returns a `secret` (Base32 encoded) and a `keyUri` (otpauth:// URI).
     ```javascript
     // Example frontend call
-    const { data, error } = await supabase.functions.invoke('generate-totp-secret');
+    const { data, error } = await supabase.functions.invoke(
+      'generate-totp-secret',
+    );
     if (error) throw error;
     const { secret, keyUri } = data;
     // Store the secret temporarily client-side
@@ -98,32 +100,35 @@ Here's a high-level overview of how your frontend application should interact wi
 3.  **Generate Recovery Keys**: Call the `generate-recovery-keys` function to get a list of backup recovery keys.
     ```javascript
     // Example frontend call
-    const { data: recoveryData, error: recoveryError } = await supabase.functions.invoke('generate-recovery-keys', {
-      body: { count: 10 } // Optional: specify number of keys
-    });
+    const { data: recoveryData, error: recoveryError } =
+      await supabase.functions.invoke('generate-recovery-keys', {
+        body: { count: 10 }, // Optional: specify number of keys
+      });
     if (recoveryError) throw recoveryError;
     const { keys: recoveryKeys } = recoveryData;
     // Display these keys to the user and instruct them to save securely.
     ```
-4.  **Verify Initial TOTP**: Ask the user to enter the code displayed in their authenticator app. Call the `verify-totp` function *with the secret obtained in step 1* to confirm the user has correctly added the secret to their app.
+4.  **Verify Initial TOTP**: Ask the user to enter the code displayed in their authenticator app. Call the `verify-totp` function _with the secret obtained in step 1_ to confirm the user has correctly added the secret to their app.
     ```javascript
     // Example frontend call
     const userEnteredToken = '123456'; // Get from user input
-    const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-totp', {
-      body: { secret: secret, token: userEnteredToken }
-    });
+    const { data: verifyData, error: verifyError } =
+      await supabase.functions.invoke('verify-totp', {
+        body: { secret: secret, token: userEnteredToken },
+      });
     if (verifyError || !verifyData.verified) {
       // Handle verification failure
-      console.error("Initial TOTP verification failed");
+      console.error('Initial TOTP verification failed');
       return;
     }
     ```
 5.  **Complete Setup**: If the initial TOTP is verified, call the `complete-2fa-setup` function, passing the `secret` and the generated `recoveryKeys`. This function saves the data securely in the `user_2fa` table and updates the user's profile (`two_factor_enabled = true`).
     ```javascript
     // Example frontend call (requires user to be authenticated)
-    const { data: completeData, error: completeError } = await supabase.functions.invoke('complete-2fa-setup', {
-      body: { secret: secret, recoveryKeys: recoveryKeys }
-    });
+    const { data: completeData, error: completeError } =
+      await supabase.functions.invoke('complete-2fa-setup', {
+        body: { secret: secret, recoveryKeys: recoveryKeys },
+      });
     if (completeError) throw completeError;
     // 2FA is now enabled!
     ```
@@ -134,13 +139,13 @@ Here's a high-level overview of how your frontend application should interact wi
 2.  **Check 2FA Status**: After successful primary authentication, check the user's profile (e.g., `supabase.auth.user().user_metadata.two_factor_enabled` or fetch from your `profiles` table).
 3.  **Prompt for TOTP**: If 2FA is enabled, prompt the user for their TOTP code.
 4.  **Verify Login TOTP**: Call a **modified** or **new** Edge Function to verify the TOTP.
-    *   **Important**: The current `verify-totp` function requires the `secret` to be passed in the body. For login, the secret should **not** come from the client. You need a function that:
-        *   Accepts the user's `token`.
-        *   Uses the authenticated user's JWT (passed automatically in the `Authorization` header) to get the `user_id`.
-        *   Retrieves the user's `totp_secret` from the `user_2fa` table using the `user_id` (using the admin client).
-        *   Performs the TOTP verification using the retrieved secret and the provided token.
-        *   Returns whether the verification was successful.
-    *   You will need to create this secure login verification function.
+    - **Important**: The current `verify-totp` function requires the `secret` to be passed in the body. For login, the secret should **not** come from the client. You need a function that:
+      - Accepts the user's `token`.
+      - Uses the authenticated user's JWT (passed automatically in the `Authorization` header) to get the `user_id`.
+      - Retrieves the user's `totp_secret` from the `user_2fa` table using the `user_id` (using the admin client).
+      - Performs the TOTP verification using the retrieved secret and the provided token.
+      - Returns whether the verification was successful.
+    - You will need to create this secure login verification function.
 
 **c. Disabling 2FA:**
 
@@ -155,7 +160,7 @@ Here's a high-level overview of how your frontend application should interact wi
 
 ## 4. Security Considerations
 
-*   **Function Security**: Ensure your Edge Functions handle authentication and authorization correctly. The provided functions use the JWT from the `Authorization` header to identify the user and use the `SERVICE_ROLE_KEY` for admin operations. Review policies on the `user_2fa` table.
-*   **Recovery Keys**: Instruct users to store recovery keys securely. Implement logic to handle used recovery keys if you add that feature.
-*   **Rate Limiting**: Consider adding rate limiting to functions like `verify-totp` to prevent brute-force attacks.
-*   **Login TOTP Verification**: As mentioned, create a secure Edge Function for verifying TOTP during login that retrieves the secret server-side. Never trust a secret sent from the client during login verification.
+- **Function Security**: Ensure your Edge Functions handle authentication and authorization correctly. The provided functions use the JWT from the `Authorization` header to identify the user and use the `SERVICE_ROLE_KEY` for admin operations. Review policies on the `user_2fa` table.
+- **Recovery Keys**: Instruct users to store recovery keys securely. Implement logic to handle used recovery keys if you add that feature.
+- **Rate Limiting**: Consider adding rate limiting to functions like `verify-totp` to prevent brute-force attacks.
+- **Login TOTP Verification**: As mentioned, create a secure Edge Function for verifying TOTP during login that retrieves the secret server-side. Never trust a secret sent from the client during login verification.

@@ -1,9 +1,23 @@
+'use client';
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { UserX, ShieldAlert, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { AssociationMember } from '@/hooks/useAssociationMembers';
@@ -15,17 +29,17 @@ export interface MemberListProps {
   onRemoveMember: (memberId: string, memberName: string) => void;
 }
 
-const MemberList: React.FC<MemberListProps> = ({ 
-  members, 
-  onUpdateRole, 
-  onRemoveMember 
+const MemberList: React.FC<MemberListProps> = ({
+  members,
+  onUpdateRole,
+  onRemoveMember,
 }) => {
   const { user } = useAuth();
 
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(part => part[0])
+      .map((part) => part[0])
       .join('')
       .toUpperCase();
   };
@@ -42,19 +56,26 @@ const MemberList: React.FC<MemberListProps> = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {members.map(member => {
-          const profile = member.profile || { name: 'Unknown User', email: 'No email', profile_image: undefined };
+        {members.map((member) => {
+          const profile = member.profile || {
+            name: 'Unknown User',
+            email: 'No email',
+            profile_image: undefined,
+          };
           const memberName = profile.name || 'Unknown User';
           const memberEmail = profile.email || 'No email';
           const memberProfileImage = profile.profile_image;
           const isSelf = user?.id === member.user_id;
-          
+
           return (
             <TableRow key={member.id}>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Avatar>
-                    <AvatarImage src={memberProfileImage || ''} alt={memberName} />
+                    <AvatarImage
+                      src={memberProfileImage || ''}
+                      alt={memberName}
+                    />
                     <AvatarFallback>{getInitials(memberName)}</AvatarFallback>
                   </Avatar>
                   <span>{memberName}</span>
@@ -74,7 +95,9 @@ const MemberList: React.FC<MemberListProps> = ({
                 ) : (
                   <Select
                     value={member.role}
-                    onValueChange={value => onUpdateRole(member.id, value as UserRoleType)}
+                    onValueChange={(value) =>
+                      onUpdateRole(member.id, value as UserRoleType)
+                    }
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Select role" />

@@ -1,19 +1,32 @@
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeProvider';
-import { 
-  Eye, 
-  Type, 
-  Contrast, 
-  MousePointer, 
-  Zap, 
-  Sparkles, 
+import {
+  Eye,
+  Type,
+  Contrast,
+  MousePointer,
+  Zap,
+  Sparkles,
   Layers,
   ScreenShare,
   Braces,
@@ -23,39 +36,39 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const AccessibilitySettings = () => {
   const { toast } = useToast();
-  const { 
-    textSize, 
-    setTextSize, 
-    contrast, 
-    setContrast, 
-    reducedMotion, 
+  const {
+    textSize,
+    setTextSize,
+    contrast,
+    setContrast,
+    reducedMotion,
     setReducedMotion,
     animations,
     setAnimations,
     density,
     setDensity,
     screenReader,
-    setScreenReader
+    setScreenReader,
   } = useTheme();
 
   const handleSave = () => {
     toast({
-      title: "Settings Saved",
-      description: "Your accessibility preferences have been updated.",
+      title: 'Settings Saved',
+      description: 'Your accessibility preferences have been updated.',
     });
   };
 
   const handleResetDefaults = () => {
-    setTextSize("default");
-    setContrast("default");
+    setTextSize('default' as any);
+    setContrast('default' as any);
     setReducedMotion(false);
-    setAnimations("full");
-    setDensity("comfortable");
+    setAnimations(true);
+    setDensity('comfortable');
     setScreenReader(false);
-    
+
     toast({
-      title: "Settings Reset",
-      description: "Accessibility settings have been reset to defaults.",
+      title: 'Settings Reset',
+      description: 'Accessibility settings have been reset to defaults.',
     });
   };
 
@@ -68,7 +81,8 @@ const AccessibilitySettings = () => {
             Visual Preferences
           </CardTitle>
           <CardDescription>
-            Customize how content appears on screen to improve readability and visual comfort
+            Customize how content appears on screen to improve readability and
+            visual comfort
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -79,10 +93,12 @@ const AccessibilitySettings = () => {
                   <Type className="h-4 w-4" />
                   Text Size
                 </Label>
-                <span className="text-sm text-muted-foreground capitalize">{textSize}</span>
+                <span className="text-sm text-muted-foreground capitalize">
+                  {textSize}
+                </span>
               </div>
-              <Select 
-                value={textSize} 
+              <Select
+                value={textSize}
                 onValueChange={(value) => setTextSize(value as any)}
               >
                 <SelectTrigger>
@@ -107,10 +123,12 @@ const AccessibilitySettings = () => {
                   <Contrast className="h-4 w-4" />
                   Color Contrast
                 </Label>
-                <span className="text-sm text-muted-foreground capitalize">{contrast}</span>
+                <span className="text-sm text-muted-foreground capitalize">
+                  {contrast}
+                </span>
               </div>
-              <Select 
-                value={contrast} 
+              <Select
+                value={contrast}
                 onValueChange={(value) => setContrast(value as any)}
               >
                 <SelectTrigger>
@@ -137,13 +155,17 @@ const AccessibilitySettings = () => {
             Motion & Animations
           </CardTitle>
           <CardDescription>
-            Control movement and animations for improved comfort and reduced distractions
+            Control movement and animations for improved comfort and reduced
+            distractions
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="reduced-motion" className="flex items-center gap-2">
+              <Label
+                htmlFor="reduced-motion"
+                className="flex items-center gap-2"
+              >
                 <Zap className="h-4 w-4" />
                 Reduce Motion
               </Label>
@@ -151,7 +173,7 @@ const AccessibilitySettings = () => {
                 Minimize animations throughout the interface
               </p>
             </div>
-            <Switch 
+            <Switch
               id="reduced-motion"
               checked={reducedMotion}
               onCheckedChange={setReducedMotion}
@@ -165,9 +187,9 @@ const AccessibilitySettings = () => {
               <Sparkles className="h-4 w-4" />
               Animation Level
             </Label>
-            <Select 
-              value={animations} 
-              onValueChange={(value) => setAnimations(value as any)}
+            <Select
+              value={animations ? 'full' : 'none'}
+              onValueChange={(value) => setAnimations(value === 'full')}
               disabled={reducedMotion}
             >
               <SelectTrigger>
@@ -199,8 +221,8 @@ const AccessibilitySettings = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Density</Label>
-            <ToggleGroup 
-              type="single" 
+            <ToggleGroup
+              type="single"
               value={density}
               onValueChange={(value) => {
                 if (value) setDensity(value as any);
@@ -231,15 +253,19 @@ const AccessibilitySettings = () => {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="screen-reader" className="flex items-center gap-2">
+              <Label
+                htmlFor="screen-reader"
+                className="flex items-center gap-2"
+              >
                 <Braces className="h-4 w-4" />
                 Screen Reader Optimizations
               </Label>
               <p className="text-sm text-muted-foreground">
-                Improve compatibility with screen readers and other assistive technologies
+                Improve compatibility with screen readers and other assistive
+                technologies
               </p>
             </div>
-            <Switch 
+            <Switch
               id="screen-reader"
               checked={screenReader}
               onCheckedChange={setScreenReader}
@@ -249,8 +275,8 @@ const AccessibilitySettings = () => {
       </Card>
 
       <div className="flex justify-between">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={handleResetDefaults}
           className="flex items-center gap-2"
         >
@@ -263,4 +289,4 @@ const AccessibilitySettings = () => {
   );
 };
 
-export default AccessibilitySettings;
+export { AccessibilitySettings };

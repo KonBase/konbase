@@ -1,3 +1,4 @@
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useAssociation } from '@/contexts/AssociationContext';
@@ -19,33 +20,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
 
 export function AssociationSelector() {
-  const { currentAssociation, setCurrentAssociation, userAssociations } = useAssociation();
+  const { currentAssociation, setCurrentAssociation, userAssociations } =
+    useAssociation();
   const { profile } = useUserProfile();
   const [open, setOpen] = useState(false);
   const [adminAssociations, setAdminAssociations] = useState<Association[]>([]);
-  const navigate = useNavigate();
-  
+  const router = useRouter();
+
   // Only fetch admin associations if the user has the appropriate role
   useEffect(() => {
     if (profile?.role === 'super_admin' || profile?.role === 'system_admin') {
       fetchAdminAssociations();
     }
   }, [profile]);
-  
+
   const fetchAdminAssociations = async () => {
     try {
       const { data: associations, error } = await supabase
         .from('associations')
         .select('*');
-        
+
       if (error) throw error;
-      
+
       if (associations) {
-        const formattedAssociations = associations.map(a => ({
+        const formattedAssociations = associations.map((a) => ({
           id: a.id,
           name: a.name,
           description: a.description || undefined,
@@ -55,69 +57,73 @@ export function AssociationSelector() {
           contactPhone: a.contact_phone || undefined,
           website: a.website || undefined,
           createdAt: a.created_at,
-          updatedAt: a.updated_at
+          updatedAt: a.updated_at,
         }));
-        
+
         // Ensure userAssociations exists before filtering
         const userAssociationsArray = userAssociations || [];
-        
+
         // Filter out associations the user already has access to
         const filteredAssociations = formattedAssociations.filter(
-          assoc => !userAssociationsArray.some(userAssoc => userAssoc.id === assoc.id)
+          (assoc) =>
+            !userAssociationsArray.some(
+              (userAssoc) => userAssoc.id === assoc.id,
+            ),
         );
-        
+
         setAdminAssociations(filteredAssociations);
       }
     } catch (error) {
       console.error('Error fetching admin associations:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch associations",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to fetch associations',
+        variant: 'destructive',
       });
     }
   };
-  
+
   // Ensure userAssociations is always an array (default to empty array if undefined)
   const safeUserAssociations = userAssociations || [];
-  
+
   // Combine user associations and admin associations for super admins
-  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'system_admin';
-  const displayedAssociations = isAdmin 
-    ? [...safeUserAssociations, ...adminAssociations] 
+  const isAdmin =
+    profile?.role === 'super_admin' || profile?.role === 'system_admin';
+  const displayedAssociations = isAdmin
+    ? [...safeUserAssociations, ...adminAssociations]
     : safeUserAssociations;
-    
+
   const handleSelectAssociation = (association: Association) => {
     try {
       setCurrentAssociation(association);
       setOpen(false);
-      
+
       // Add a toast notification for feedback
       toast({
-        title: "Association Selected",
+        title: 'Association Selected',
         description: `You are now viewing ${association.name}`,
       });
     } catch (error: any) {
-      console.error("Error selecting association:", error);
+      console.error('Error selecting association:', error);
       toast({
-        title: "Error",
-        description: "Failed to select association",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to select association',
+        variant: 'destructive',
       });
     }
   };
-  
+
   const handleManageAssociation = () => {
     if (currentAssociation) {
-      navigate(`/association/profile`);
+      router.push(`/association/profile`);
     }
   };
-  
+
   // If there are no associations to display and no current association, return null
   if (!currentAssociation && displayedAssociations.length === 0) {
     return null;
   }
-  
+
   return (
     <div className="flex items-center gap-2">
       <Popover open={open} onOpenChange={setOpen}>
@@ -130,7 +136,7 @@ export function AssociationSelector() {
           >
             {currentAssociation
               ? currentAssociation.name
-              : "Select Association..."}
+              : 'Select Association...'}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -149,9 +155,14 @@ export function AssociationSelector() {
                   >
                     <span className="truncate">
                       {association.name}
-                      {!safeUserAssociations.some(a => a.id === association.id) && isAdmin && (
-                        <span className="ml-2 text-xs text-muted-foreground">(Admin)</span>
-                      )}
+                      {!safeUserAssociations.some(
+                        (a) => a.id === association.id,
+                      ) &&
+                        isAdmin && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (Admin)
+                          </span>
+                        )}
                     </span>
                     {currentAssociation?.id === association.id && (
                       <Check className="ml-2 h-4 w-4" />
@@ -163,7 +174,7 @@ export function AssociationSelector() {
           </Command>
         </PopoverContent>
       </Popover>
-      
+
       {currentAssociation && isAdmin && (
         <Button
           variant="ghost"

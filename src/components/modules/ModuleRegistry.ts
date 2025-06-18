@@ -1,3 +1,5 @@
+'use client';
+
 import { KonbaseModule, ModuleManifest } from '@/types/modules';
 import { logDebug } from '@/utils/debug';
 
@@ -11,7 +13,7 @@ class ModuleRegistry {
 
   /**
    * Register a new module in the system
-   * 
+   *
    * @param module The module to register
    * @returns True if registration was successful
    */
@@ -19,13 +21,21 @@ class ModuleRegistry {
     try {
       // Validate module has required fields
       if (!module.id || !module.name || !module.version) {
-        logDebug(`Failed to register module: Missing required fields`, module, 'error');
+        logDebug(
+          `Failed to register module: Missing required fields`,
+          module,
+          'error',
+        );
         return false;
       }
 
       // Check if module is already registered
       if (this.modules.has(module.id)) {
-        logDebug(`Module with ID ${module.id} is already registered`, null, 'warn');
+        logDebug(
+          `Module with ID ${module.id} is already registered`,
+          null,
+          'warn',
+        );
         return false;
       }
 
@@ -44,10 +54,18 @@ class ModuleRegistry {
         updateDate: new Date().toISOString(),
       });
 
-      logDebug(`Module ${module.name} (${module.id}) registered successfully`, null, 'info');
+      logDebug(
+        `Module ${module.name} (${module.id}) registered successfully`,
+        null,
+        'info',
+      );
       return true;
     } catch (error) {
-      logDebug(`Error registering module: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+      logDebug(
+        `Error registering module: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+        'error',
+      );
       return false;
     }
   }
@@ -83,14 +101,18 @@ class ModuleRegistry {
     manifest.isEnabled = true;
     manifest.updateDate = new Date().toISOString();
     this.manifests.set(moduleId, manifest);
-    
+
     // Call the module's onEnable method if it exists
     const module = this.modules.get(moduleId);
     if (module && typeof module.onEnable === 'function') {
       try {
         module.onEnable();
       } catch (error) {
-        logDebug(`Error enabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+        logDebug(
+          `Error enabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`,
+          null,
+          'error',
+        );
         return false;
       }
     }
@@ -108,14 +130,18 @@ class ModuleRegistry {
     manifest.isEnabled = false;
     manifest.updateDate = new Date().toISOString();
     this.manifests.set(moduleId, manifest);
-    
+
     // Call the module's onDisable method if it exists
     const module = this.modules.get(moduleId);
     if (module && typeof module.onDisable === 'function') {
       try {
         module.onDisable();
       } catch (error) {
-        logDebug(`Error disabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`, null, 'error');
+        logDebug(
+          `Error disabling module ${moduleId}: ${error instanceof Error ? error.message : String(error)}`,
+          null,
+          'error',
+        );
         return false;
       }
     }

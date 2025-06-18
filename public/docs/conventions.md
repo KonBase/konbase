@@ -1,5 +1,5 @@
 ---
-title: Convention Management 
+title: Convention Management
 description: The Convention Module is a central component of KonBase that enables comprehensive management of conventions, events, and gatherings. This module provides tools to plan, organize, and execute successful conventions while integrating seamlessly with inventory and association management capabilities.
 date: 2025-04-03
 keywords: konbase, convention, event, inventory, staff, scheduling, association
@@ -79,6 +79,7 @@ The Convention Module integrates with:
 ## Administration
 
 Association administrators and managers can:
+
 - Create and manage conventions
 - Set convention visibility (public/private)
 - Control access to convention management features
@@ -87,6 +88,7 @@ Association administrators and managers can:
 ## Getting Started
 
 To begin using the Convention Module:
+
 1. Navigate to the Conventions section in your association
 2. Create a new convention with basic details
 3. Define program elements and schedule

@@ -1,10 +1,27 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,7 +55,9 @@ interface Category {
 }
 
 const templateSchema = z.object({
-  name: z.string().min(2, { message: "Template name must be at least 2 characters" }),
+  name: z
+    .string()
+    .min(2, { message: 'Template name must be at least 2 characters' }),
   description: z.string().nullable().optional(),
   includeLocations: z.boolean().default(false),
   includeEquipment: z.boolean().default(false),
@@ -60,7 +79,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
   const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
   const [consumables, setConsumables] = useState<EquipmentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  
+
   const form = useForm<z.infer<typeof templateSchema>>({
     resolver: zodResolver(templateSchema),
     defaultValues: {
@@ -94,7 +113,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
           .select('id, name, type')
           .eq('association_id', currentAssociation.id)
           .order('name');
-        
+
         if (locationsError) throw locationsError;
         setLocations(locationsData || []);
 
@@ -104,7 +123,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
           .select('id, name')
           .eq('association_id', currentAssociation.id)
           .order('name');
-        
+
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
 
@@ -115,26 +134,27 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
           .eq('association_id', currentAssociation.id)
           .eq('is_consumable', false)
           .order('name');
-        
+
         if (equipmentError) throw equipmentError;
         setEquipment(equipmentData || []);
 
         // Fetch consumables
-        const { data: consumablesData, error: consumablesError } = await supabase
-          .from('items')
-          .select('id, name, category_id, is_consumable')
-          .eq('association_id', currentAssociation.id)
-          .eq('is_consumable', true)
-          .order('name');
-        
+        const { data: consumablesData, error: consumablesError } =
+          await supabase
+            .from('items')
+            .select('id, name, category_id, is_consumable')
+            .eq('association_id', currentAssociation.id)
+            .eq('is_consumable', true)
+            .order('name');
+
         if (consumablesError) throw consumablesError;
         setConsumables(consumablesData || []);
       } catch (error: any) {
-        console.error("Error fetching template data:", error);
+        console.error('Error fetching template data:', error);
         toast({
-          title: "Error loading data",
-          description: error.message || "An unknown error occurred",
-          variant: "destructive",
+          title: 'Error loading data',
+          description: error.message || 'An unknown error occurred',
+          variant: 'destructive',
         });
       }
     };
@@ -145,9 +165,9 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof templateSchema>) => {
     if (!currentAssociation) {
       toast({
-        title: "Error",
-        description: "Association data is missing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Association data is missing',
+        variant: 'destructive',
       });
       return;
     }
@@ -155,36 +175,39 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
     setIsLoading(true);
     try {
       // Get the current user's ID
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError) throw userError;
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error('Not authenticated');
 
       // Build the configuration object based on selected items
       const configuration: Record<string, any> = {};
-      
+
       if (values.includeLocations && values.selectedLocations?.length) {
         configuration.locations = locations
-          .filter(location => values.selectedLocations?.includes(location.id))
-          .map(location => ({
+          .filter((location) => values.selectedLocations?.includes(location.id))
+          .map((location) => ({
             name: location.name,
             type: location.type,
           }));
       }
-      
+
       if (values.includeEquipment && values.selectedEquipment?.length) {
         configuration.equipment = equipment
-          .filter(item => values.selectedEquipment?.includes(item.id))
-          .map(item => ({
+          .filter((item) => values.selectedEquipment?.includes(item.id))
+          .map((item: EquipmentItem) => ({
             item_id: item.id,
             quantity: 1, // Default quantity
           }));
       }
-      
+
       if (values.includeConsumables && values.selectedConsumables?.length) {
         configuration.consumables = consumables
-          .filter(item => values.selectedConsumables?.includes(item.id))
-          .map(item => ({
+          .filter((item) => values.selectedConsumables?.includes(item.id))
+          .map((item: EquipmentItem) => ({
             item_id: item.id,
             allocated_quantity: 10, // Default quantity
             used_quantity: 0,
@@ -202,7 +225,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
       if (error) throw error;
 
       toast({
-        title: "Template created",
+        title: 'Template created',
         description: `${values.name} has been created successfully`,
       });
 
@@ -210,11 +233,11 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
       onTemplateAdded();
       onClose();
     } catch (error: any) {
-      console.error("Error creating template:", error);
+      console.error('Error creating template:', error);
       toast({
-        title: "Error creating template",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error creating template',
+        description: error.message || 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -223,7 +246,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : 'Uncategorized';
   };
 
@@ -246,7 +269,10 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                 <FormItem>
                   <FormLabel>Template Name*</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Standard Gaming Convention" {...field} />
+                    <Input
+                      placeholder="e.g., Standard Gaming Convention"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,10 +286,10 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe what this template includes" 
-                      {...field} 
-                      value={field.value || ''} 
+                    <Textarea
+                      placeholder="Describe what this template includes"
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -341,29 +367,38 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
 
             <Tabs defaultValue="locations" className="w-full">
               <TabsList className="w-full">
-                <TabsTrigger 
-                  value="locations" 
+                <TabsTrigger
+                  value="locations"
                   className="flex-1"
                   disabled={!includeLocations}
                 >
-                  Locations {selectedLocations?.length ? `(${selectedLocations.length})` : ''}
+                  Locations{' '}
+                  {selectedLocations?.length
+                    ? `(${selectedLocations.length})`
+                    : ''}
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="equipment" 
+                <TabsTrigger
+                  value="equipment"
                   className="flex-1"
                   disabled={!includeEquipment}
                 >
-                  Equipment {selectedEquipment?.length ? `(${selectedEquipment.length})` : ''}
+                  Equipment{' '}
+                  {selectedEquipment?.length
+                    ? `(${selectedEquipment.length})`
+                    : ''}
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="consumables" 
+                <TabsTrigger
+                  value="consumables"
                   className="flex-1"
                   disabled={!includeConsumables}
                 >
-                  Consumables {selectedConsumables?.length ? `(${selectedConsumables.length})` : ''}
+                  Consumables{' '}
+                  {selectedConsumables?.length
+                    ? `(${selectedConsumables.length})`
+                    : ''}
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="locations" className="mt-4">
                 {!includeLocations ? (
                   <p className="text-muted-foreground text-center py-4">
@@ -394,16 +429,25 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                                     >
                                       <FormControl>
                                         <Checkbox
-                                          checked={field.value?.includes(location.id)}
+                                          checked={field.value?.includes(
+                                            location.id,
+                                          )}
                                           onCheckedChange={(checked) => {
-                                            const currentValues = field.value || [];
+                                            const currentValues =
+                                              field.value || [];
                                             if (checked) {
                                               // Add to selection
-                                              field.onChange([...currentValues, location.id]);
+                                              field.onChange([
+                                                ...currentValues,
+                                                location.id,
+                                              ]);
                                             } else {
                                               // Remove from selection
                                               field.onChange(
-                                                currentValues.filter((value) => value !== location.id)
+                                                currentValues.filter(
+                                                  (value) =>
+                                                    value !== location.id,
+                                                ),
                                               );
                                             }
                                           }}
@@ -430,7 +474,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="equipment" className="mt-4">
                 {!includeEquipment ? (
                   <p className="text-muted-foreground text-center py-4">
@@ -461,14 +505,22 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                                     >
                                       <FormControl>
                                         <Checkbox
-                                          checked={field.value?.includes(item.id)}
+                                          checked={field.value?.includes(
+                                            item.id,
+                                          )}
                                           onCheckedChange={(checked) => {
-                                            const currentValues = field.value || [];
+                                            const currentValues =
+                                              field.value || [];
                                             if (checked) {
-                                              field.onChange([...currentValues, item.id]);
+                                              field.onChange([
+                                                ...currentValues,
+                                                item.id,
+                                              ]);
                                             } else {
                                               field.onChange(
-                                                currentValues.filter((value) => value !== item.id)
+                                                currentValues.filter(
+                                                  (value) => value !== item.id,
+                                                ),
                                               );
                                             }
                                           }}
@@ -495,7 +547,7 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="consumables" className="mt-4">
                 {!includeConsumables ? (
                   <p className="text-muted-foreground text-center py-4">
@@ -526,14 +578,22 @@ export const AddTemplateDialog: React.FC<AddTemplateDialogProps> = ({
                                     >
                                       <FormControl>
                                         <Checkbox
-                                          checked={field.value?.includes(item.id)}
+                                          checked={field.value?.includes(
+                                            item.id,
+                                          )}
                                           onCheckedChange={(checked) => {
-                                            const currentValues = field.value || [];
+                                            const currentValues =
+                                              field.value || [];
                                             if (checked) {
-                                              field.onChange([...currentValues, item.id]);
+                                              field.onChange([
+                                                ...currentValues,
+                                                item.id,
+                                              ]);
                                             } else {
                                               field.onChange(
-                                                currentValues.filter((value) => value !== item.id)
+                                                currentValues.filter(
+                                                  (value) => value !== item.id,
+                                                ),
                                               );
                                             }
                                           }}

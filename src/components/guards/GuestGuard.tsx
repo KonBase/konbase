@@ -1,28 +1,31 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
+'use client';
+
+import { useEffect, ReactNode } from 'react';
+import { useRouter } from '@/lib/navigation';
+import { useAuth } from '@/contexts/auth/useAuth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface GuestGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
-  const { user, loading: isLoading } = useAuth(); // Use 'user' and rename 'loading' to 'isLoading' for consistency if needed, or just use 'loading'
-  
-  if (isLoading) {
+export function GuestGuard({ children }: GuestGuardProps) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Spinner className="h-8 w-8" />
       </div>
     );
   }
-  
-  // Check if the user object exists to determine authentication
-  if (!!user) { 
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <>{children}</>;
-};
 
-export default GuestGuard;
+  return <>{children}</>;
+}

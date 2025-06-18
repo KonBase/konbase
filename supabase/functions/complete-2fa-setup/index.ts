@@ -1,10 +1,10 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
@@ -16,8 +16,13 @@ serve(async (req) => {
   try {
     // Get the request body
     const { secret, recoveryKeys } = await req.json();
-    
-    if (!secret || !recoveryKeys || !Array.isArray(recoveryKeys) || recoveryKeys.length === 0) {
+
+    if (
+      !secret ||
+      !recoveryKeys ||
+      !Array.isArray(recoveryKeys) ||
+      recoveryKeys.length === 0
+    ) {
       throw new Error('Secret and recovery keys are required');
     }
 
@@ -36,13 +41,14 @@ serve(async (req) => {
       {
         auth: {
           persistSession: false,
-        }
-      }
+        },
+      },
     );
 
     // Use the JWT to get the user ID
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+    const { data: userData, error: userError } =
+      await supabaseAdmin.auth.getUser(token);
+
     if (userError || !userData) {
       throw new Error(userError?.message || 'Failed to get user data');
     }
@@ -69,22 +75,20 @@ serve(async (req) => {
           totp_secret: secret,
           recovery_keys: recoveryKeys,
           used_recovery_keys: [],
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);
     } else {
-      dbOperation = supabaseAdmin
-        .from('user_2fa')
-        .insert({
-          user_id: userId,
-          totp_secret: secret,
-          recovery_keys: recoveryKeys,
-          used_recovery_keys: []
-        });
+      dbOperation = supabaseAdmin.from('user_2fa').insert({
+        user_id: userId,
+        totp_secret: secret,
+        recovery_keys: recoveryKeys,
+        used_recovery_keys: [],
+      });
     }
 
     const { error: saveError } = await dbOperation;
-    
+
     if (saveError) {
       throw new Error(`Error saving 2FA data: ${saveError.message}`);
     }
@@ -100,29 +104,29 @@ serve(async (req) => {
     }
 
     console.log('2FA setup completed successfully for user:', userId);
-    
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: '2FA has been successfully enabled'
+        message: '2FA has been successfully enabled',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+        status: 200,
+      },
     );
   } catch (error) {
     console.error('Error completing 2FA setup:', error.message);
-    
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+        status: 400,
+      },
     );
   }
 });

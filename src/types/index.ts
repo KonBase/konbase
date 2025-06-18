@@ -3,7 +3,7 @@ export * from './user';
 export * from './association';
 
 // Add any other global types here
-export type Permission = 
+export type Permission =
   | 'admin:all'
   | 'manage:users'
   | 'manage:inventory'
