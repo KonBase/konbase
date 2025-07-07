@@ -101,7 +101,7 @@ export function CreateItemDialog({
   const fetchLocations = async () => {
     try {
       const { data, error } = await supabase
-        .from('storage_locations')
+        .from('locations')
         .select('*')
         .eq('association_id', currentAssociation?.id)
         .order('name');

@@ -142,13 +142,13 @@ export function HomeHeader() {
 
   return (
     <>
-      <header className="w-full border-b bg-konbase-blue text-konbase-white">
+      <header className="w-full border-b bg-konbase-navy-blue text-konbase-light-gray">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
-              className="text-konbase-white mr-2 md:hidden"
+              className="text-konbase-light-gray mr-2 md:hidden"
               onClick={() => setMobileMenuOpen(true)}
             >
               <span className="sr-only">Open menu</span>
@@ -174,7 +174,7 @@ export function HomeHeader() {
                 alt="KonBase Logo"
                 className="h-10 w-10"
               />
-              <h1 className="text-2xl font-bold text-konbase-yellow">
+              <h1 className="text-2xl font-bold text-konbase-pastel-yellow">
                 KonBase
               </h1>
             </Link>
@@ -185,7 +185,7 @@ export function HomeHeader() {
               <NavigationMenuItem>
                 <Link
                   href="/#features"
-                  className="text-konbase-white hover:text-konbase-yellow px-4 py-2 transition-colors"
+                  className="text-konbase-light-gray hover:text-konbase-pastel-yellow px-4 py-2 transition-colors"
                 >
                   Features
                 </Link>
@@ -193,13 +193,13 @@ export function HomeHeader() {
               <NavigationMenuItem>
                 <Link
                   href="/#about"
-                  className="text-konbase-white hover:text-konbase-yellow px-4 py-2 transition-colors"
+                  className="text-konbase-light-gray hover:text-konbase-pastel-yellow px-4 py-2 transition-colors"
                 >
                   About
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-konbase-white bg-transparent hover:bg-konbase-blue-800/40 hover:text-konbase-yellow">
+                <NavigationMenuTrigger className="text-konbase-light-gray bg-transparent hover:bg-konbase-deep-navy/40 hover:text-konbase-pastel-yellow">
                   Community
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -210,7 +210,7 @@ export function HomeHeader() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-2 hover:bg-accent rounded-md"
                     >
-                      <Github className="h-5 w-5 dark:text-konbase-yellow" />
+                      <Github className="h-5 w-5 dark:text-konbase-pastel-yellow" />
                       <div>
                         <div className="font-medium">GitHub</div>
                         <div className="text-sm text-muted-foreground">
@@ -224,7 +224,7 @@ export function HomeHeader() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-2 hover:bg-accent rounded-md"
                     >
-                      <MessageCircle className="h-5 w-5 dark:text-konbase-yellow" />
+                      <MessageCircle className="h-5 w-5 dark:text-konbase-pastel-yellow" />
                       <div>
                         <div className="font-medium">Discord</div>
                         <div className="text-sm text-muted-foreground">
@@ -245,7 +245,7 @@ export function HomeHeader() {
                   variant="outline"
                   size="sm"
                   onClick={handleDashboard}
-                  className="text-konbase-white bg-transparent border-konbase-white/30 hover:bg-konbase-blue-800/40 hover:text-konbase-yellow hidden sm:flex"
+                  className="text-konbase-light-gray bg-transparent border-konbase-light-gray/30 hover:bg-konbase-deep-navy/40 hover:text-konbase-pastel-yellow hidden sm:flex"
                 >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
@@ -270,13 +270,13 @@ export function HomeHeader() {
                 <Button
                   variant="ghost"
                   onClick={handleLogin}
-                  className="text-konbase-white hover:text-konbase-yellow hover:bg-konbase-blue-800/40 hidden sm:inline-flex"
+                  className="text-konbase-light-gray hover:text-konbase-pastel-yellow hover:bg-konbase-deep-navy/40 hidden sm:inline-flex"
                 >
                   Login
                 </Button>
                 <Button
                   onClick={handleRegister}
-                  className="bg-konbase-yellow text-konbase-blue hover:bg-konbase-yellow/90"
+                  className="bg-konbase-pastel-yellow text-konbase-navy-blue hover:bg-konbase-pastel-yellow/90"
                 >
                   Register
                 </Button>

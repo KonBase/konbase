@@ -61,7 +61,7 @@ export function StorageLocationManager() {
     try {
       setLoading(true);
       const { data: locationsData, error: locationsError } = await supabase
-        .from('storage_locations')
+        .from('locations')
         .select('*')
         .eq('association_id', currentAssociation.id)
         .order('name');
@@ -133,7 +133,7 @@ export function StorageLocationManager() {
 
     try {
       const { error } = await supabase
-        .from('storage_locations')
+        .from('locations')
         .delete()
         .eq('id', locationToDelete.id);
 

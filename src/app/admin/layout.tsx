@@ -19,21 +19,81 @@ export default function AdminLayout({
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user) {
+      console.log('=== Admin Status Check Debug ===');
+      console.log('User ID:', user?.id);
+      console.log('User Email:', user?.email);
+      console.log('User role from context:', user?.role);
+      console.log('Full User Object:', user);
+      
+      if (!user?.id) {
+        console.warn('No user ID available for admin check');
+        setIsAdmin(false);
         setLoading(false);
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      // First check if we already have the role from the user context
+      if (user.role) {
+        const isAdminUser = ['admin', 'system_admin', 'super_admin'].includes(user.role);
+        console.log('Using role from user context:', user.role, 'Is admin:', isAdminUser);
+        setIsAdmin(isAdminUser);
+        setLoading(false);
+        return;
+      }
 
-        if (error) throw error;
-        setIsAdmin(!!data);
+      // Check if we have a valid session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+      
+      if (!session) {
+        console.warn('No active session found');
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Session user ID:', session.user.id);
+      console.log('Session expires at:', session.expires_at);
+      console.log('Using session user ID for query:', session.user.id);
+
+      try {
+        // Use session.user.id instead of user.id to ensure we're using the authenticated user ID
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error('Supabase error checking admin status:', error);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error.details);
+          console.error('Error hint:', error.hint);
+          console.error('Error code:', error.code);
+          console.error('Full error object:', error);
+          
+          // Check if it's a permission error
+          if (error.code === 'PGRST116' || error.message?.includes('permission')) {
+            console.error('Permission denied - user may not have access to their own profile');
+          }
+          
+          throw error;
+        }
+
+        if (!data) {
+          console.warn('No profile data found for user:', session.user.id);
+          setIsAdmin(false);
+        } else {
+          console.log('Profile data found:', data);
+          const isAdminUser = ['admin', 'system_admin', 'super_admin'].includes(data.role);
+          console.log('Is admin user:', isAdminUser, 'Role:', data.role);
+          setIsAdmin(isAdminUser);
+        }
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
@@ -42,7 +102,11 @@ export default function AdminLayout({
       }
     };
 
-    checkAdminStatus();
+    if (user) {
+      checkAdminStatus();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {

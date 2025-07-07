@@ -31,28 +31,69 @@ export default function AdminPage() {
   }, [user]); // Added user dependency, removed checkAdminAccess as it's not needed
 
   const checkAdminAccess = async () => {
+    console.log('=== Admin Page Access Check ===');
+    console.log('User:', user);
+    
     if (!user) {
+      console.log('No user found, redirecting to login');
       router.push('/login');
       return;
     }
 
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
+      // Check user role from profiles table (system-level roles)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
-      if (
-        error ||
-        !data ||
-        (data.role !== 'admin' && data.role !== 'super_admin')
-      ) {
-        router.push('/dashboard');
+      console.log('Profile data:', profileData);
+      console.log('Profile error:', profileError);
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        throw profileError;
+      }
+
+      // Check if user has system-level admin role
+      const hasSystemAdminRole = profileData?.role && ['admin', 'system_admin', 'super_admin'].includes(profileData.role);
+      console.log('Has system admin role:', hasSystemAdminRole, 'Role:', profileData?.role);
+
+      if (hasSystemAdminRole) {
+        console.log('User has system admin role, granting access');
+        setIsAdmin(true);
         return;
       }
 
-      setIsAdmin(true);
+      // If no system admin role, check association-level admin roles
+      const { data: memberData, error: memberError } = await supabase
+        .from('association_members')
+        .select('role, association_id')
+        .eq('user_id', user.id);
+
+      console.log('Association member data:', memberData);
+      console.log('Association member error:', memberError);
+
+      if (memberError) {
+        console.error('Error fetching association membership:', memberError);
+        throw memberError;
+      }
+
+      // Check if user has admin role in any association
+      const hasAssociationAdminRole = memberData?.some(member => 
+        ['admin', 'system_admin'].includes(member.role)
+      );
+      console.log('Has association admin role:', hasAssociationAdminRole);
+
+      if (hasAssociationAdminRole) {
+        console.log('User has association admin role, granting access');
+        setIsAdmin(true);
+        return;
+      }
+
+      console.log('User does not have admin privileges, redirecting to dashboard');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error checking admin access:', error);
       router.push('/dashboard');

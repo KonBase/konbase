@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { LandingPage } from '@/components/pages/LandingPage';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -10,5 +9,6 @@ export default async function Home() {
     redirect('/dashboard');
   }
 
-  return <LandingPage />;
+  // Redirect unauthenticated users directly to login
+  redirect('/login');
 }

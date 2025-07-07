@@ -20,7 +20,7 @@ export function ThemeToggle() {
         <Button
           variant="outline"
           size="icon"
-          className="bg-transparent rborder-konbase-white/30 hover:bg-konbase-blue-800/40 hover:text-konbase-furry"
+          className="bg-transparent border-konbase-light-gray/30 hover:bg-konbase-deep-navy/40 hover:text-konbase-pale-blue"
         >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

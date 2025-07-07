@@ -1,9 +1,11 @@
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { AuthProvider } from '@/contexts/auth';
 import { AssociationProvider } from '@/contexts/AssociationContext';
+import { AccessibilityProvider } from '@/contexts/AccessibilityProvider';
 import { ToasterProvider } from '@/components/ui/ToasterProvider';
 import RouteChangeHandler from '@/components/RouteChangeHandler';
 import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
+import { SkipToMain } from '@/components/accessibility/SkipLink';
 import '@/app/globals.css';
 
 export const metadata = {
@@ -19,17 +21,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider>
-          <AuthProvider>
-            <AssociationProvider>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-              <ToasterProvider />
-              <RouteChangeHandler />
-            </AssociationProvider>
-          </AuthProvider>
+          <AccessibilityProvider>
+            <AuthProvider>
+              <AssociationProvider>
+                <SkipToMain />
+                <ConditionalLayout>
+                  <ToasterProvider />
+                  <RouteChangeHandler />
+                  <main id="main-content" tabIndex={-1}>
+                    {children}
+                  </main>
+                </ConditionalLayout>
+              </AssociationProvider>
+            </AuthProvider>
+          </AccessibilityProvider>
         </ThemeProvider>
       </body>
     </html>

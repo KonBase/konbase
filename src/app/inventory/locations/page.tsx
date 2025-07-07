@@ -52,7 +52,7 @@ export default function StorageLocationsPage() {
   const fetchLocations = async () => {
     try {
       const { data: locationsData, error: locationsError } = await supabase
-        .from('storage_locations')
+        .from('locations')
         .select('*')
         .order('name');
 
@@ -61,17 +61,17 @@ export default function StorageLocationsPage() {
       // Fetch item counts for each location
       const { data: itemCounts, error: countError } = await supabase
         .from('items')
-        .select('storage_location_id')
+        .select('location_id')
         .in(
-          'storage_location_id',
+          'location_id',
           locationsData.map((l) => l.id),
         );
 
       if (!countError && itemCounts) {
         const countMap = itemCounts.reduce(
           (acc, item) => {
-            acc[item.storage_location_id] =
-              (acc[item.storage_location_id] || 0) + 1;
+            acc[item.location_id] =
+              (acc[item.location_id] || 0) + 1;
             return acc;
           },
           {} as Record<string, number>,
@@ -108,7 +108,7 @@ export default function StorageLocationsPage() {
 
     try {
       const { error } = await supabase
-        .from('storage_locations')
+        .from('locations')
         .delete()
         .eq('id', locationToDelete.id);
 

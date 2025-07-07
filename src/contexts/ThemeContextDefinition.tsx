@@ -1,9 +1,9 @@
 import { createContext } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type TextSize = 'small' | 'medium' | 'large';
-export type Contrast = 'normal' | 'high';
-export type Density = 'comfortable' | 'compact';
+export type TextSize = 'default' | 'large' | 'larger';
+export type Contrast = 'default' | 'increased' | 'high';
+export type Density = 'compact' | 'comfortable' | 'spacious';
 
 export interface ThemeProviderState {
   theme: Theme;

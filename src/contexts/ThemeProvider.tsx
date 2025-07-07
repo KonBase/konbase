@@ -25,8 +25,8 @@ export function ThemeProvider({
     // Initialize theme state without accessing localStorage or window during SSR
     return defaultTheme;
   });
-  const [textSize, setTextSize] = React.useState<TextSize>('medium');
-  const [contrast, setContrast] = React.useState<Contrast>('normal');
+  const [textSize, setTextSize] = React.useState<TextSize>('default');
+  const [contrast, setContrast] = React.useState<Contrast>('default');
   const [reducedMotion, setReducedMotion] = React.useState(false);
   const [animations, setAnimations] = React.useState(true);
   const [density, setDensity] = React.useState<Density>('comfortable');
@@ -47,6 +47,35 @@ export function ThemeProvider({
       // This ensures consistency if defaultTheme is 'system' and needs media query
       setTheme(defaultTheme);
     }
+
+    // Load accessibility settings from localStorage
+    const savedAccessibilitySettings = localStorage.getItem('konbase-accessibility-settings');
+    if (savedAccessibilitySettings) {
+      try {
+        const settings = JSON.parse(savedAccessibilitySettings);
+        if (settings.textSize) setTextSize(settings.textSize);
+        if (settings.contrast) setContrast(settings.contrast);
+        if (settings.density) setDensity(settings.density);
+        if (typeof settings.reducedMotion === 'boolean') setReducedMotion(settings.reducedMotion);
+        if (typeof settings.animations === 'boolean') setAnimations(settings.animations);
+        if (typeof settings.screenReader === 'boolean') setScreenReader(settings.screenReader);
+      } catch (error) {
+        console.warn('Failed to parse accessibility settings from localStorage:', error);
+      }
+    }
+
+    // Respect system preferences for reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion && !savedAccessibilitySettings) {
+      setReducedMotion(true);
+      setAnimations(false);
+    }
+
+    // Respect system preferences for high contrast
+    const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
+    if (prefersHighContrast && !savedAccessibilitySettings) {
+      setContrast('high');
+    }
   }, [storageKey, defaultTheme]);
 
   // Effect to apply theme to DOM, runs only after mounted and when theme changes
@@ -64,6 +93,65 @@ export function ThemeProvider({
     }
     root.classList.add(currentTheme);
   }, [theme, mounted]);
+
+  // Effect to apply accessibility settings to DOM
+  React.useEffect(() => {
+    if (!mounted) return;
+
+    const root = window.document.documentElement;
+    const body = window.document.body;
+
+    // Remove existing accessibility classes
+    root.classList.remove(
+      'text-size-default', 'text-size-large', 'text-size-larger',
+      'contrast-default', 'contrast-increased', 'contrast-high',
+      'density-compact', 'density-comfortable', 'density-spacious',
+      'reduced-motion', 'animations-none', 'animations-reduced', 'animations-full',
+      'screen-reader-optimized', 'accessibility-enhanced'
+    );
+
+    // Apply text size classes
+    root.classList.add(`text-size-${textSize}`);
+
+    // Apply contrast classes
+    root.classList.add(`contrast-${contrast}`);
+
+    // Apply density classes
+    root.classList.add(`density-${density}`);
+
+    // Apply motion preferences
+    if (reducedMotion) {
+      root.classList.add('reduced-motion');
+    }
+
+    // Apply animation preferences
+    if (!animations) {
+      root.classList.add('animations-none');
+    } else if (reducedMotion) {
+      root.classList.add('animations-reduced');
+    } else {
+      root.classList.add('animations-full');
+    }
+
+    // Apply screen reader optimizations
+    if (screenReader) {
+      root.classList.add('screen-reader-optimized');
+    }
+
+    // Always add base accessibility enhancements
+    root.classList.add('accessibility-enhanced');
+
+    // Store accessibility preferences in localStorage
+    const accessibilitySettings = {
+      textSize,
+      contrast,
+      density,
+      reducedMotion,
+      animations,
+      screenReader
+    };
+    localStorage.setItem('konbase-accessibility-settings', JSON.stringify(accessibilitySettings));
+  }, [mounted, textSize, contrast, density, reducedMotion, animations, screenReader]);
 
   const value: ThemeProviderState = {
     theme,

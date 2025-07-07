@@ -67,14 +67,25 @@ export default {
           background: '#ea8000',
         },
         konbase: {
+          // New color palette
+          'pastel-yellow': '#fce771',    // Accent
+          'navy-blue': '#0c2e62',        // Primary
+          'bright-pink': '#d84165',      // Warning
+          'sky-blue': '#0fb4ea',         // Information
+          'charcoal-gray': '#1b1b1b',    // Text
+          'light-gray': '#e7eaef',       // Light Background
+          'pale-blue': '#9eabc0',        // 25% dark background
+          'slate-blue': '#556d91',       // 50% dark background
+          'deep-navy': '#082045',        // 75% dark background
+          'midnight-blue': '#061731',    // Dark Background
+          
+          // Legacy aliases for backward compatibility
           blue: '#0c2e62',
           cherry: '#d84165',
           'light-blue': '#0fb4ea',
           yellow: '#fce771',
-          black: '#171716',
-          white: '#e6e6dc',
-          furry: '#a2779c',
-          gzdacz: '#ea8000',
+          black: '#1b1b1b',
+          white: '#e7eaef',
         },
       },
       borderRadius: {

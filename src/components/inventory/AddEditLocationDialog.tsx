@@ -88,7 +88,7 @@ export function AddEditLocationDialog({
     try {
       if (isEdit && location) {
         const { error } = await supabase
-          .from('storage_locations')
+          .from('locations')
           .update(data)
           .eq('id', location.id);
 
@@ -99,7 +99,7 @@ export function AddEditLocationDialog({
           description: 'Location updated successfully',
         });
       } else {
-        const { error } = await supabase.from('storage_locations').insert({
+        const { error } = await supabase.from('locations').insert({
           ...data,
           association_id: currentAssociation.id,
         });
