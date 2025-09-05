@@ -16,6 +16,9 @@ export function getRedisClient(): RedisClientType {
 
   redisClient = createClient({
     url: redisUrl,
+    socket: {
+      connectTimeout: 10000, // 10 seconds
+    },
   });
 
   // Connect to Redis

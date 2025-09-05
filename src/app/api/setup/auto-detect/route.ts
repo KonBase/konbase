@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getConnectionInfo } from '@/lib/db/gel';
 import { getRedisConnectionInfo, testRedisConnection } from '@/lib/db/redis';
 import { getUnifiedStorage } from '@/lib/storage/unified';
+import { getGelClient } from '@/lib/db/gel';
+import fs from 'fs';
+import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +19,13 @@ export async function GET(request: NextRequest) {
         configured: false,
         type: null as string | null,
         status: 'not_configured',
+        details: null as any,
+      },
+      migrations: {
+        configured: false,
+        status: 'unknown',
+        pendingCount: 0,
+        totalCount: 0,
         details: null as any,
       },
       setup: {
@@ -73,11 +83,65 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Detect migration status if database is configured
+    if (detection.database.configured && detection.database.type !== 'redis') {
+      try {
+        const migrationsDir = path.join(process.cwd(), 'scripts', 'gel', 'migrations');
+        
+        if (fs.existsSync(migrationsDir)) {
+          const files = fs.readdirSync(migrationsDir)
+            .filter(f => f.endsWith('.sql'))
+            .sort();
+          
+          detection.migrations.configured = true;
+          detection.migrations.totalCount = files.length;
+          
+          // Try to check applied migrations
+          try {
+            const client = getGelClient();
+            const appliedMigrations = await client.query(`
+              SELECT version FROM schema_migrations ORDER BY version
+            `);
+            
+            const appliedVersions = appliedMigrations.map((m: any) => m.version);
+            const pendingMigrations = files.filter(file => !appliedVersions.includes(file));
+            
+            detection.migrations.pendingCount = pendingMigrations.length;
+            detection.migrations.status = pendingMigrations.length === 0 ? 'up_to_date' : 'pending';
+            detection.migrations.details = {
+              appliedVersions,
+              pendingVersions: pendingMigrations,
+              migrationFiles: files
+            };
+          } catch (migrationError) {
+            // If we can't check migrations, assume they need to be run
+            detection.migrations.status = 'unknown';
+            detection.migrations.pendingCount = files.length;
+            detection.migrations.details = {
+              error: 'Could not check migration status',
+              migrationFiles: files
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Migration detection error:', error);
+        detection.migrations.status = 'error';
+        detection.migrations.details = { error: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    }
+
     // Determine if setup can proceed
     if (detection.database.configured && detection.storage.configured) {
-      detection.setup.canProceed = true;
-      detection.setup.nextStep = 'admin';
-      detection.setup.message = 'Ready to create admin user';
+      // Check if migrations are needed
+      if (detection.migrations.configured && detection.migrations.pendingCount > 0) {
+        detection.setup.canProceed = false;
+        detection.setup.nextStep = 'migrations';
+        detection.setup.message = `Database and storage configured, but ${detection.migrations.pendingCount} migrations are pending`;
+      } else {
+        detection.setup.canProceed = true;
+        detection.setup.nextStep = 'admin';
+        detection.setup.message = 'Ready to create admin user';
+      }
     } else if (detection.database.configured) {
       detection.setup.nextStep = 'storage';
       detection.setup.message = 'Database configured, please configure storage';

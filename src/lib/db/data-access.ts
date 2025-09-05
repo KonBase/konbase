@@ -225,7 +225,15 @@ export class DataAccessLayer {
       
       return result as Association[] || [];
     } else {
-      return await this.db.getAll('associations') as Association[] || [];
+      // Redis: Get all association keys and fetch each association
+      const keys = await this.db.keys('associations:*');
+      const associations = await Promise.all(
+        keys.map(async (key: string) => {
+          const data = await this.db.get(key);
+          return data as Association;
+        })
+      );
+      return associations.filter(Boolean);
     }
   }
 
@@ -264,9 +272,15 @@ export class DataAccessLayer {
       
       return result as AssociationMember[] || [];
     } else {
-      // Edge Config: Get all members and filter, then get association names
-      const members = await this.db.getAll('association_members') as AssociationMember[];
-      const filteredMembers = members.filter(member => member.profile_id === profileId);
+      // Redis: Get all member keys and filter, then get association names
+      const keys = await this.db.keys('association_members:*');
+      const members = await Promise.all(
+        keys.map(async (key: string) => {
+          const data = await this.db.get(key);
+          return data as AssociationMember;
+        })
+      );
+      const filteredMembers = members.filter(member => member && member.profile_id === profileId);
       
       // Get association names for each member
       const membersWithNames = await Promise.all(
@@ -323,9 +337,15 @@ export class DataAccessLayer {
       
       return result as Convention[] || [];
     } else {
-      // Edge Config: Get all conventions and filter
-      const conventions = await this.db.getAll('conventions') as Convention[];
-      return conventions.filter(conv => conv.association_id === associationId);
+      // Redis: Get all convention keys and filter
+      const keys = await this.db.keys('conventions:*');
+      const conventions = await Promise.all(
+        keys.map(async (key: string) => {
+          const data = await this.db.get(key);
+          return data as Convention;
+        })
+      );
+      return conventions.filter(conv => conv && conv.association_id === associationId);
     }
   }
 
@@ -385,12 +405,14 @@ export class DataAccessLayer {
       if (this.dbType === 'postgresql') {
         await this.db.querySingle('SELECT 1');
       } else {
-        await this.db.isAvailable();
+        // For Redis, use ping command
+        await this.db.ping();
       }
       
       const latency = Date.now() - startTime;
       return { status: 'healthy', latency };
     } catch (error) {
+      console.error('Health check failed:', error);
       return { status: 'unhealthy' };
     }
   }

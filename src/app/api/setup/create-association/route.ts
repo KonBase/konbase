@@ -1,84 +1,152 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDataAccessLayer } from '@/lib/db/data-access';
 
+// Set timeout for the entire operation
+const TIMEOUT_MS = 25000; // 25 seconds
+
 export async function POST(request: NextRequest) {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Request timeout')), TIMEOUT_MS);
+  });
+
   try {
-    const { 
-      name, 
-      description, 
-      email, 
-      website, 
-      phone, 
-      address, 
-      type, 
-      status,
-      adminUserId,
-      databaseType = 'postgresql'
-    } = await request.json();
+    const operationPromise = async () => {
+      const { 
+        name, 
+        description, 
+        email, 
+        website, 
+        phone, 
+        address, 
+        type, 
+        status,
+        adminUserId,
+        databaseType = 'postgresql'
+      } = await request.json();
 
-    if (!name || !email || !adminUserId) {
-      return NextResponse.json({ 
-        error: 'Name, email, and admin user ID are required' 
-      }, { status: 400 });
-    }
+      if (!name || !email || !adminUserId) {
+        return NextResponse.json({ 
+          error: 'Name, email, and admin user ID are required' 
+        }, { status: 400 });
+      }
 
-    // Edge Config is read-only in production, so we need to use PostgreSQL for setup
-    const actualDatabaseType = databaseType === 'edge-config' ? 'postgresql' : databaseType;
-    
-    // Create data access layer
-    const dataAccess = createDataAccessLayer(actualDatabaseType);
+      console.log('Creating association with database type:', databaseType);
 
-    // Create association
-    const association = await dataAccess.createAssociation({
-      name,
-      description: description || undefined,
-      email,
-      website: website || undefined,
-      phone: phone || undefined,
-      address: address || undefined
-    });
+      // Auto-detect database type if not specified
+      let actualDatabaseType = databaseType;
+      if (databaseType === 'auto' || !databaseType) {
+        if (process.env.REDIS_URL) {
+          actualDatabaseType = 'redis';
+        } else if (process.env.EDGEDB_INSTANCE && process.env.EDGEDB_SECRET_KEY) {
+          actualDatabaseType = 'postgresql'; // EdgeDB uses PostgreSQL interface
+        } else if (process.env.GEL_DATABASE_URL) {
+          actualDatabaseType = 'postgresql';
+        } else {
+          return NextResponse.json({ 
+            error: 'No database configuration found',
+            suggestion: 'Please configure REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL'
+          }, { status: 400 });
+        }
+      }
 
-    // Add admin user as association member
-    await dataAccess.createAssociationMember({
-      association_id: association.id,
-      profile_id: adminUserId,
-      role: 'admin'
-    });
+      console.log('Using database type:', actualDatabaseType);
+      
+      // Create data access layer
+      const dataAccess = createDataAccessLayer(actualDatabaseType as 'postgresql' | 'redis');
 
-    return NextResponse.json({
-      success: true,
-      associationId: association.id,
-      message: 'Association created successfully',
-      note: databaseType === 'edge-config' ? 'Association created in PostgreSQL (Edge Config is read-only for setup)' : undefined
-    });
+      // Test database connection first
+      console.log('Testing database connection...');
+      const healthCheck = await dataAccess.healthCheck();
+      console.log('Database health check:', healthCheck);
+
+      if (healthCheck.status !== 'healthy') {
+        return NextResponse.json({ 
+          error: 'Database connection failed',
+          details: `Database is ${healthCheck.status}`,
+          suggestion: 'Please check your database configuration and ensure the database is accessible'
+        }, { status: 500 });
+      }
+
+      // Create association
+      console.log('Creating association...');
+      const association = await dataAccess.createAssociation({
+        name,
+        description: description || undefined,
+        email,
+        website: website || undefined,
+        phone: phone || undefined,
+        address: address || undefined
+      });
+
+      console.log('Association created with ID:', association.id);
+
+      // Add admin user as association member
+      console.log('Adding admin user as association member...');
+      await dataAccess.createAssociationMember({
+        association_id: association.id,
+        profile_id: adminUserId,
+        role: 'admin'
+      });
+
+      console.log('Association member created successfully');
+
+      return NextResponse.json({
+        success: true,
+        associationId: association.id,
+        message: 'Association created successfully',
+        databaseType: actualDatabaseType,
+        healthCheck: healthCheck
+      });
+    };
+
+    // Race between operation and timeout
+    const result = await Promise.race([operationPromise(), timeoutPromise]);
+    return result as NextResponse;
+
   } catch (error) {
     console.error('Create association error:', error);
     
+    // Handle timeout specifically
+    if (error instanceof Error && error.message === 'Request timeout') {
+      return NextResponse.json(
+        { 
+          error: 'Request timeout - database operation took too long',
+          suggestion: 'Please check your database connection and try again'
+        },
+        { status: 504 }
+      );
+    }
+    
     // Provide more specific error messages
     if (error instanceof Error) {
-      if (error.message.includes('Edge Config is read-only')) {
+      if (error.message.includes('GEL_DATABASE_URL') || error.message.includes('REDIS_URL')) {
         return NextResponse.json(
           { 
-            error: 'Edge Config is read-only in production. Please use PostgreSQL for setup operations.',
-            suggestion: 'Set DATABASE_TYPE=postgresql or provide GEL_DATABASE_URL for setup'
+            error: 'Database configuration is required for setup operations',
+            suggestion: 'Please provide REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL environment variable'
           },
           { status: 400 }
         );
       }
-      
-      if (error.message.includes('GEL_DATABASE_URL')) {
+
+      if (error.message.includes('connection') || error.message.includes('timeout')) {
         return NextResponse.json(
           { 
-            error: 'PostgreSQL database URL is required for setup operations',
-            suggestion: 'Please provide GEL_DATABASE_URL environment variable'
+            error: 'Database connection failed',
+            details: error.message,
+            suggestion: 'Please check your database configuration and ensure the database is accessible'
           },
-          { status: 400 }
+          { status: 500 }
         );
       }
     }
     
     return NextResponse.json(
-      { error: 'Failed to create association', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Failed to create association', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        suggestion: 'Please check your database configuration and try again'
+      },
       { status: 500 }
     );
   }

@@ -53,6 +53,13 @@ interface DetectionResult {
     status: string;
     details: any;
   };
+  migrations: {
+    configured: boolean;
+    status: string;
+    pendingCount: number;
+    totalCount: number;
+    details: any;
+  };
   setup: {
     canProceed: boolean;
     nextStep: string;
@@ -134,6 +141,34 @@ export const SetupWizard: React.FC = () => {
     }
   };
 
+  const runMigrations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/setup/migrate-database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh detection after successful migration
+        await detectEnvironment();
+        return true;
+      } else {
+        setError(data.error || 'Migration failed');
+        return false;
+      }
+    } catch (err) {
+      setError('Failed to run migrations');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderStepContent = () => {
     // Show auto-detection status if we're in auto mode and on step 0
     if (activeStep === 0 && setupMode === 'auto') {
@@ -201,6 +236,52 @@ export const SetupWizard: React.FC = () => {
               </Alert>
             )}
 
+            {/* Migration Status */}
+            {detection.migrations.configured && (
+              <>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Database size={24} />
+                  <Typography variant="subtitle1">Database Migrations</Typography>
+                  {detection.migrations.status === 'up_to_date' && <CheckCircle size={20} color="green" />}
+                </Box>
+
+                {detection.migrations.status === 'up_to_date' ? (
+                  <Box mb={3}>
+                    <Chip 
+                      label="All migrations applied" 
+                      color="success" 
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Database schema is up to date ({detection.migrations.totalCount} migrations)
+                    </Typography>
+                  </Box>
+                ) : detection.migrations.pendingCount > 0 ? (
+                  <Box mb={3}>
+                    <Chip 
+                      label={`${detection.migrations.pendingCount} pending migrations`} 
+                      color="warning" 
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Database schema needs updates
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box mb={3}>
+                    <Chip 
+                      label="Migration status unknown" 
+                      color="default" 
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Could not determine migration status
+                    </Typography>
+                  </Box>
+                )}
+              </>
+            )}
+
             {/* Setup Status */}
             <Alert 
               severity={detection.setup.canProceed ? 'success' : 'info'}
@@ -220,17 +301,30 @@ export const SetupWizard: React.FC = () => {
                 Continue to Admin Setup
               </Button>
             ) : (
-              <Box display="flex" gap={2}>
+              <Box display="flex" gap={2} flexWrap="wrap">
+                {detection.migrations.configured && detection.migrations.pendingCount > 0 && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={runMigrations}
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={16} /> : <Database size={16} />}
+                  >
+                    Run Migrations ({detection.migrations.pendingCount})
+                  </Button>
+                )}
                 <Button
                   variant="outlined"
                   onClick={detectEnvironment}
                   startIcon={<RefreshCw size={16} />}
+                  disabled={loading}
                 >
                   Refresh Detection
                 </Button>
                 <Button
                   variant="outlined"
                   onClick={() => setSetupMode('manual')}
+                  disabled={loading}
                 >
                   Manual Setup
                 </Button>
