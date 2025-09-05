@@ -132,6 +132,7 @@ KonBase supports multiple database solutions to fit different use cases:
 - **Performance**: < 15ms latency at P99
 - **Features**: Global edge distribution, ultra-low latency, built-in caching
 - **Use Cases**: High-performance applications, configuration management
+- **⚠️ Limitation**: Read-only in production (requires PostgreSQL for setup operations)
 
 ## 📁 File Storage Options
 
@@ -199,10 +200,13 @@ APP_URL=http://localhost:3000
 4. Run migrations: `npm run db:migrate`
 
 #### Edge Config Setup
+⚠️ **Important**: Edge Config is **read-only** in production. For setup operations (creating admin users, associations), you must also configure PostgreSQL.
+
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Navigate to **Storage** → **Edge Config**
 3. Create a new Edge Config
 4. Set `EDGE_CONFIG_ID` and `EDGE_CONFIG_READ_ACCESS_TOKEN`
+5. **Also set** `GEL_DATABASE_URL` for setup operations
 
 ### File Storage Setup
 
