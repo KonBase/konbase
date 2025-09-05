@@ -1,36 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { geldb } from '@/lib/db/gel';
+import { getUnifiedDatabase } from '@/lib/db/unified';
+import { isEdgeConfigConfigured } from '@/lib/db/edge-config';
 
 export async function GET(request: NextRequest) {
   try {
+    const db = getUnifiedDatabase();
+    const adapterType = db.getAdapterType();
+    
+    // Check if database is available
+    const isAvailable = await db.isAvailable();
+    
+    if (!isAvailable) {
+      return NextResponse.json({
+        setupComplete: false,
+        databaseType: adapterType,
+        error: `${adapterType} database is not available`
+      });
+    }
+
     // Check if setup is complete by looking for system settings
-    const setupComplete = await geldb.querySingle(`
-      SELECT value FROM system_settings WHERE key = 'setup_complete'
-    `);
-
+    const setupComplete = await db.get('system_settings:setup_complete');
+    
     // Check if there are any users (indicates setup has been done)
-    const userCount = await geldb.querySingle(`
-      SELECT COUNT(*) as count FROM users
-    `) as any;
-
+    const users = await db.getAll('users');
+    const userCount = users.length;
+    
     // Check if there are any associations
-    const associationCount = await geldb.querySingle(`
-      SELECT COUNT(*) as count FROM associations
-    `) as any;
+    const associations = await db.getAll('associations');
+    const associationCount = associations.length;
 
-    const isSetupComplete = (setupComplete as any)?.value === 'true' || 
-                            ((userCount as any)?.count > 0 && (associationCount as any)?.count > 0);
+    const isSetupComplete = setupComplete === 'true' || 
+                            (userCount > 0 && associationCount > 0);
 
     return NextResponse.json({
       setupComplete: isSetupComplete,
-      userCount: (userCount as any)?.count || 0,
-      associationCount: (associationCount as any)?.count || 0,
+      databaseType: adapterType,
+      userCount,
+      associationCount,
+      databaseAvailable: true,
     });
   } catch (error) {
     console.error('Setup status check error:', error);
-    // If we can't connect to database, assume setup is needed
+    
+    // Check if Edge Config is configured as fallback
+    const edgeConfigConfigured = await isEdgeConfigConfigured();
+    
     return NextResponse.json({
       setupComplete: false,
+      databaseType: edgeConfigConfigured ? 'edge-config' : 'postgresql',
+      databaseAvailable: false,
       error: 'Database connection failed'
     });
   }

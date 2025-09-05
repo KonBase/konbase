@@ -411,7 +411,7 @@ server {
 }
 ```
 
-## Vercel Deployment
+## Vercel/GitHub Action/Pages Deployment
 
 This guide helps you deploy KonBase to Vercel with CI/CD automation and production-ready configuration.
 
@@ -440,6 +440,41 @@ This guide helps you deploy KonBase to Vercel with CI/CD automation and producti
    - PostgreSQL support
    - Easy deployment
    - Good for development
+
+KonBase now supports **Vercel Edge Config** as a database solution, providing ultra-low latency data access (< 15ms at P99) for configuration data, feature flags, and small datasets. This is perfect for KonBase's configuration needs and provides significant performance benefits over traditional database connections.
+
+## Setup Instructions
+
+### 1. Create Edge Config in Vercel Dashboard
+
+1. Go to your Vercel dashboard
+2. Navigate to **Storage** → **Edge Config**
+3. Click **Create Edge Config**
+4. Give it a name (e.g., "konbase-config")
+5. Copy the **Edge Config ID**
+
+### 2. Configure Environment Variables
+
+Add the following environment variables to your Vercel project:
+
+```bash
+# Edge Config Configuration
+EDGE_CONFIG_ID=your-edge-config-id-here
+
+# Optional: Override database type
+DATABASE_TYPE=edge-config
+```
+
+### 3. Set Up Read Access Token
+
+1. In your Edge Config settings, go to **Access Tokens**
+2. Create a new **Read Access Token**
+3. Copy the token value
+4. Add it to your Vercel environment variables:
+
+```bash
+EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
+```
 
 ## 🚀 Quick Start
 
