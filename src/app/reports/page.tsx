@@ -1,164 +1,309 @@
 'use client';
 
-import { AuthGuard } from '@/components/guards/AuthGuard';
+import React, { useState } from 'react';
 import {
+  Container,
+  Typography,
+  Box,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+  Button,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  InputAdornment,
+  Chip,
+} from '@mui/material';
 import {
-  FileText,
-  TrendingUp,
-  Package,
-  Users,
-  DollarSign,
-  Calendar,
   Download,
-  Filter,
+  Calendar,
+  Package,
+  TrendingUp,
+  Users,
+  AlertTriangle,
+  BarChart3,
+  PieChart as PieChartIcon,
+  FileText,
 } from 'lucide-react';
-import Link from 'next/link';
-
-const reportTypes = [
-  {
-    title: 'Convention Reports',
-    description: 'Attendance, revenue, and performance reports',
-    icon: Calendar,
-    href: '/reports/conventions',
-    color: 'text-blue-500',
-  },
-  {
-    title: 'Inventory Reports',
-    description: 'Stock levels, usage, and valuation reports',
-    icon: Package,
-    href: '/reports/inventory',
-    color: 'text-green-500',
-  },
-  {
-    title: 'Financial Reports',
-    description: 'Revenue, expenses, and profit reports',
-    icon: DollarSign,
-    href: '/reports/financial',
-    color: 'text-yellow-500',
-  },
-  {
-    title: 'Member Reports',
-    description: 'Membership statistics and activity',
-    icon: Users,
-    href: '/reports/members',
-    color: 'text-purple-500',
-  },
-  {
-    title: 'Custom Reports',
-    description: 'Create custom reports with filters',
-    icon: Filter,
-    href: '/reports/custom',
-    color: 'text-indigo-500',
-  },
-  {
-    title: 'Scheduled Reports',
-    description: 'Manage automated report generation',
-    icon: Calendar,
-    href: '/reports/scheduled',
-    color: 'text-pink-500',
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Cell } from 'recharts';
 
 export default function ReportsPage() {
-  return (
-    <AuthGuard>
-      <div className="container mx-auto py-6">
-        <div className="flex flex-col space-y-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-              <p className="text-muted-foreground">
-                Generate and view various reports and analytics.
-              </p>
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export All
-              </Button>
-              <Button>
-                <FileText className="mr-2 h-4 w-4" />
-                Create Report
-              </Button>
-            </div>
-          </div>
+  const { data: session } = useSession();
+  const [selectedReport, setSelectedReport] = useState('inventory-summary');
+  const [dateRange, setDateRange] = useState('30');
+  const [associationId] = useState(session?.user?.associations?.[0]?.association?.id || '');
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reportTypes.map((report) => {
-              const Icon = report.icon;
-              return (
-                <Card
-                  key={report.title}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardHeader>
-                    <div className="flex items-center space-x-4">
-                      <Icon className={`h-8 w-8 ${report.color}`} />
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <CardTitle className="text-lg">{report.title}</CardTitle>
-                    <CardDescription>{report.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href={report.href}>Generate Report</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ['reports', selectedReport, dateRange, associationId],
+    queryFn: async () => {
+      const response = await fetch(`/api/reports/${selectedReport}?days=${dateRange}`, {
+        headers: {
+          'x-association-id': associationId,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch report data');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!session && !!associationId,
+  });
 
-          {/* Recent Reports Section */}
+  const reportTypes = [
+    {
+      id: 'inventory-summary',
+      name: 'Inventory Summary',
+      description: 'Overview of all inventory items and their status',
+      icon: Package,
+      color: 'primary',
+    },
+    {
+      id: 'convention-usage',
+      name: 'Convention Usage',
+      description: 'Equipment usage patterns across conventions',
+      icon: Calendar,
+      color: 'success',
+    },
+    {
+      id: 'maintenance-alerts',
+      name: 'Maintenance Alerts',
+      description: 'Items requiring attention or maintenance',
+      icon: AlertTriangle,
+      color: 'warning',
+    },
+    {
+      id: 'user-activity',
+      name: 'User Activity',
+      description: 'User engagement and activity metrics',
+      icon: Users,
+      color: 'info',
+    },
+    {
+      id: 'financial-summary',
+      name: 'Financial Summary',
+      description: 'Purchase costs and asset valuations',
+      icon: TrendingUp,
+      color: 'secondary',
+    },
+  ];
+
+  const renderChart = () => {
+    if (!reportData) return null;
+
+    switch (selectedReport) {
+      case 'inventory-summary':
+        return (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Items by Condition</Typography>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <PieChart
+                      data={reportData.conditionBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                    >
+                      {reportData.conditionBreakdown?.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${index * 60}, 70%, 50%)`} />
+                      ))}
+                    </PieChart>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Items by Category</Typography>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={reportData.categoryBreakdown}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </Box>
+        );
+
+      case 'convention-usage':
+        return (
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Reports</CardTitle>
-              <CardDescription>Your recently generated reports</CardDescription>
-            </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">
-                        Convention Performance Q4 2023
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Generated 2 days ago
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Inventory Valuation Report</p>
-                      <p className="text-sm text-muted-foreground">
-                        Generated 1 week ago
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <Typography variant="h6" gutterBottom>Equipment Usage Over Time</Typography>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={reportData.usageOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="itemsUsed" stroke="#8884d8" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AuthGuard>
+        );
+
+      case 'maintenance-alerts':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {reportData.alerts?.map((alert: any, index: number) => (
+              <Card key={index} sx={{ borderLeft: 4, borderLeftColor: 'warning.main' }}>
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="h6">{alert.itemName}</Typography>
+                      <Typography color="text.secondary">{alert.issue}</Typography>
+                    </Box>
+                    <Chip
+                      label={alert.priority}
+                      color={alert.priority === 'high' ? 'error' : 'warning'}
+                      size="small"
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        );
+
+      default:
+        return (
+          <Card>
+            <CardContent>
+              <Typography>Select a report type to view data</Typography>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`/api/reports/${selectedReport}/export?days=${dateRange}`, {
+        headers: {
+          'x-association-id': associationId,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedReport}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography>Loading reports...</Typography>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Typography variant="h4" component="h1">
+            Reports & Analytics
+          </Typography>
+          <Typography color="text.secondary">
+            Generate insights and track performance metrics
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Download size={20} />}
+          onClick={handleExport}
+          disabled={!reportData}
+        >
+          Export Report
+        </Button>
+      </Box>
+
+      {/* Report Selection */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel>Report Type</InputLabel>
+              <Select
+                value={selectedReport}
+                onChange={(e) => setSelectedReport(e.target.value)}
+                label="Report Type"
+              >
+                {reportTypes.map((report) => (
+                  <MenuItem key={report.id} value={report.id}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <report.icon size={16} />
+                      {report.name}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Date Range</InputLabel>
+              <Select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                label="Date Range"
+              >
+                <MenuItem value="7">Last 7 days</MenuItem>
+                <MenuItem value="30">Last 30 days</MenuItem>
+                <MenuItem value="90">Last 90 days</MenuItem>
+                <MenuItem value="365">Last year</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Report Description */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            {(() => {
+              const report = reportTypes.find(r => r.id === selectedReport);
+              const IconComponent = report?.icon || BarChart3;
+              return <IconComponent size={24} color="#666" />;
+            })()}
+            <Box>
+              <Typography variant="h6">
+                {reportTypes.find(r => r.id === selectedReport)?.name}
+              </Typography>
+              <Typography color="text.secondary">
+                {reportTypes.find(r => r.id === selectedReport)?.description}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Report Content */}
+      {renderChart()}
+    </Container>
   );
 }

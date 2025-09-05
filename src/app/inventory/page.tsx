@@ -1,149 +1,455 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  Grid,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { useAssociation } from '@/contexts/AssociationContext';
-import { AuthGuard } from '@/components/guards/AuthGuard';
-import Link from 'next/link';
+  IconButton,
+  Menu,
+  Chip,
+  TextField,
+  InputAdornment,
+  Fab,
+} from '@mui/material';
 import {
+  Plus,
+  Search,
+  Filter,
   Package,
-  FolderTree,
   MapPin,
-  FileText,
-  PackagePlus,
-  FileSpreadsheet,
+  Tag,
+  MoreVertical,
+  Edit,
+  Eye,
+  Trash2,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
+import { DataTable } from '@/components/tables/DataTable';
+import { Dialog } from '@/components/ui/Dialog';
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Item, TableColumn } from '@/types';
 
 export default function InventoryPage() {
-  const { currentAssociation, isLoading } = useAssociation();
+  const { data: session } = useSession();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [conditionFilter, setConditionFilter] = useState('');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
-  if (isLoading) {
-    return (
-      <AuthGuard>
-        <div className="container mx-auto p-4 md:p-6 space-y-6">
-          <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2"></div>
-          <div className="h-4 w-96 bg-muted rounded animate-pulse"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4 animate-pulse">
-                <div className="h-10 bg-muted rounded w-full mb-4"></div>
-                <div className="h-20 bg-muted rounded w-full"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
+  const { data: items = [], isLoading, refetch } = useQuery({
+    queryKey: ['inventory-items', searchQuery, categoryFilter, locationFilter, conditionFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('query', searchQuery);
+      if (categoryFilter) params.append('categoryId', categoryFilter);
+      if (locationFilter) params.append('locationId', locationFilter);
+      if (conditionFilter) params.append('condition', conditionFilter);
 
-  if (!currentAssociation) {
-    return (
-      <AuthGuard>
-        <div className="container mx-auto p-4 md:p-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>No Association Selected</CardTitle>
-              <CardDescription>
-                Please select or create an association to manage inventory.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <Link href="/associations">Go to Associations</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </AuthGuard>
-    );
-  }
+      const response = await fetch(`/api/inventory/items?${params}`, {
+        headers: {
+          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch items');
+      const result = await response.json();
+      return result.data as Item[];
+    },
+    enabled: !!session,
+  });
 
-  const inventoryModules = [
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await fetch('/api/inventory/categories', {
+        headers: {
+          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!session,
+  });
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const response = await fetch('/api/inventory/locations', {
+        headers: {
+          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch locations');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!session,
+  });
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, itemId: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedItem(itemId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedItem(null);
+  };
+
+  const getConditionColor = (condition: string) => {
+    switch (condition) {
+      case 'excellent': return 'success';
+      case 'good': return 'info';
+      case 'fair': return 'warning';
+      case 'poor': case 'broken': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const columns: TableColumn<Item>[] = [
     {
-      title: 'Inventory Items',
-      description: 'Manage and track all items in your inventory',
-      href: '/inventory/items',
-      icon: Package,
-      color: 'text-blue-600',
+      id: 'name',
+      label: 'Item Name',
+      sortable: true,
+      format: (value, row) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <Package size={16} />
+          <Box>
+            <Typography variant="body2" fontWeight="medium">
+              {value}
+            </Typography>
+            {row?.serial_number && (
+              <Typography variant="caption" color="text.secondary">
+                SN: {row.serial_number}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      ),
     },
     {
-      title: 'Categories',
-      description: 'Organize items into logical categories',
-      href: '/inventory/categories',
-      icon: FolderTree,
-      color: 'text-green-600',
+      id: 'category',
+      label: 'Category',
+      format: (value) => value?.name || 'Uncategorized',
     },
     {
-      title: 'Storage Locations',
-      description: 'Track where items are physically stored',
-      href: '/inventory/storage',
-      icon: MapPin,
-      color: 'text-orange-600',
+      id: 'location',
+      label: 'Location',
+      format: (value) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <MapPin size={14} />
+          {value?.name || 'No location'}
+        </Box>
+      ),
     },
     {
-      title: 'Warranties & Documents',
-      description: 'Manage warranties, manuals, and receipts',
-      href: '/inventory/warranties',
-      icon: FileText,
-      color: 'text-purple-600',
+      id: 'condition',
+      label: 'Condition',
+      format: (value) => (
+        <Chip
+          label={value}
+          size="small"
+          color={getConditionColor(value) as any}
+          variant="outlined"
+        />
+      ),
     },
     {
-      title: 'Equipment Sets',
-      description: 'Create reusable bundles of equipment',
-      href: '/inventory/sets',
-      icon: PackagePlus,
-      color: 'text-indigo-600',
+      id: 'purchase_price',
+      label: 'Value',
+      align: 'right',
+      format: (value) => value ? `$${value.toLocaleString()}` : '—',
     },
     {
-      title: 'Import/Export',
-      description: 'Bulk import or export inventory data',
-      href: '/inventory/import-export',
-      icon: FileSpreadsheet,
-      color: 'text-red-600',
+      id: 'actions',
+      label: 'Actions',
+      align: 'center',
+      format: (value, row) => (
+        <IconButton
+          size="small"
+          onClick={(e) => handleMenuClick(e, row?.id || '')}
+        >
+          <MoreVertical size={16} />
+        </IconButton>
+      ),
     },
   ];
 
-  return (
-    <AuthGuard>
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Inventory Management
-          </h1>
-          <p className="text-muted-foreground">
-            Comprehensive tools to manage your association's inventory and
-            equipment
-          </p>
-        </div>
+  const categoryOptions = categories.map((cat: any) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {inventoryModules.map((module) => {
-            const Icon = module.icon;
-            return (
-              <Card
-                key={module.href}
-                className="hover:shadow-lg transition-shadow"
+  const locationOptions = locations.map((loc: any) => ({
+    value: loc.id,
+    label: loc.name,
+  }));
+
+  const conditionOptions = [
+    { value: 'excellent', label: 'Excellent' },
+    { value: 'good', label: 'Good' },
+    { value: 'fair', label: 'Fair' },
+    { value: 'poor', label: 'Poor' },
+    { value: 'broken', label: 'Broken' },
+  ];
+
+  return (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Typography variant="h4" component="h1">
+            Inventory Management
+          </Typography>
+          <Typography color="text.secondary">
+            Manage your items, categories, and locations
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
+          onClick={() => setCreateDialogOpen(true)}
+          sx={{ display: { xs: 'none', sm: 'flex' } }}
+        >
+          Add Item
+        </Button>
+      </Box>
+
+      {/* Filters */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                fullWidth
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={20} />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
+                size="small"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value as string)}
+                  label="Category"
+                >
+                  <MenuItem value="">All Categories</MenuItem>
+                  {categoryOptions.map((option: any) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Location</InputLabel>
+                <Select
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value as string)}
+                  label="Location"
+                >
+                  <MenuItem value="">All Locations</MenuItem>
+                  {locationOptions.map((option: any) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Condition</InputLabel>
+                <Select
+                  value={conditionFilter}
+                  onChange={(e) => setConditionFilter(e.target.value as string)}
+                  label="Condition"
+                >
+                  <MenuItem value="">All Conditions</MenuItem>
+                  {conditionOptions.map((option: any) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Filter size={16} />}
+                onClick={() => {
+                  setSearchQuery('');
+                  setCategoryFilter('');
+                  setLocationFilter('');
+                  setConditionFilter('');
+                }}
               >
-                <Link href={module.href}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon className={`h-5 w-5 ${module.color}`} />
-                      {module.title}
-                    </CardTitle>
-                    <CardDescription>{module.description}</CardDescription>
-                  </CardHeader>
-                </Link>
-              </Card>
+                Clear Filters
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
+      <Grid container spacing={3} mb={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Package size={24} color="#1976d2" />
+                <Box>
+                  <Typography variant="h4">{items.length}</Typography>
+                  <Typography color="text.secondary">Total Items</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Tag size={24} color="#388e3c" />
+                <Box>
+                  <Typography variant="h4">{categories.length}</Typography>
+                  <Typography color="text.secondary">Categories</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={2}>
+                <MapPin size={24} color="#f57c00" />
+                <Box>
+                  <Typography variant="h4">{locations.length}</Typography>
+                  <Typography color="text.secondary">Locations</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Package size={24} color="#d32f2f" />
+                <Box>
+                  <Typography variant="h4">
+                    {items.filter(item => ['poor', 'broken'].includes(item.condition)).length}
+                  </Typography>
+                  <Typography color="text.secondary">Need Attention</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Items Table */}
+      <Card>
+        <DataTable
+          data={items}
+          columns={columns}
+          loading={isLoading}
+          selectable
+          selectedRows={selectedRows}
+          onSelectRow={(id) => {
+            setSelectedRows(prev => 
+              prev.includes(id) 
+                ? prev.filter(rowId => rowId !== id)
+                : [...prev, id]
             );
-          })}
-        </div>
-      </div>
-    </AuthGuard>
+          }}
+          onSelectAll={(selected) => {
+            setSelectedRows(selected ? items.map(item => item.id) : []);
+          }}
+          emptyMessage="No items found. Add your first item to get started."
+        />
+      </Card>
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => {
+          // Navigate to item details
+          handleMenuClose();
+        }}>
+          <Eye size={16} style={{ marginRight: 8 }} />
+          View Details
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Navigate to edit item
+          handleMenuClose();
+        }}>
+          <Edit size={16} style={{ marginRight: 8 }} />
+          Edit Item
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Delete item
+          handleMenuClose();
+        }}>
+          <Trash2 size={16} style={{ marginRight: 8 }} />
+          Delete Item
+        </MenuItem>
+      </Menu>
+
+      {/* Floating Action Button for mobile */}
+      <Fab
+        color="primary"
+        aria-label="add item"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', sm: 'none' }
+        }}
+        onClick={() => setCreateDialogOpen(true)}
+      >
+        <Plus size={24} />
+      </Fab>
+
+      {/* Create Item Dialog */}
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        title="Add New Item"
+        maxWidth="md"
+      >
+        <Typography>Item creation form would go here...</Typography>
+      </Dialog>
+    </Container>
   );
 }

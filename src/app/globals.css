@@ -1,75 +1,58 @@
-/* This is the existing index.css - it will be moved to globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Import accessibility styles */
-@import '../styles/accessibility.css';
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-primary: #1e293b;
+  --color-primary-foreground: #f8fafc;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #1e293b;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #1e293b;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #1e293b;
+  --radius: 0.5rem;
+}
 
-@layer base {
-  :root {
-    /* Updated color palette based on new specifications */
-    --background: 217 20% 93%;        /* Light Gray #e7eaef */
-    --foreground: 0 0% 11%;           /* Charcoal Gray #1b1b1b */
-    --card: 0 0% 100%;                /* White */
-    --card-foreground: 0 0% 11%;      /* Charcoal Gray #1b1b1b */
-    --popover: 0 0% 100%;             /* White */
-    --popover-foreground: 0 0% 11%;   /* Charcoal Gray #1b1b1b */
-    --primary: 213 83% 22%;           /* Navy Blue #0c2e62 */
-    --primary-foreground: 0 0% 100%;  /* White */
-    --secondary: 217 20% 93%;         /* Light Gray #e7eaef */
-    --secondary-foreground: 0 0% 11%; /* Charcoal Gray #1b1b1b */
-    --muted: 210 25% 70%;             /* Pale Blue #9eabc0 */
-    --muted-foreground: 213 29% 45%;  /* Slate Blue #556d91 */
-    --accent: 54 96% 72%;             /* Pastel Yellow #fce771 */
-    --accent-foreground: 0 0% 11%;    /* Charcoal Gray #1b1b1b */
-    --destructive: 345 83% 61%;       /* Bright Pink #d84165 */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 210 25% 70%;            /* Pale Blue #9eabc0 */
-    --input: 217 20% 93%;             /* Light Gray #e7eaef */
-    --ring: 213 83% 22%;              /* Navy Blue #0c2e62 */
-    --radius: 0.75rem;
-    --chart-1: 54 96% 72%;            /* Pastel Yellow */
-    --chart-2: 195 89% 48%;           /* Sky Blue */
-    --chart-3: 345 83% 61%;           /* Bright Pink */
-    --chart-4: 213 29% 45%;           /* Slate Blue */
-    --chart-5: 213 83% 22%;           /* Navy Blue */
-  }
-
-  .dark {
-    /* Dark mode using new color palette */
-    --background: 220 100% 9%;        /* Midnight Blue #061731 */
-    --foreground: 217 20% 93%;        /* Light Gray #e7eaef */
-    --card: 213 83% 14%;              /* Deep Navy #082045 */
-    --card-foreground: 217 20% 93%;   /* Light Gray #e7eaef */
-    --popover: 213 83% 14%;           /* Deep Navy #082045 */
-    --popover-foreground: 217 20% 93%; /* Light Gray #e7eaef */
-    --primary: 54 96% 72%;            /* Pastel Yellow #fce771 */
-    --primary-foreground: 0 0% 11%;   /* Charcoal Gray #1b1b1b */
-    --secondary: 213 29% 45%;         /* Slate Blue #556d91 */
-    --secondary-foreground: 217 20% 93%; /* Light Gray #e7eaef */
-    --muted: 213 29% 45%;             /* Slate Blue #556d91 */
-    --muted-foreground: 210 25% 70%;  /* Pale Blue #9eabc0 */
-    --accent: 54 96% 72%;             /* Pastel Yellow #fce771 */
-    --accent-foreground: 0 0% 11%;    /* Charcoal Gray #1b1b1b */
-    --destructive: 345 83% 61%;       /* Bright Pink #d84165 */
-    --destructive-foreground: 217 20% 93%; /* Light Gray #e7eaef */
-    --border: 213 29% 45%;            /* Slate Blue #556d91 */
-    --input: 213 29% 45%;             /* Slate Blue #556d91 */
-    --ring: 54 96% 72%;               /* Pastel Yellow #fce771 */
-    --chart-1: 54 96% 72%;            /* Pastel Yellow */
-    --chart-2: 195 89% 48%;           /* Sky Blue */
-    --chart-3: 345 83% 61%;           /* Bright Pink */
-    --chart-4: 210 25% 70%;           /* Pale Blue */
-    --chart-5: 213 83% 22%;           /* Navy Blue */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: #0f172a;
+    --color-foreground: #f8fafc;
+    --color-card: #0f172a;
+    --color-card-foreground: #f8fafc;
+    --color-popover: #0f172a;
+    --color-popover-foreground: #f8fafc;
+    --color-primary: #f8fafc;
+    --color-primary-foreground: #1e293b;
+    --color-secondary: #1e293b;
+    --color-secondary-foreground: #f8fafc;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+    --color-accent: #1e293b;
+    --color-accent-foreground: #f8fafc;
+    --color-destructive: #dc2626;
+    --color-destructive-foreground: #f8fafc;
+    --color-border: #1e293b;
+    --color-input: #1e293b;
+    --color-ring: #e2e8f0;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+html, 
+body { 
+  height: 100%; 
+}
+
+body { 
+  background-color: var(--color-background); 
+  color: var(--color-foreground); 
 }

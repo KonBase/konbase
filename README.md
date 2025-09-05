@@ -18,7 +18,7 @@
   </a>
 </p>
 
-KonBase is a comprehensive inventory and convention management system built for associations that organize events and need to track their equipment and supplies.
+KonBase is a comprehensive inventory and convention management system built for associations that organize events and need to track their equipment and supplies. This modernized version is built with Next.js 15, Material UI v7, GelDB, and Auth.js for a robust, scalable solution.
 
 ## Table of Contents
 
@@ -66,151 +66,600 @@ KonBase is built using modern web technologies:
 
 ### Frontend
 
-- **React** - A JavaScript library for building user interfaces
+- **Next.js 15** - React framework with App Router and Server Components
 - **TypeScript** - Static typing for better developer experience
-- **Vite** - Next generation frontend tooling
-- **Tailwind CSS** - Utility-first CSS framework
-- **shadcn/ui** - Reusable UI components built with Radix UI and Tailwind CSS
-- **React Router** - Routing library for React
+- **Material UI v7** - Modern React component library
+- **Tailwind CSS v4** - Utility-first CSS framework with new CSS-first configuration
+- **React Hook Form** - Form validation and management
+- **TanStack Query** - Asynchronous state management
 - **Lucide Icons** - Beautiful open source icons
-- **React Hook Form** - Form validation
 - **Recharts** - Data visualization components
 
 ### Backend
 
-- **Supabase** - Open source Firebase alternative
-  - PostgreSQL database
-  - Authentication
-  - Storage
-  - Edge Functions
-  - Realtime subscriptions
-- **Tanstack Query** - Asynchronous state management
+- **GelDB** - Modern PostgreSQL client with type safety
+- **Auth.js (NextAuth)** - Authentication with multiple providers
+- **PostgreSQL** - Robust relational database
+- **Row Level Security (RLS)** - Database-level security policies
 
 ### Deployment
 
-- **GitHub Pages** - For static site hosting
+- **Docker** - Containerized deployment
+- **Docker Compose** - Multi-container orchestration
 - **GitHub Actions** - CI/CD for automatic deployment
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- Supabase account (for database and authentication)
+- Node.js (v18 or higher)
+- PostgreSQL database (or Docker for containerized setup)
+- Git
 
-### Supabase Setup
-
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run the database schema setup script from the `schema.sql` file in the SQL editor
-3. Configure authentication providers as needed
-4. Get your Supabase URL and anonymous key
-
-### Installation
+### Quick Start with Docker
 
 1. Clone the repository
-
+   ```bash
+   git clone https://github.com/KonBase/konbase.git
+   cd konbase
    ```
-   git clone https://github.com/ShiroLuxferre/KonBase.git
+
+2. Copy environment variables
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. Start with Docker Compose
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Run database migrations
+   ```bash
+   npm run db:migrate
+   ```
+
+5. Access the application at `http://localhost:3000`
+
+### Manual Setup
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/KonBase/konbase.git
    cd konbase
    ```
 
 2. Install dependencies
-
-   ```
+   ```bash
    npm install
    ```
 
-3. Create an `.env` file with your Supabase credentials
-
+3. Set up environment variables
+   ```bash
+   cp .env.example .env.local
    ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   Configure the following variables in `.env.local`:
+   ```env
+   # Database
+   GEL_DATABASE_URL=postgresql://username:password@localhost:5432/konbase
+   
+   # Authentication
+   NEXTAUTH_SECRET=your-secret-key
+   NEXTAUTH_URL=http://localhost:3000
+   
+   # OAuth Providers (optional)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   DISCORD_CLIENT_ID=your-discord-client-id
+   DISCORD_CLIENT_SECRET=your-discord-client-secret
    ```
 
-4. Start the development server
-
+4. Run database migrations
+   ```bash
+   npm run db:migrate
    ```
+
+5. Start the development server
+   ```bash
    npm run dev
    ```
 
-5. Build for production
+6. Access the application at `http://localhost:3000`
+
+## Modern Stack (Next.js 15 + Material UI + GelDB)
+
+For the Next.js modernization in this branch:
+
+- Copy `.env.example` to `.env.local` and set:
+  - NEXTAUTH_SECRET, NEXTAUTH_URL
+  - GEL_DATABASE_URL (Postgres-compatible)
+  - GOOGLE_CLIENT_ID/SECRET, DISCORD_CLIENT_ID/SECRET (optional)
+- Run database migrations:
+
+```
+npm run db:migrate
+```
+
+- Run the dev server:
+
+```
+npm run dev
+```
+
+## Docker Deployment
+
+### 🚀 Quick Start
+
+### Development Environment
+```bash
+# Clone the repository
+git clone https://github.com/your-org/konbase.git
+cd konbase
+
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d --build
+
+# Access the application
+open http://localhost:3000
+```
+
+### Production Environment
+```bash
+# Use the automated setup script
+./scripts/setup-production.sh
+
+# Or manually:
+cp env.production .env
+# Edit .env with your values
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+## 📁 Configuration Files
+
+| File | Purpose | Environment |
+|------|---------|-------------|
+| `docker-compose.yml` | Basic development setup | Development |
+| `docker-compose.dev.yml` | Enhanced development with hot reload | Development |
+| `docker-compose.prod.yml` | Production-ready with security | Production |
+| `Dockerfile` | Standard build | Development |
+| `Dockerfile.prod` | Optimized production build | Production |
+| `env.example` | Environment template | All |
+| `env.production` | Production environment template | Production |
+
+## 🔐 Security Configuration
+
+### Required Environment Variables
+
+```bash
+# Authentication
+NEXTAUTH_SECRET=your-super-secret-key-minimum-32-characters-long
+NEXTAUTH_URL=https://yourdomain.com
+
+# Database
+DB_USER=gel
+DB_PASSWORD=your-secure-database-password-minimum-16-characters
+DB_NAME=konbase_prod
+
+# Application
+APP_NAME=KonBase
+APP_URL=https://yourdomain.com
+```
+
+### Optional Environment Variables
+
+```bash
+# OAuth Providers
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+DISCORD_CLIENT_ID=your-discord-client-id
+DISCORD_CLIENT_SECRET=your-discord-client-secret
+
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Redis (for caching)
+REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password
+```
+
+## 🐳 Docker Commands
+
+### Development
+```bash
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Stop services
+docker-compose -f docker-compose.dev.yml down
+
+# Rebuild and restart
+docker-compose -f docker-compose.dev.yml up -d --build
+```
+
+### Production
+```bash
+# Start production environment
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Stop services
+docker-compose -f docker-compose.prod.yml down
+
+# Update and restart
+docker-compose -f docker-compose.prod.yml pull
+docker-compose -f docker-compose.prod.yml up -d --build
+
+# Backup database
+docker-compose -f docker-compose.prod.yml exec geldb pg_dump -U gel konbase_prod > backup.sql
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Failed**
+   ```bash
+   # Check if database is healthy
+   docker-compose logs geldb
+   
+   # Restart database
+   docker-compose restart geldb
    ```
-   npm run build
+
+2. **Application Won't Start**
+   ```bash
+   # Check application logs
+   docker-compose logs app
+   
+   # Verify environment variables
+   docker-compose config
    ```
 
-## Connecting to Supabase
+3. **Permission Issues**
+   ```bash
+   # Fix upload directory permissions
+   sudo chown -R 1001:1001 uploads/
+   ```
 
-This project uses Supabase as its backend. To connect your local development environment to your remote Supabase project, follow these steps:
+### Health Checks
 
-1.  **Install Supabase CLI:**
-    If you haven't already, install the Supabase CLI. Follow the official instructions for your operating system: [Supabase CLI Installation](https://supabase.com/docs/guides/cli/getting-started#installation)
+All services include health checks:
+- **App**: HTTP endpoint at `/api/health`
+- **Database**: PostgreSQL `pg_isready`
+- **Redis**: Redis CLI ping
 
-2.  **Log in to Supabase:**
-    Open your terminal (Powershell in your case) and log in to your Supabase account:
+## 📊 Monitoring
 
-    ```powershell
-    supabase login
-    ```
+### View Service Status
+```bash
+# Check all services
+docker-compose ps
 
-    This will open a browser window for authentication.
+# Check health status
+docker-compose exec app curl -f http://localhost:3000/api/health
+```
 
-3.  **Link your Project:**
-    Navigate to the root directory of this project (`konbase-open-source`) in your terminal and link it to your remote Supabase project:
+### Log Management
+```bash
+# Follow all logs
+docker-compose logs -f
 
-    ```powershell
-    supabase link --project-ref YOUR_PROJECT_REF
-    ```
+# Follow specific service
+docker-compose logs -f app
 
-    Replace `YOUR_PROJECT_REF` with your actual Supabase project reference ID. You can find this in your Supabase project's dashboard URL (e.g., `https://app.supabase.com/project/YOUR_PROJECT_REF`) or in Project Settings -> General.
+# View last 100 lines
+docker-compose logs --tail=100 app
+```
 
-4.  **Set up Environment Variables:**
-    The application needs your Supabase Project URL and Anon Key to communicate with the backend.
+## 🔄 Updates and Maintenance
 
-    - Create a `.env` file in the root of the project if it doesn't exist.
-    - Add the following lines to the `.env` file:
+### Updating KonBase
+```bash
+# Pull latest changes
+git pull origin main
 
-      ```dotenv
-      NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
-      NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-      ```
+# Rebuild and restart
+docker-compose -f docker-compose.prod.yml up -d --build
+```
 
-    - Replace `YOUR_SUPABASE_PROJECT_URL` and `YOUR_SUPABASE_ANON_KEY` with the actual values from your Supabase project dashboard (Project Settings -> API).
+### Database Backups
+```bash
+# Create backup
+docker-compose exec geldb pg_dump -U gel konbase_prod > backup_$(date +%Y%m%d_%H%M%S).sql
 
-5.  **(Optional) Pull Remote Database Changes:**
-    If you have made changes to your remote database schema _after_ linking, you might want to pull those changes to keep your local `supabase/migrations` folder in sync (though this project currently uses `schema.sql` for initial setup):
+# Restore backup
+docker-compose exec -T geldb psql -U gel konbase_prod < backup.sql
+```
 
-    ```powershell
-    supabase db pull
-    ```
+### Cleanup
+```bash
+# Remove unused images
+docker image prune -f
 
-    _Note: Be cautious with this command if you have local migration files you haven't applied remotely._
+# Remove unused volumes (CAUTION: This removes data)
+docker volume prune -f
 
-6.  **Run the Application:**
-    You should now be able to run the application locally, and it will connect to your remote Supabase instance.
-    ```powershell
-    npm run dev
-    ```
+# Complete cleanup (CAUTION: This removes everything)
+docker system prune -a -f --volumes
+```
 
-## Database Setup (Manual)
+## 🌐 Reverse Proxy Setup
 
-Since the first-time setup wizard has been removed, follow these steps to set up your Supabase database manually:
+For production, use a reverse proxy like Nginx:
 
-1.  Navigate to your Supabase project dashboard.
-2.  Go to the **SQL Editor**.
-3.  Click **"New query"**.
-4.  Copy the entire content of the `schema.sql` file from this project.
-5.  Paste the content into the SQL Editor.
-6.  Run the query. This will create all necessary tables, roles, functions, and RLS policies.
-7.  **Grant Super Admin:**
-    - Sign up a user for your application (this will be your super admin).
-    - Find the `user_id` (UUID) of this user in the Supabase Dashboard under Authentication -> Users.
-    - Open the `super_admin.sql` file in this project.
-    - Replace the placeholder `'YOUR_USER_ID_HERE'` with the actual `user_id`.
-    - Go back to the Supabase **SQL Editor** and create another **"New query"**.
-    - Copy the modified content of `super_admin.sql` and paste it into the editor.
-    - Run the query.
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
 
-Your database is now set up and connected to the application.
+## Vercel Deployment
+
+This guide helps you deploy KonBase to Vercel with CI/CD automation and production-ready configuration.
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Vercel account
+- GitHub repository
+- Environment variables configured
+
+### 2. One-Click Deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/konbase)
+
+### 3. Manual Setup
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy
+./scripts/deploy-vercel.sh
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Set these in your Vercel dashboard or via CLI:
+
+#### Required
+```bash
+NEXTAUTH_SECRET=your-super-secret-key-minimum-32-characters
+NEXTAUTH_URL=https://yourdomain.vercel.app
+GEL_DATABASE_URL=your-database-connection-string
+```
+
+#### Optional
+```bash
+# OAuth Providers
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+DISCORD_CLIENT_ID=your-discord-client-id
+DISCORD_CLIENT_SECRET=your-discord-client-secret
+
+# Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# App Configuration
+APP_NAME=KonBase
+APP_URL=https://yourdomain.vercel.app
+```
+
+### Setting Environment Variables
+
+#### Via Vercel CLI:
+```bash
+vercel env add NEXTAUTH_SECRET
+vercel env add GEL_DATABASE_URL
+vercel env add GOOGLE_CLIENT_ID
+# ... add all required variables
+```
+
+#### Via Vercel Dashboard:
+1. Go to your project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add each variable for Production, Preview, and Development
+
+## 🏗️ CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+#### 1. **CI Pipeline** (`.github/workflows/ci.yml`)
+- **Triggers**: Push to `main`/`develop`, Pull Requests
+- **Jobs**:
+  - Code quality checks (ESLint, TypeScript)
+  - Security scanning (Trivy)
+  - Build testing
+  - Docker image building
+  - Automated deployment
+
+#### 2. **Vercel Deploy** (`.github/workflows/vercel-deploy.yml`)
+- **Triggers**: Push to `main`/`production`, Pull Requests
+- **Jobs**:
+  - Lint and test
+  - Deploy preview for PRs
+  - Deploy production for main branch
+
+### Workflow Features
+- ✅ **Automated Testing**: Lint, type check, build validation
+- ✅ **Security Scanning**: Vulnerability detection
+- ✅ **Preview Deployments**: Every PR gets a preview URL
+- ✅ **Production Deployments**: Automatic on main branch
+- ✅ **Docker Testing**: Multi-stage Docker builds
+- ✅ **Artifact Storage**: Build artifacts preserved
+
+## 📁 Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `vercel.json` | Vercel deployment configuration |
+| `.vercelignore` | Files to exclude from deployment |
+| `.github/workflows/ci.yml` | Main CI/CD pipeline |
+| `.github/workflows/vercel-deploy.yml` | Vercel-specific deployment |
+| `scripts/deploy-vercel.sh` | Manual deployment script |
+
+## 🔐 Security Features
+
+### Vercel Security
+- **HTTPS**: Automatic SSL certificates
+- **Security Headers**: XSS protection, content type options
+- **CORS**: Proper API access control
+- **Environment Variables**: Secure secret management
+
+### CI/CD Security
+- **Secret Management**: GitHub Secrets for sensitive data
+- **Vulnerability Scanning**: Automated security checks
+- **Code Quality**: Automated linting and type checking
+- **Build Validation**: Ensures only working code deploys
+
+## 🚀 Deployment Strategies
+
+### 1. **Preview Deployments**
+- Every pull request gets a preview URL
+- Perfect for testing before merging
+- Automatic cleanup after PR closure
+
+### 2. **Production Deployments**
+- Automatic on `main` branch pushes
+- Zero-downtime deployments
+- Rollback capability
+
+### 3. **Manual Deployments**
+```bash
+# Preview deployment
+vercel
+
+# Production deployment
+vercel --prod
+
+# Deploy specific branch
+vercel --target production
+```
+
+## 📊 Monitoring & Analytics
+
+### Vercel Analytics
+- **Performance**: Core Web Vitals tracking
+- **Usage**: Page views and user analytics
+- **Errors**: Automatic error tracking
+- **Functions**: Serverless function monitoring
+
+### GitHub Actions Monitoring
+- **Build Status**: Visual indicators in PRs
+- **Deployment History**: Track all deployments
+- **Security Alerts**: Vulnerability notifications
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### 1. **Build Failures**
+```bash
+# Check build logs
+vercel logs
+
+# Test build locally
+npm run build
+```
+
+#### 2. **Environment Variable Issues**
+```bash
+# List all environment variables
+vercel env ls
+
+# Check specific environment
+vercel env pull .env.local
+```
+
+#### 3. **Database Connection Issues**
+- Ensure `GEL_DATABASE_URL` is correctly formatted
+- Check database accessibility from Vercel
+- Verify network security groups
+
+### Debug Commands
+```bash
+# View deployment logs
+vercel logs [deployment-url]
+
+# Check function logs
+vercel logs --follow
+
+# Inspect environment
+vercel env pull .env.local
+```
+
+## 🌐 Custom Domain Setup
+
+### 1. **Add Domain in Vercel**
+```bash
+vercel domains add yourdomain.com
+```
+
+### 2. **Configure DNS**
+- Add CNAME record pointing to Vercel
+- Or use A records for apex domains
+
+### 3. **SSL Certificate**
+- Automatic SSL via Vercel
+- Let's Encrypt integration
+
+## 📈 Performance Optimization
+
+### Vercel Optimizations
+- **Edge Functions**: Global CDN distribution
+- **Image Optimization**: Automatic image optimization
+- **Caching**: Intelligent caching strategies
+- **Bundle Analysis**: Automatic bundle optimization
+
+### Next.js Optimizations
+- **Static Generation**: Pre-rendered pages
+- **API Routes**: Serverless functions
+- **Middleware**: Edge runtime for auth
+- **Font Optimization**: Automatic font loading
+
+## 🔄 Updates and Maintenance
+
+### Updating KonBase
+```bash
+# Pull latest changes
+git pull origin main
+
+# Deploy updates
+vercel --prod
+```
+
+### Environment Updates
+```bash
+# Update environment variables
+vercel env add VARIABLE_NAME
+
+# Redeploy with new env vars
+vercel --prod
+```
 
 ## Contributing
 
@@ -276,3 +725,4 @@ KonBase is licensed under the [MIT License](./LICENSE.md) - see the LICENSE.md f
 <p align="center">
   Made with ❤️ by the KonBase community
 </p>
+

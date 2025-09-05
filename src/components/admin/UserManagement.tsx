@@ -1,276 +1,416 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useState } from 'react';
 import {
+  Box,
+  Typography,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { UserRoleManager } from '@/components/admin/UserRoleManager';
-import { Search, Trash2 } from 'lucide-react';
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  Alert,
+  Pagination,
+  InputAdornment,
+  Avatar,
+  Switch,
+  FormControlLabel,
+} from '@mui/material';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { handleError } from '@/utils/debug';
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
+  Plus,
+  Search,
+  User,
+  Shield,
+  Mail,
+  Calendar,
+  Key,
+} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
-// Interface for user profiles
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  association_id: string | null;
-  created_at: string;
-}
+export const UserManagement: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
 
-export function UserManagement() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userSearchQuery, setUserSearchQuery] = useState('');
-  const { toast } = useToast();
+  const { data: users, isLoading, refetch } = useQuery({
+    queryKey: ['admin-users', searchQuery, page],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('search', searchQuery);
+      params.append('page', page.toString());
+      params.append('limit', '10');
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, name, role, association_id, created_at');
+      const response = await fetch(`/api/admin/users?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const result = await response.json();
+      return result.data;
+    },
+  });
 
-      if (error) throw error;
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, user: any) => {
+    setMenuAnchor(event.currentTarget);
+    setSelectedUser(user);
+  };
 
-      setUsers(data || []);
-    } catch (error: any) {
-      handleError(error, 'UserManagement.fetchUsers');
-      toast({
-        title: 'Error',
-        description: 'Failed to load user profiles',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setSelectedUser(null);
+  };
+
+  const handleEdit = () => {
+    setEditDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleView = () => {
+    // Navigate to user details
+    handleMenuClose();
+  };
+
+  const handleRoleChange = () => {
+    setRoleDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'error';
+      case 'system_admin': return 'warning';
+      case 'admin': return 'primary';
+      case 'manager': return 'info';
+      case 'member': return 'default';
+      case 'guest': return 'secondary';
+      default: return 'default';
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      // First check if the user exists to avoid cascading errors
-      const { error: userCheckError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (userCheckError) {
-        throw new Error('User not found or cannot be accessed');
-      }
-
-      // First remove user from audit logs (optional but prevents orphaned records)
-      const { error: auditLogError } = await supabase
-        .from('audit_logs')
-        .delete()
-        .eq('user_id', userId);
-
-      if (auditLogError) {
-        console.warn(
-          'Could not clean up audit logs for user, continuing:',
-          auditLogError,
-        );
-      }
-
-      // Remove user from any associations - wrap in try/catch for resilience
-      try {
-        const { error: membershipError } = await supabase
-          .from('association_members')
-          .delete()
-          .eq('user_id', userId);
-
-        if (membershipError) {
-          console.warn(
-            'Error removing association memberships:',
-            membershipError,
-          );
-          // Continue with deletion despite this error
-        }
-      } catch (membershipDeleteError) {
-        console.warn(
-          'Exception during association cleanup:',
-          membershipDeleteError,
-        );
-        // Continue with deletion despite this error
-      }
-
-      // Remove any documents associated with the user
-      try {
-        const { error: docsError } = await supabase
-          .from('documents')
-          .delete()
-          .eq('uploaded_by', userId);
-
-        if (docsError) {
-          console.warn('Error removing user documents:', docsError);
-        }
-      } catch (docsError) {
-        console.warn('Exception during document cleanup:', docsError);
-      }
-
-      // Then delete the user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error('Failed to delete user profile:', profileError);
-        throw profileError;
-      }
-
-      // Create audit log entry
-      await supabase.from('audit_logs').insert({
-        action: 'delete_user',
-        entity: 'users',
-        entity_id: userId,
-        user_id: '', // Will be filled by auth context
-        changes: { deleted_user_id: userId },
-      });
-
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully',
-      });
-
-      // Refresh users
-      fetchUsers();
-    } catch (error: any) {
-      console.error('Error deleting user:', error);
-      toast({
-        title: 'Error',
-        description: `Failed to delete user: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
-      });
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'success';
+      case 'suspended': return 'warning';
+      case 'inactive': return 'error';
+      default: return 'default';
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(userSearchQuery.toLowerCase()),
-  );
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" py={4}>
+        <Typography>Loading users...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Management</CardTitle>
-        <CardDescription>
-          View and manage user accounts and permissions
-        </CardDescription>
-        <div className="relative mt-4">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users by name or email"
-            value={userSearchQuery}
-            onChange={(e) => setUserSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex justify-between p-2 border-b animate-pulse"
-              >
-                <div className="space-y-1">
-                  <div className="h-4 w-40 bg-muted rounded"></div>
-                  <div className="h-3 w-60 bg-muted rounded"></div>
-                </div>
-                <div className="h-8 w-32 bg-muted rounded"></div>
-              </div>
-            ))}
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <p className="text-center py-4">No users found</p>
-        ) : (
-          <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex flex-col md:flex-row justify-between md:items-center p-2 border-b last:border-0 gap-2"
-              >
-                <div>
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    User ID: {user.id.substring(0, 8)}... | Created:{' '}
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Association:{' '}
-                    {user.association_id
-                      ? user.association_id.substring(0, 8) + '...'
-                      : 'None'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <UserRoleManager
-                    userId={user.id}
-                    currentRole={user.role as any}
-                    onRoleUpdated={fetchUsers}
-                  />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h6">
+          User Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
+          onClick={() => setEditDialogOpen(true)}
+        >
+          Create User
+        </Button>
+      </Box>
+
+      {/* Search and Filters */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" gap={2} alignItems="center">
+            <TextField
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={20} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ flex: 1 }}
+            />
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Role</InputLabel>
+              <Select label="Role">
+                <MenuItem value="all">All Roles</MenuItem>
+                <MenuItem value="super_admin">Super Admin</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="manager">Manager</MenuItem>
+                <MenuItem value="member">Member</MenuItem>
+                <MenuItem value="guest">Guest</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Status</InputLabel>
+              <Select label="Status">
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="suspended">Suspended</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Users Table */}
+      <Card>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>User</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>2FA</TableCell>
+                <TableCell>Last Login</TableCell>
+                <TableCell>Associations</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users?.data?.map((user: any) => (
+                <TableRow key={user.id} hover>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Avatar
+                        src={user.profile?.avatar_url}
+                        sx={{ width: 40, height: 40 }}
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete User</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this user? This action
-                          cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            ))}
-          </div>
+                        {user.profile?.first_name?.[0]}{user.profile?.last_name?.[0]}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium">
+                          {user.profile?.first_name} {user.profile?.last_name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {user.email}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.role?.replace('_', ' ').toUpperCase()}
+                      color={getRoleColor(user.role) as any}
+                      size="small"
+                      icon={<Shield size={12} />}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.status}
+                      color={getStatusColor(user.status) as any}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.profile?.two_factor_enabled ? 'Enabled' : 'Disabled'}
+                      color={user.profile?.two_factor_enabled ? 'success' : 'default'}
+                      size="small"
+                      icon={<Key size={12} />}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}
+                  </TableCell>
+                  <TableCell>
+                    {user.association_count || 0}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuClick(e, user)}
+                    >
+                      <MoreVertical size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {users?.pagination && (
+          <Box display="flex" justifyContent="center" p={2}>
+            <Pagination
+              count={users.pagination.totalPages}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              color="primary"
+            />
+          </Box>
         )}
-      </CardContent>
-    </Card>
+      </Card>
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleView}>
+          <Eye size={16} style={{ marginRight: 8 }} />
+          View Profile
+        </MenuItem>
+        <MenuItem onClick={handleEdit}>
+          <Edit size={16} style={{ marginRight: 8 }} />
+          Edit User
+        </MenuItem>
+        <MenuItem onClick={handleRoleChange}>
+          <Shield size={16} style={{ marginRight: 8 }} />
+          Change Role
+        </MenuItem>
+        <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+          <Trash2 size={16} style={{ marginRight: 8 }} />
+          Delete User
+        </MenuItem>
+      </Menu>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {selectedUser ? 'Edit User' : 'Create User'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Box display="flex" gap={2} mb={2}>
+              <TextField
+                fullWidth
+                label="First Name"
+                defaultValue={selectedUser?.profile?.first_name || ''}
+              />
+              <TextField
+                fullWidth
+                label="Last Name"
+                defaultValue={selectedUser?.profile?.last_name || ''}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              defaultValue={selectedUser?.email || ''}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Phone"
+              defaultValue={selectedUser?.profile?.phone || ''}
+              sx={{ mb: 2 }}
+            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Role</InputLabel>
+              <Select
+                defaultValue={selectedUser?.role || 'member'}
+                label="Role"
+              >
+                <MenuItem value="super_admin">Super Admin</MenuItem>
+                <MenuItem value="system_admin">System Admin</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="manager">Manager</MenuItem>
+                <MenuItem value="member">Member</MenuItem>
+                <MenuItem value="guest">Guest</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControlLabel
+              control={<Switch defaultChecked={selectedUser?.status === 'active'} />}
+              label="Active User"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained">
+            {selectedUser ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Role Change Dialog */}
+      <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)}>
+        <DialogTitle>Change User Role</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Changing user roles affects their permissions across the system. Please review carefully.
+          </Alert>
+          <Typography sx={{ mb: 2 }}>
+            Current role: <strong>{selectedUser?.role?.replace('_', ' ').toUpperCase()}</strong>
+          </Typography>
+          <FormControl fullWidth>
+            <InputLabel>New Role</InputLabel>
+            <Select
+              defaultValue={selectedUser?.role || 'member'}
+              label="New Role"
+            >
+              <MenuItem value="super_admin">Super Admin</MenuItem>
+              <MenuItem value="system_admin">System Admin</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="manager">Manager</MenuItem>
+              <MenuItem value="member">Member</MenuItem>
+              <MenuItem value="guest">Guest</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRoleDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained">Update Role</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            This action cannot be undone. All data associated with this user will be permanently deleted.
+          </Alert>
+          <Typography>
+            Are you sure you want to delete "{selectedUser?.profile?.first_name} {selectedUser?.profile?.last_name}"?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-}
+};
+
+export default UserManagement;

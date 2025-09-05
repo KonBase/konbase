@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_SECRET=development-secret-key-change-in-production
+      - NEXTAUTH_URL=http://localhost:3000
+      - GEL_DATABASE_URL=postgres://gel:gel@geldb:5432/gel
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+    depends_on:
+      geldb:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - ./src:/app/src:ro  # For development hot reload
+    restart: unless-stopped
+    networks:
+      - konbase_dev_network
+
+  geldb:
+    image: geldata/gel:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - GEL_SERVER_SECURITY=insecure_dev_mode
+      - GEL_SERVER_DEFAULT_AUTH_METHOD=Trust
+    volumes:
+      - geldb_dev_data:/var/lib/gel/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - konbase_dev_network
+
+volumes:
+  geldb_dev_data:
+    driver: local
+
+networks:
+  konbase_dev_network:
+    driver: bridge

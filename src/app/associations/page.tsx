@@ -1,159 +1,250 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { PlusCircle, Building2, Edit, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import {
+  Container,
+  Typography,
+  Box,
+  Fab,
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { useAssociation } from '@/contexts/AssociationContext';
-import { AuthGuard } from '@/components/guards/AuthGuard';
+  CardActions,
+  Button,
+  Avatar,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import { Plus, Settings, Users, MoreVertical } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
+import { Association, AssociationMember } from '@/types';
+import { Dialog } from '@/components/ui/Dialog';
+import { AssociationForm } from '@/components/forms/AssociationForm';
+import { DataTable } from '@/components/tables/DataTable';
 
 export default function AssociationsPage() {
-  const {
-    userAssociations,
-    currentAssociation,
-    setCurrentAssociation,
-    isLoading,
-  } = useAssociation();
-  const router = useRouter();
+  const { data: session } = useSession();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedAssociation, setSelectedAssociation] = useState<string | null>(null);
 
-  const handleSelectAssociation = (id: string) => {
-    const association = userAssociations.find((a) => a.id === id);
-    if (association) {
-      setCurrentAssociation(association);
-      router.push('/dashboard');
+  const { data: associations = [], isLoading, refetch } = useQuery({
+    queryKey: ['associations'],
+    queryFn: async () => {
+      const response = await fetch('/api/associations');
+      if (!response.ok) throw new Error('Failed to fetch associations');
+      const result = await response.json();
+      return result.data as AssociationMember[];
+    },
+    enabled: !!session,
+  });
+
+  const handleCreateAssociation = async (data: any) => {
+    try {
+      const response = await fetch('/api/associations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) throw new Error('Failed to create association');
+      
+      await refetch();
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating association:', error);
     }
   };
 
-  const handleCreateAssociation = () => {
-    // Navigate to the correct setup page
-    router.push('/setup/association');
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, associationId: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedAssociation(associationId);
   };
 
-  return (
-    <AuthGuard>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Associations</h1>
-            <p className="text-muted-foreground">
-              Select an association to manage or create a new one.
-            </p>
-          </div>
-          <Button onClick={handleCreateAssociation}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Association
-          </Button>
-        </div>
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedAssociation(null);
+  };
 
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2].map((i) => (
-              <Card key={i} className="w-full opacity-60 animate-pulse">
-                <CardHeader>
-                  <div className="h-7 w-40 bg-muted rounded"></div>
-                  <div className="h-5 w-64 bg-muted rounded"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 w-full bg-muted rounded"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <>
-            {userAssociations.length === 0 ? (
-              <Card className="text-center p-6">
-                <CardHeader>
-                  <CardTitle>No Associations Found</CardTitle>
-                  <CardDescription>
-                    You don't have any associations yet. Create your first
-                    association to get started.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter className="flex justify-center">
-                  <Button onClick={handleCreateAssociation}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create Association
-                  </Button>
-                </CardFooter>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userAssociations.map((association) => (
-                  <Card
-                    key={association.id}
-                    className={`cursor-pointer transition-shadow hover:shadow-md ${
-                      currentAssociation?.id === association.id
-                        ? 'border-primary'
-                        : ''
-                    }`}
-                    onClick={() => handleSelectAssociation(association.id)}
-                  >
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                      <div className="space-y-1">
-                        <CardTitle className="text-xl">
-                          {association.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {association.contactEmail}
-                        </CardDescription>
-                      </div>
-                      <div
-                        className={`p-2 rounded-full ${
-                          currentAssociation?.id === association.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'error';
+      case 'manager': return 'warning';
+      case 'member': return 'primary';
+      default: return 'default';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography>Loading associations...</Typography>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h4" component="h1">
+          My Associations
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          Create Association
+        </Button>
+      </Box>
+
+      {associations.length === 0 ? (
+        <Card sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            No associations found
+          </Typography>
+          <Typography color="text.secondary" mb={3}>
+            Create your first association to get started with KonBase.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Plus size={20} />}
+            onClick={() => setCreateDialogOpen(true)}
+          >
+            Create Association
+          </Button>
+        </Card>
+      ) : (
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 3 }}>
+          {associations.map((membership) => (
+            <Box key={membership.id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flex: 1 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Avatar
+                        src={membership.association?.logo_url}
+                        sx={{ width: 48, height: 48 }}
                       >
-                        <Building2 className="h-4 w-4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {association.description || 'No description provided'}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/associations/${association.id}`);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push('/settings');
-                          }}
-                        >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Settings
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </AuthGuard>
+                        {membership.association?.name?.[0]}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6" component="h2">
+                          {membership.association?.name}
+                        </Typography>
+                        <Chip
+                          label={membership.role}
+                          size="small"
+                          color={getRoleColor(membership.role) as any}
+                          variant="outlined"
+                        />
+                      </Box>
+                    </Box>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuClick(e, membership.association?.id || '')}
+                    >
+                      <MoreVertical size={20} />
+                    </IconButton>
+                  </Box>
+
+                  <Typography color="text.secondary" sx={{ mb: 2 }}>
+                    {membership.association?.description || 'No description provided.'}
+                  </Typography>
+
+                  <Box display="flex" gap={1} mb={2}>
+                    {membership.association?.website && (
+                      <Chip label="Website" size="small" variant="outlined" />
+                    )}
+                    {membership.association?.email && (
+                      <Chip label="Contact" size="small" variant="outlined" />
+                    )}
+                  </Box>
+
+                  <Typography variant="caption" color="text.secondary">
+                    Joined {new Date(membership.joined_at).toLocaleDateString()}
+                  </Typography>
+                </CardContent>
+
+                <CardActions>
+                  <Button
+                    size="small"
+                    startIcon={<Users size={16} />}
+                    href={`/associations/${membership.association?.id}`}
+                  >
+                    View Details
+                  </Button>
+                  {(membership.role === 'admin' || membership.role === 'manager') && (
+                    <Button
+                      size="small"
+                      startIcon={<Settings size={16} />}
+                      href={`/associations/${membership.association?.id}/settings`}
+                    >
+                      Settings
+                    </Button>
+                  )}
+                </CardActions>
+              </Card>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Create Association Dialog */}
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        title="Create New Association"
+        maxWidth="md"
+      >
+        <AssociationForm
+          onSubmit={handleCreateAssociation}
+          title=""
+        />
+      </Dialog>
+
+      {/* Association Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => {
+          // Navigate to association details
+          handleMenuClose();
+        }}>
+          View Details
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Navigate to settings
+          handleMenuClose();
+        }}>
+          Settings
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Leave association
+          handleMenuClose();
+        }}>
+          Leave Association
+        </MenuItem>
+      </Menu>
+
+      {/* Floating Action Button for mobile */}
+      <Fab
+        color="primary"
+        aria-label="create association"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', sm: 'none' }
+        }}
+        onClick={() => setCreateDialogOpen(true)}
+      >
+        <Plus size={24} />
+      </Fab>
+    </Container>
   );
 }

@@ -1,44 +1,20 @@
-import { ThemeProvider } from '@/contexts/ThemeProvider';
-import { AuthProvider } from '@/contexts/auth';
-import { AssociationProvider } from '@/contexts/AssociationContext';
-import { AccessibilityProvider } from '@/contexts/AccessibilityProvider';
-import { ToasterProvider } from '@/components/ui/ToasterProvider';
-import RouteChangeHandler from '@/components/RouteChangeHandler';
-import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
-import { SkipToMain } from '@/components/accessibility/SkipLink';
-import '@/app/globals.css';
+import './globals.css'
+import type { Metadata } from 'next'
+import { RootProviders } from '../providers/RootProviders'
 
-export const metadata = {
-  title: 'KonBase - Event & Inventory Management',
-  description: 'Manage your events, inventory, and more with KonBase',
-};
+export const metadata: Metadata = {
+  title: 'KonBase Modernized',
+  description: 'Inventory and convention management, Next.js 15',
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body suppressHydrationWarning>
-        <ThemeProvider>
-          <AccessibilityProvider>
-            <AuthProvider>
-              <AssociationProvider>
-                <SkipToMain />
-                <ConditionalLayout>
-                  <ToasterProvider />
-                  <RouteChangeHandler />
-                  <main id="main-content" tabIndex={-1}>
-                    {children}
-                  </main>
-                </ConditionalLayout>
-              </AssociationProvider>
-            </AuthProvider>
-          </AccessibilityProvider>
-        </ThemeProvider>
+    <html lang="en" className="contrast-default text-size-default">
+      <body>
+        <RootProviders>
+          {children}
+        </RootProviders>
       </body>
     </html>
-  );
+  )
 }

@@ -1,150 +1,328 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import {
+  Container,
+  Typography,
+  Box,
+  Button,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, MapPin, Users } from 'lucide-react';
-import CreateConventionDialog from '@/components/conventions/CreateConventionDialog';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import Link from 'next/link';
+  CardActions,
+  IconButton,
+  Menu,
+  MenuItem,
+  Chip,
+  Fab,
+  TextField,
+  InputAdornment,
+} from '@mui/material';
+import {
+  Plus,
+  Search,
+  Filter,
+  Calendar,
+  MapPin,
+  Users,
+  Package,
+  MoreVertical,
+  Edit,
+  Eye,
+  Trash2,
+  Play,
+  Pause,
+  CheckCircle,
+} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
+import { Convention } from '@/types';
+import { Dialog } from '@/components/ui/Dialog';
+import { ConventionForm } from '@/components/forms/ConventionForm';
 
 export default function ConventionsPage() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const [conventions, setConventions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { data: session } = useSession();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedConvention, setSelectedConvention] = useState<string | null>(null);
 
-  const fetchConventions = async () => {
+  const { data: conventions = [], isLoading, refetch } = useQuery({
+    queryKey: ['conventions', searchQuery, statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('query', searchQuery);
+      if (statusFilter) params.append('status', statusFilter);
+
+      const response = await fetch(`/api/conventions?${params}`, {
+        headers: {
+          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch conventions');
+      const result = await response.json();
+      return result.data as Convention[];
+    },
+    enabled: !!session,
+  });
+
+  const handleCreateConvention = async (data: any) => {
     try {
-      const { data, error } = await supabase
-        .from('conventions')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch('/api/conventions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (error) throw error;
-      setConventions(data || []);
-    } catch (error: any) {
-      console.error('Error fetching conventions:', error);
-      toast.error('Failed to load conventions');
-    } finally {
-      setLoading(false);
+      if (!response.ok) throw new Error('Failed to create convention');
+      
+      await refetch();
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating convention:', error);
     }
   };
 
-  useEffect(() => {
-    fetchConventions();
-  }, []);
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, conventionId: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedConvention(conventionId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedConvention(null);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500';
-      case 'upcoming':
-        return 'bg-blue-500';
-      case 'completed':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
+      case 'planning': return 'info';
+      case 'active': return 'success';
+      case 'completed': return 'default';
+      case 'cancelled': return 'error';
+      default: return 'default';
     }
   };
 
-  if (loading) {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'planning': return <Calendar size={16} />;
+      case 'active': return <Play size={16} />;
+      case 'completed': return <CheckCircle size={16} />;
+      case 'cancelled': return <Pause size={16} />;
+      default: return <Calendar size={16} />;
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography>Loading conventions...</Typography>
+      </Container>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Conventions</h1>
-          <p className="text-muted-foreground">
-            Manage your events and conventions
-          </p>
-        </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Typography variant="h4" component="h1">
+            Convention Management
+          </Typography>
+          <Typography color="text.secondary">
+            Plan, manage, and track your conventions and events
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
+          onClick={() => setCreateDialogOpen(true)}
+          sx={{ display: { xs: 'none', sm: 'flex' } }}
+        >
           Create Convention
         </Button>
-      </div>
+      </Box>
 
-      {conventions.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No conventions yet</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Get started by creating your first convention
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Convention
+      {/* Filters */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" gap={2} alignItems="center">
+            <TextField
+              placeholder="Search conventions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={20} />
+                  </InputAdornment>
+                ),
+              }}
+              variant="outlined"
+              size="small"
+              sx={{ flex: 1 }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<Filter size={16} />}
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('');
+              }}
+            >
+              Clear Filters
             </Button>
-          </CardContent>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Conventions Grid */}
+      {conventions.length === 0 ? (
+        <Card sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            No conventions found
+          </Typography>
+          <Typography color="text.secondary" mb={3}>
+            Create your first convention to get started with KonBase.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Plus size={20} />}
+            onClick={() => setCreateDialogOpen(true)}
+          >
+            Create Convention
+          </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 3 }}>
           {conventions.map((convention) => (
-            <Card
-              key={convention.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-            >
-              <Link href={`/conventions/${convention.id}`}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{convention.name}</CardTitle>
-                    <Badge className={getStatusColor(convention.status)}>
-                      {convention.status}
-                    </Badge>
-                  </div>
-                  <CardDescription>{convention.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {new Date(
-                        convention.start_date,
-                      ).toLocaleDateString()} -{' '}
-                      {new Date(convention.end_date).toLocaleDateString()}
-                    </div>
+            <Box key={convention.id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flex: 1 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box>
+                      <Typography variant="h6" component="h2" gutterBottom>
+                        {convention.name}
+                      </Typography>
+                      <Chip
+                        label={convention.status}
+                        size="small"
+                        color={getStatusColor(convention.status) as any}
+                        variant="outlined"
+                        icon={getStatusIcon(convention.status)}
+                      />
+                    </Box>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuClick(e, convention.id)}
+                    >
+                      <MoreVertical size={20} />
+                    </IconButton>
+                  </Box>
+
+                  <Typography color="text.secondary" sx={{ mb: 2 }}>
+                    {convention.description || 'No description provided.'}
+                  </Typography>
+
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Calendar size={16} color="#666" />
+                      <Typography variant="body2">
+                        {new Date(convention.start_date).toLocaleDateString()} - {new Date(convention.end_date).toLocaleDateString()}
+                      </Typography>
+                    </Box>
                     {convention.location && (
-                      <div className="flex items-center">
-                        <MapPin className="mr-2 h-4 w-4" />
-                        {convention.location}
-                      </div>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <MapPin size={16} color="#666" />
+                        <Typography variant="body2">{convention.location}</Typography>
+                      </Box>
                     )}
-                    <div className="flex items-center">
-                      <Users className="mr-2 h-4 w-4" />
-                      {convention.attendee_count || 0} attendees
-                    </div>
-                  </div>
+                  </Box>
                 </CardContent>
-              </Link>
-            </Card>
+
+                <CardActions>
+                  <Button
+                    size="small"
+                    startIcon={<Eye size={16} />}
+                    href={`/conventions/${convention.id}`}
+                  >
+                    View Details
+                  </Button>
+                  {convention.status === 'planning' && (
+                    <Button
+                      size="small"
+                      startIcon={<Edit size={16} />}
+                      href={`/conventions/${convention.id}/edit`}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </CardActions>
+              </Card>
+            </Box>
           ))}
-        </div>
+        </Box>
       )}
 
-      <CreateConventionDialog
-        onConventionCreated={() => {
-          fetchConventions();
+      {/* Create Convention Dialog */}
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        title="Create New Convention"
+        maxWidth="md"
+      >
+        <ConventionForm
+          onSubmit={handleCreateConvention}
+          title=""
+        />
+      </Dialog>
+
+      {/* Convention Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => {
+          // Navigate to convention details
+          handleMenuClose();
+        }}>
+          <Eye size={16} style={{ marginRight: 8 }} />
+          View Details
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Navigate to edit convention
+          handleMenuClose();
+        }}>
+          <Edit size={16} style={{ marginRight: 8 }} />
+          Edit Convention
+        </MenuItem>
+        <MenuItem onClick={() => {
+          // Delete convention
+          handleMenuClose();
+        }}>
+          <Trash2 size={16} style={{ marginRight: 8 }} />
+          Delete Convention
+        </MenuItem>
+      </Menu>
+
+      {/* Floating Action Button for mobile */}
+      <Fab
+        color="primary"
+        aria-label="create convention"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', sm: 'none' }
         }}
-      />
-    </div>
+        onClick={() => setCreateDialogOpen(true)}
+      >
+        <Plus size={24} />
+      </Fab>
+    </Container>
   );
 }
