@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:vercel": "node ./scripts/vercel-build.mjs",
+    "postbuild": "node ./scripts/run-gel-migrations.mjs || echo 'Migrations skipped'",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

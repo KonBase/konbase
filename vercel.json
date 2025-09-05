@@ -9,7 +9,7 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "npm run build",
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
