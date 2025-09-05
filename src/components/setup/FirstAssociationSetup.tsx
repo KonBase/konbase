@@ -98,6 +98,7 @@ export const FirstAssociationSetup: React.FC<FirstAssociationSetupProps> = ({
         body: JSON.stringify({
           ...formData,
           adminUserId: setupData.adminUser.id,
+          databaseType: setupData.databaseType || 'postgresql',
         }),
       });
 

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/uploads/1.svg" alt="KonBase Logo" width="300" />
+  <img src="./.github/1.svg" alt="KonBase Logo" width="300" />
 </div>
 
 <p align="center">
@@ -18,475 +18,227 @@
   </a>
 </p>
 
-KonBase is a comprehensive inventory and convention management system built for associations that organize events and need to track their equipment and supplies. This modernized version is built with Next.js 15, Material UI v7, GelDB, and Auth.js for a robust, scalable solution.
+# KonBase - Modern Inventory & Convention Management System
 
-## Table of Contents
+KonBase is a comprehensive inventory and convention management system built for associations that organize events and need to track their equipment and supplies. This modernized version is built with Next.js 15, Material UI v7, and supports both PostgreSQL and Vercel Edge Config for ultra-fast data access.
 
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Contributing](#contributing)
-- [Community](#community)
-- [License](#license)
+## 🚀 Quick Start
 
-## Key Features
+### One-Click Deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KonBase/konbase)
 
-### Association Management Module
+### Local Development
+```bash
+# Clone the repository
+git clone https://github.com/KonBase/konbase.git
+cd konbase
 
-- Association registration and profile management
-- Inventory management with categorization and location tracking
-- User management with permission levels
-- Warranty and documentation tracking
-- Equipment sets management
-- Import/export functionality
-- Local backup capabilities
+# Install dependencies
+npm install
 
-### Convention Management Module
+# Copy environment variables
+cp .env.example .env.local
 
-- Create convention from association template
-- Equipment issuing and return tracking
-- Consumable items tracking
-- Room/location mapping
-- Requirements gathering and fulfillment tracking
-- Comprehensive logging of all actions
-- Reports generation
-- Post-convention archiving
+# Start development server
+npm run dev
+```
 
-### Security Features
+## 📋 Table of Contents
 
-- Role-based access control
-- Super-admin role with full system access
-- Enhanced security for log files
-- Two-factor authentication for sensitive operations
-- Data encryption for sensitive information
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Database Options](#-database-options)
+- [File Storage Options](#-file-storage-options)
+- [Setup Instructions](#-setup-instructions)
+- [Deployment Guide](#-deployment-guide)
+- [API Documentation](#-api-documentation)
+- [Admin Panel](#-admin-panel)
+- [Branding System](#-branding-system)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [Community](#-community)
+- [License](#-license)
 
-## Tech Stack
+## ✨ Key Features
 
-KonBase is built using modern web technologies:
+### 🏢 Association Management
+- **Association Registration**: Complete profile management with custom branding
+- **User Management**: Role-based access control with permission levels
+- **Inventory Management**: Categorization, location tracking, and warranty management
+- **Equipment Sets**: Pre-configured equipment packages for events
+- **Import/Export**: Bulk data operations with CSV support
+- **Local Backup**: Automated backup capabilities
+
+### 🎪 Convention Management
+- **Event Creation**: Create conventions from association templates
+- **Equipment Tracking**: Issue and return tracking with real-time status
+- **Consumable Items**: Track usage and inventory levels
+- **Room Mapping**: Location-based equipment organization
+- **Requirements Gathering**: Automated fulfillment tracking
+- **Comprehensive Logging**: Complete audit trail of all actions
+- **Reports Generation**: Custom reports for post-event analysis
+- **Archiving**: Post-convention data archiving
+
+### 🔐 Security Features
+- **Role-Based Access Control**: Granular permission system
+- **Super Admin Role**: Full system access and management
+- **Two-Factor Authentication**: Enhanced security for sensitive operations
+- **Data Encryption**: Sensitive information protection
+- **Audit Logging**: Complete security event tracking
+
+### 🎨 Custom Branding
+- **Admin Panel Branding**: Customize logos, colors, and styling
+- **File Upload System**: Upload custom assets with Vercel Blob support
+- **Theme Customization**: CSS and HTML customization options
+- **PWA Support**: Progressive Web App with custom manifest
+
+## 🛠 Tech Stack
 
 ### Frontend
-
 - **Next.js 15** - React framework with App Router and Server Components
 - **TypeScript** - Static typing for better developer experience
 - **Material UI v7** - Modern React component library
-- **Tailwind CSS v4** - Utility-first CSS framework with new CSS-first configuration
+- **Tailwind CSS v4** - Utility-first CSS framework
 - **React Hook Form** - Form validation and management
 - **TanStack Query** - Asynchronous state management
 - **Lucide Icons** - Beautiful open source icons
 - **Recharts** - Data visualization components
 
 ### Backend
-
 - **GelDB** - Modern PostgreSQL client with type safety
 - **Auth.js (NextAuth)** - Authentication with multiple providers
 - **PostgreSQL** - Robust relational database
+- **Vercel Edge Config** - Ultra-fast configuration storage
 - **Row Level Security (RLS)** - Database-level security policies
 
-### Deployment
-
+### Storage & Deployment
+- **Vercel Blob** - Global file storage with CDN
 - **Docker** - Containerized deployment
 - **Docker Compose** - Multi-container orchestration
 - **GitHub Actions** - CI/CD for automatic deployment
 
-## Getting Started
+## 🗄 Database Options
+
+KonBase supports multiple database solutions to fit different use cases:
+
+### 1. PostgreSQL GelDB (Traditional)
+- **Best for**: Complex queries, large datasets, transactional operations
+- **Performance**: 50-200ms query latency
+- **Features**: Full SQL support, ACID compliance, complex relationships
+- **Use Cases**: Production applications, complex data relationships
+
+### 2. Vercel Edge Config (Ultra-fast)
+- **Best for**: Configuration data, feature flags, small datasets
+- **Performance**: < 15ms latency at P99
+- **Features**: Global edge distribution, ultra-low latency, built-in caching
+- **Use Cases**: High-performance applications, configuration management
+
+## 📁 File Storage Options
+
+### 1. Vercel Blob (Recommended)
+- **Best for**: Production applications, global distribution
+- **Performance**: < 15ms latency at P99
+- **Features**: Global CDN, automatic scaling, built-in caching
+- **Use Cases**: Production deployments, global file distribution
+
+### 2. Local Storage (Development)
+- **Best for**: Development, testing, small deployments
+- **Performance**: Direct file system access
+- **Features**: No external dependencies, easy debugging
+- **Use Cases**: Local development, testing environments
+
+## ⚙️ Setup Instructions
 
 ### Prerequisites
-
 - Node.js (v18 or higher)
 - PostgreSQL database (or Docker for containerized setup)
 - Git
+- Vercel account (for Edge Config and Blob storage)
 
-### Quick Start with Docker
+### Environment Configuration
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/KonBase/konbase.git
-   cd konbase
-   ```
-
-2. Copy environment variables
-   ```bash
-   cp .env.example .env.local
-   ```
-
-3. Start with Docker Compose
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Run database migrations
-   ```bash
-   npm run db:migrate
-   ```
-
-5. Access the application at `http://localhost:3000`
-
-### Manual Setup
-
-1. Clone the repository
-   ```bash
-   git clone https://github.com/KonBase/konbase.git
-   cd konbase
-   ```
-
-2. Install dependencies
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Configure the following variables in `.env.local`:
-   ```env
-   # Database
-   GEL_DATABASE_URL=postgresql://username:password@localhost:5432/konbase
-   
-   # Authentication
-   NEXTAUTH_SECRET=your-secret-key
-   NEXTAUTH_URL=http://localhost:3000
-   
-   # OAuth Providers (optional)
-   GOOGLE_CLIENT_ID=your-google-client-id
-   GOOGLE_CLIENT_SECRET=your-google-client-secret
-   DISCORD_CLIENT_ID=your-discord-client-id
-   DISCORD_CLIENT_SECRET=your-discord-client-secret
-   ```
-
-4. Run database migrations
-   ```bash
-   npm run db:migrate
-   ```
-
-5. Start the development server
-   ```bash
-   npm run dev
-   ```
-
-6. Access the application at `http://localhost:3000`
-
-## Modern Stack (Next.js 15 + Material UI + GelDB)
-
-For the Next.js modernization in this branch:
-
-- Copy `.env.example` to `.env.local` and set:
-  - NEXTAUTH_SECRET, NEXTAUTH_URL
-  - GEL_DATABASE_URL (Postgres-compatible)
-  - GOOGLE_CLIENT_ID/SECRET, DISCORD_CLIENT_ID/SECRET (optional)
-- Run database migrations:
-
-```
-npm run db:migrate
-```
-
-- Run the dev server:
-
-```
-npm run dev
-```
-
-## Docker Deployment
-
-### 🚀 Quick Start
-
-### Development Environment
-```bash
-# Clone the repository
-git clone https://github.com/your-org/konbase.git
-cd konbase
-
-# Start development environment
-docker-compose -f docker-compose.dev.yml up -d --build
-
-# Access the application
-open http://localhost:3000
-```
-
-### Production Environment
-```bash
-# Use the automated setup script
-./scripts/setup-production.sh
-
-# Or manually:
-cp env.production .env
-# Edit .env with your values
-docker-compose -f docker-compose.prod.yml up -d --build
-```
-
-## 📁 Configuration Files
-
-| File | Purpose | Environment |
-|------|---------|-------------|
-| `docker-compose.yml` | Basic development setup | Development |
-| `docker-compose.dev.yml` | Enhanced development with hot reload | Development |
-| `docker-compose.prod.yml` | Production-ready with security | Production |
-| `Dockerfile` | Standard build | Development |
-| `Dockerfile.prod` | Optimized production build | Production |
-| `env.example` | Environment template | All |
-| `env.production` | Production environment template | Production |
-
-## 🔐 Security Configuration
-
-### Required Environment Variables
+Create `.env.local` with the following variables:
 
 ```bash
-# Authentication
-NEXTAUTH_SECRET=your-super-secret-key-minimum-32-characters-long
-NEXTAUTH_URL=https://yourdomain.com
+# NextAuth Configuration
+NEXTAUTH_SECRET=your-super-secret-key-minimum-32-characters
+NEXTAUTH_URL=http://localhost:3000
 
-# Database
-DB_USER=gel
-DB_PASSWORD=your-secure-database-password-minimum-16-characters
-DB_NAME=konbase_prod
+# Database Configuration (choose one)
+# Option 1: PostgreSQL
+GEL_DATABASE_URL=postgresql://username:password@localhost:5432/konbase
 
-# Application
-APP_NAME=KonBase
-APP_URL=https://yourdomain.com
-```
+# Option 2: Edge Config
+EDGE_CONFIG_ID=your-edge-config-id
+EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
 
-### Optional Environment Variables
+# File Storage Configuration (choose one)
+# Option 1: Vercel Blob (Recommended)
+BLOB_READ_WRITE_TOKEN=your-blob-read-write-token
 
-```bash
-# OAuth Providers
+# Option 2: Local Storage (Development)
+# LOCAL_STORAGE_PATH=./uploads
+
+# OAuth Providers (Optional)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 DISCORD_CLIENT_ID=your-discord-client-id
 DISCORD_CLIENT_SECRET=your-discord-client-secret
 
-# Email Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-
-# Redis (for caching)
-REDIS_PORT=6379
-REDIS_PASSWORD=your-redis-password
+# Application Settings
+APP_NAME=KonBase
+APP_URL=http://localhost:3000
 ```
 
-## 🐳 Docker Commands
+### Database Setup
 
-### Development
-```bash
-# Start development environment
-docker-compose -f docker-compose.dev.yml up -d
+#### PostgreSQL Setup
+1. Install PostgreSQL 12 or higher
+2. Create a database named `konbase`
+3. Set the `GEL_DATABASE_URL` environment variable
+4. Run migrations: `npm run db:migrate`
 
-# View logs
-docker-compose -f docker-compose.dev.yml logs -f
-
-# Stop services
-docker-compose -f docker-compose.dev.yml down
-
-# Rebuild and restart
-docker-compose -f docker-compose.dev.yml up -d --build
-```
-
-### Production
-```bash
-# Start production environment
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
-
-# Stop services
-docker-compose -f docker-compose.prod.yml down
-
-# Update and restart
-docker-compose -f docker-compose.prod.yml pull
-docker-compose -f docker-compose.prod.yml up -d --build
-
-# Backup database
-docker-compose -f docker-compose.prod.yml exec geldb pg_dump -U gel konbase_prod > backup.sql
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Failed**
-   ```bash
-   # Check if database is healthy
-   docker-compose logs geldb
-   
-   # Restart database
-   docker-compose restart geldb
-   ```
-
-2. **Application Won't Start**
-   ```bash
-   # Check application logs
-   docker-compose logs app
-   
-   # Verify environment variables
-   docker-compose config
-   ```
-
-3. **Permission Issues**
-   ```bash
-   # Fix upload directory permissions
-   sudo chown -R 1001:1001 uploads/
-   ```
-
-### Health Checks
-
-All services include health checks:
-- **App**: HTTP endpoint at `/api/health`
-- **Database**: PostgreSQL `pg_isready`
-- **Redis**: Redis CLI ping
-
-## 📊 Monitoring
-
-### View Service Status
-```bash
-# Check all services
-docker-compose ps
-
-# Check health status
-docker-compose exec app curl -f http://localhost:3000/api/health
-```
-
-### Log Management
-```bash
-# Follow all logs
-docker-compose logs -f
-
-# Follow specific service
-docker-compose logs -f app
-
-# View last 100 lines
-docker-compose logs --tail=100 app
-```
-
-## 🔄 Updates and Maintenance
-
-### Updating KonBase
-```bash
-# Pull latest changes
-git pull origin main
-
-# Rebuild and restart
-docker-compose -f docker-compose.prod.yml up -d --build
-```
-
-### Database Backups
-```bash
-# Create backup
-docker-compose exec geldb pg_dump -U gel konbase_prod > backup_$(date +%Y%m%d_%H%M%S).sql
-
-# Restore backup
-docker-compose exec -T geldb psql -U gel konbase_prod < backup.sql
-```
-
-### Cleanup
-```bash
-# Remove unused images
-docker image prune -f
-
-# Remove unused volumes (CAUTION: This removes data)
-docker volume prune -f
-
-# Complete cleanup (CAUTION: This removes everything)
-docker system prune -a -f --volumes
-```
-
-## 🌐 Reverse Proxy Setup
-
-For production, use a reverse proxy like Nginx:
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-    
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-## Vercel/GitHub Action/Pages Deployment
-
-This guide helps you deploy KonBase to Vercel with CI/CD automation and production-ready configuration.
-
-## Prerequisites
-
-1. **Database Setup**: GelDB is not directly compatible with Vercel's serverless environment. You'll need to use a managed PostgreSQL service.
-
-### Recommended Database Options:
-
-1. **Vercel Postgres** (Recommended)
-   - Native Vercel integration
-   - Automatic connection pooling
-   - Easy setup through Vercel dashboard
-
-2. **Supabase**
-   - PostgreSQL-compatible
-   - Good free tier
-   - Easy migration from GelDB
-
-3. **PlanetScale**
-   - MySQL-compatible (requires schema changes)
-   - Serverless-friendly
-   - Good performance
-
-4. **Railway**
-   - PostgreSQL support
-   - Easy deployment
-   - Good for development
-
-KonBase now supports **Vercel Edge Config** as a database solution, providing ultra-low latency data access (< 15ms at P99) for configuration data, feature flags, and small datasets. This is perfect for KonBase's configuration needs and provides significant performance benefits over traditional database connections.
-
-## Setup Instructions
-
-### 1. Create Edge Config in Vercel Dashboard
-
-1. Go to your Vercel dashboard
+#### Edge Config Setup
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Navigate to **Storage** → **Edge Config**
-3. Click **Create Edge Config**
-4. Give it a name (e.g., "konbase-config")
-5. Copy the **Edge Config ID**
+3. Create a new Edge Config
+4. Set `EDGE_CONFIG_ID` and `EDGE_CONFIG_READ_ACCESS_TOKEN`
 
-### 2. Configure Environment Variables
+### File Storage Setup
 
-Add the following environment variables to your Vercel project:
+#### Vercel Blob Setup
+1. Go to [Vercel Storage Dashboard](https://vercel.com/dashboard/storage)
+2. Create a new Blob Store
+3. Get the Read/Write Token
+4. Set `BLOB_READ_WRITE_TOKEN` environment variable
 
-```bash
-# Edge Config Configuration
-EDGE_CONFIG_ID=your-edge-config-id-here
+#### Local Storage Setup
+1. Create uploads directory: `mkdir uploads`
+2. Set `LOCAL_STORAGE_PATH=./uploads`
 
-# Optional: Override database type
-DATABASE_TYPE=edge-config
-```
-
-### 3. Set Up Read Access Token
-
-1. In your Edge Config settings, go to **Access Tokens**
-2. Create a new **Read Access Token**
-3. Copy the token value
-4. Add it to your Vercel environment variables:
+### Running the Application
 
 ```bash
-EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
+# Install dependencies
+npm install
+
+# Run database migrations
+npm run db:migrate
+
+# Start development server
+npm run dev
 ```
 
-## 🚀 Quick Start
+Access the application at `http://localhost:3000`
 
-### 1. Prerequisites
-- Vercel account
-- GitHub repository
-- Environment variables configured
+## 🚀 Deployment Guide
 
-### 2. One-Click Deploy
+### Vercel Deployment (Recommended)
+
+#### 1. One-Click Deploy
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KonBase/konbase)
 
-### 3. Manual Setup
+#### 2. Manual Setup
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -495,239 +247,236 @@ npm install -g vercel
 vercel login
 
 # Deploy
-./scripts/deploy-vercel.sh
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Set these in your Vercel dashboard or via CLI:
-
-#### Required
-```bash
-NEXTAUTH_SECRET=your-super-secret-key-minimum-32-characters
-NEXTAUTH_URL=https://yourdomain.vercel.app
-GEL_DATABASE_URL=your-database-connection-string
-```
-
-#### Optional
-```bash
-# OAuth Providers
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-DISCORD_CLIENT_ID=your-discord-client-id
-DISCORD_CLIENT_SECRET=your-discord-client-secret
-
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-
-# App Configuration
-APP_NAME=KonBase
-APP_URL=https://yourdomain.vercel.app
-```
-
-### Setting Environment Variables
-
-#### Via Vercel CLI:
-```bash
-vercel env add NEXTAUTH_SECRET
-vercel env add GEL_DATABASE_URL
-vercel env add GOOGLE_CLIENT_ID
-# ... add all required variables
-```
-
-#### Via Vercel Dashboard:
-1. Go to your project dashboard
-2. Navigate to Settings → Environment Variables
-3. Add each variable for Production, Preview, and Development
-
-## 🏗️ CI/CD Pipeline
-
-### GitHub Actions Workflows
-
-#### 1. **CI Pipeline** (`.github/workflows/ci.yml`)
-- **Triggers**: Push to `main`/`develop`, Pull Requests
-- **Jobs**:
-  - Code quality checks (ESLint, TypeScript)
-  - Security scanning (Trivy)
-  - Build testing
-  - Docker image building
-  - Automated deployment
-
-#### 2. **Vercel Deploy** (`.github/workflows/vercel-deploy.yml`)
-- **Triggers**: Push to `main`/`production`, Pull Requests
-- **Jobs**:
-  - Lint and test
-  - Deploy preview for PRs
-  - Deploy production for main branch
-
-### Workflow Features
-- ✅ **Automated Testing**: Lint, type check, build validation
-- ✅ **Security Scanning**: Vulnerability detection
-- ✅ **Preview Deployments**: Every PR gets a preview URL
-- ✅ **Production Deployments**: Automatic on main branch
-- ✅ **Docker Testing**: Multi-stage Docker builds
-- ✅ **Artifact Storage**: Build artifacts preserved
-
-## 📁 Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `vercel.json` | Vercel deployment configuration |
-| `.vercelignore` | Files to exclude from deployment |
-| `.github/workflows/ci.yml` | Main CI/CD pipeline |
-| `.github/workflows/vercel-deploy.yml` | Vercel-specific deployment |
-| `scripts/deploy-vercel.sh` | Manual deployment script |
-
-## 🔐 Security Features
-
-### Vercel Security
-- **HTTPS**: Automatic SSL certificates
-- **Security Headers**: XSS protection, content type options
-- **CORS**: Proper API access control
-- **Environment Variables**: Secure secret management
-
-### CI/CD Security
-- **Secret Management**: GitHub Secrets for sensitive data
-- **Vulnerability Scanning**: Automated security checks
-- **Code Quality**: Automated linting and type checking
-- **Build Validation**: Ensures only working code deploys
-
-## 🚀 Deployment Strategies
-
-### 1. **Preview Deployments**
-- Every pull request gets a preview URL
-- Perfect for testing before merging
-- Automatic cleanup after PR closure
-
-### 2. **Production Deployments**
-- Automatic on `main` branch pushes
-- Zero-downtime deployments
-- Rollback capability
-
-### 3. **Manual Deployments**
-```bash
-# Preview deployment
-vercel
-
-# Production deployment
 vercel --prod
-
-# Deploy specific branch
-vercel --target production
 ```
 
-## 📊 Monitoring & Analytics
+#### 3. Environment Variables
+Set the following in your Vercel dashboard:
 
-### Vercel Analytics
-- **Performance**: Core Web Vitals tracking
-- **Usage**: Page views and user analytics
-- **Errors**: Automatic error tracking
-- **Functions**: Serverless function monitoring
+**Required:**
+```bash
+NEXTAUTH_SECRET=your-production-secret-key
+NEXTAUTH_URL=https://your-app.vercel.app
+```
 
-### GitHub Actions Monitoring
-- **Build Status**: Visual indicators in PRs
-- **Deployment History**: Track all deployments
-- **Security Alerts**: Vulnerability notifications
+**Database (choose one):**
+```bash
+# PostgreSQL
+GEL_DATABASE_URL=postgresql://user:pass@host:port/db
+
+# Edge Config
+EDGE_CONFIG_ID=your-edge-config-id
+EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
+```
+
+**Storage (choose one):**
+```bash
+# Vercel Blob
+BLOB_READ_WRITE_TOKEN=your-blob-read-write-token
+
+# Local Storage
+LOCAL_STORAGE_PATH=./uploads
+```
+
+### Docker Deployment
+
+#### Development
+```bash
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access the application
+open http://localhost:3000
+```
+
+#### Production
+```bash
+# Use the automated setup script
+./scripts/setup-production.sh
+
+# Or manually:
+cp env.production .env
+# Edit .env with your values
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Performance Comparison
+
+| Feature | PostgreSQL | Edge Config | Vercel Blob | Local Storage |
+|---------|------------|-------------|-------------|---------------|
+| Query Latency | 50-200ms | < 15ms | < 15ms | < 5ms |
+| Global Distribution | ❌ | ✅ | ✅ | ❌ |
+| Complex Queries | ✅ | ❌ | ❌ | ❌ |
+| Write Operations | ✅ | Limited | ✅ | ✅ |
+| Data Size Limits | Large | Small | Large | Limited |
+| ACID Compliance | ✅ | ❌ | ❌ | ❌ |
+| Connection Overhead | High | None | None | None |
+
+## 📚 API Documentation
+
+### Health Check
+```bash
+GET /api/health
+```
+Returns system health status and database type.
+
+### Setup Status
+```bash
+GET /api/setup/status
+```
+Returns setup completion status and configuration.
+
+### File Upload
+```bash
+POST /api/upload
+Content-Type: multipart/form-data
+
+# Form Data
+- file: File (required)
+- name: string (optional)
+- description: string (optional)
+- itemId: string (optional)
+- conventionId: string (optional)
+
+# Headers
+- x-association-id: string (required)
+```
+
+### File Serving
+```bash
+GET /api/files/[...path]
+
+# Examples
+GET /api/files/documents/assoc_123/doc_1234567890.pdf
+GET /api/files/images/assoc_123/avatar_1234567890.jpg
+```
+
+### Database Health
+```bash
+# PostgreSQL
+GET /api/setup/test-database
+
+# Edge Config
+GET /api/setup/check-edge-config
+
+# Blob Storage
+GET /api/setup/check-blob-storage
+```
+
+## 🎛 Admin Panel
+
+The admin panel provides comprehensive system management:
+
+### System Overview
+- **Dashboard**: Real-time system statistics
+- **Health Monitoring**: Database and storage status
+- **Performance Metrics**: Response times and usage statistics
+
+### Association Management
+- **Create/Edit Associations**: Manage association profiles
+- **User Management**: Assign roles and permissions
+- **Settings Configuration**: Customize association settings
+
+### User Management
+- **User Administration**: Create, edit, and manage users
+- **Role Assignment**: Assign and modify user roles
+- **Permission Management**: Granular access control
+
+### Global Settings
+- **System Configuration**: Global application settings
+- **Email Configuration**: SMTP and notification settings
+- **Security Settings**: Authentication and security policies
+
+### Branding Management
+- **Custom Branding**: Upload logos, favicons, and app icons
+- **Color Customization**: Set primary, secondary, and accent colors
+- **CSS Customization**: Custom styling and themes
+- **PWA Configuration**: Progressive Web App settings
+
+### Audit Logs
+- **Activity Tracking**: Complete audit trail
+- **Security Events**: Login attempts and security events
+- **System Changes**: Configuration and data changes
+
+## 🎨 Branding System
+
+KonBase includes a comprehensive branding system that allows complete customization:
+
+### Features
+- **Custom Logos**: Upload and manage logos for different contexts
+- **Color Themes**: Customize primary, secondary, and accent colors
+- **File Assets**: Upload custom favicons, app icons, and images
+- **CSS Customization**: Add custom CSS for advanced styling
+- **HTML Customization**: Custom HTML for head section
+- **PWA Support**: Custom manifest and app icons
+
+### Usage
+1. Access the Admin Panel
+2. Navigate to the "Branding" tab
+3. Upload custom assets or modify colors
+4. Preview changes in real-time
+5. Save configuration
+
+### Asset Types
+- **Logo**: Main application logo
+- **Favicon**: Browser tab icon
+- **App Icon**: PWA and mobile app icon
+- **Apple Touch Icon**: iOS home screen icon
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
-#### 1. **Build Failures**
+#### Database Connection Issues
 ```bash
-# Check build logs
-vercel logs
+# Check database health
+curl https://your-app.vercel.app/api/health
 
+# Test specific database
+curl https://your-app.vercel.app/api/setup/check-edge-config
+curl https://your-app.vercel.app/api/setup/test-database
+```
+
+#### File Upload Issues
+```bash
+# Check storage health
+curl https://your-app.vercel.app/api/setup/check-blob-storage
+
+# Test file upload
+curl -X POST https://your-app.vercel.app/api/upload \
+  -H "x-association-id: test-assoc" \
+  -F "file=@test.pdf"
+```
+
+#### Build Issues
+```bash
 # Test build locally
 npm run build
+
+# Check for TypeScript errors
+npm run type-check
+
+# Check for linting errors
+npm run lint
 ```
-
-#### 2. **Environment Variable Issues**
-```bash
-# List all environment variables
-vercel env ls
-
-# Check specific environment
-vercel env pull .env.local
-```
-
-#### 3. **Database Connection Issues**
-- Ensure `GEL_DATABASE_URL` is correctly formatted
-- Check database accessibility from Vercel
-- Verify network security groups
 
 ### Debug Commands
 ```bash
 # View deployment logs
-vercel logs [deployment-url]
+vercel logs
 
-# Check function logs
-vercel logs --follow
+# Check environment variables
+vercel env ls
 
-# Inspect environment
-vercel env pull .env.local
+# Test file serving
+curl https://your-app.vercel.app/api/files/documents/test.pdf
 ```
 
-## 🌐 Custom Domain Setup
-
-### 1. **Add Domain in Vercel**
-```bash
-vercel domains add yourdomain.com
-```
-
-### 2. **Configure DNS**
-- Add CNAME record pointing to Vercel
-- Or use A records for apex domains
-
-### 3. **SSL Certificate**
-- Automatic SSL via Vercel
-- Let's Encrypt integration
-
-## 📈 Performance Optimization
-
-### Vercel Optimizations
-- **Edge Functions**: Global CDN distribution
-- **Image Optimization**: Automatic image optimization
-- **Caching**: Intelligent caching strategies
-- **Bundle Analysis**: Automatic bundle optimization
-
-### Next.js Optimizations
-- **Static Generation**: Pre-rendered pages
-- **API Routes**: Serverless functions
-- **Middleware**: Edge runtime for auth
-- **Font Optimization**: Automatic font loading
-
-## 🔄 Updates and Maintenance
-
-### Updating KonBase
-```bash
-# Pull latest changes
-git pull origin main
-
-# Deploy updates
-vercel --prod
-```
-
-### Environment Updates
-```bash
-# Update environment variables
-vercel env add VARIABLE_NAME
-
-# Redeploy with new env vars
-vercel --prod
-```
-
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions to KonBase! Here's how you can help:
 
 ### Ways to Contribute
-
 - **Code Contributions**: Fix bugs, add features, improve performance
 - **Documentation**: Improve or expand documentation
 - **Bug Reports**: Submit issues for any bugs you encounter
@@ -735,7 +484,6 @@ We welcome contributions to KonBase! Here's how you can help:
 - **Testing**: Help test the application and provide feedback
 
 ### Contribution Process
-
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
@@ -744,16 +492,13 @@ We welcome contributions to KonBase! Here's how you can help:
 6. Open a Pull Request
 
 ### Code Style
-
 - Follow the existing code style
 - Use TypeScript for type safety
 - Write tests for new features
 - Update documentation for significant changes
 
 ### Commit Messages
-
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
 - `feat:` for new features
 - `fix:` for bug fixes
 - `docs:` for documentation
@@ -762,7 +507,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - `test:` for tests
 - `chore:` for build process or auxiliary tool changes
 
-## Community
+## 🌐 Community
 
 Join our community to get help, share ideas, and connect with other KonBase users:
 
@@ -771,13 +516,12 @@ Join our community to get help, share ideas, and connect with other KonBase user
 - **Discussions**: Participate in [GitHub Discussions](https://github.com/KonBase/konbase/discussions) for general topics
 
 ### Support the Project
-
 If you find KonBase helpful, consider supporting the project:
 
 - **GitHub Sponsors**: Support the development team directly through GitHub
 - **Buy Me a Coffee**: [Buy us a coffee](https://www.buymeacoffee.com/konbase) to fuel development
 
-## License
+## 📄 License
 
 KonBase is licensed under the [MIT License](./LICENSE.md) - see the LICENSE.md file for details.
 
@@ -786,4 +530,3 @@ KonBase is licensed under the [MIT License](./LICENSE.md) - see the LICENSE.md f
 <p align="center">
   Made with ❤️ by the KonBase community
 </p>
-

@@ -1,0 +1,416 @@
+import { getGelClient } from './gel';
+import { getEdgeConfigDatabase } from './edge-config';
+import { getUnifiedDatabase } from './unified';
+
+// Data Access Layer that abstracts database operations
+// Works with both PostgreSQL (SQL) and Edge Config (key-value)
+
+export interface User {
+  id: string;
+  email: string;
+  hashed_password?: string;
+  role: string;
+  created_at: string;
+}
+
+export interface Profile {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  display_name: string;
+  two_factor_enabled: boolean;
+  totp_secret?: string;
+  created_at: string;
+}
+
+export interface Association {
+  id: string;
+  name: string;
+  description?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  created_at: string;
+}
+
+export interface AssociationMember {
+  id: string;
+  association_id: string;
+  profile_id: string;
+  role: string;
+  created_at: string;
+  association_name?: string; // For joined queries
+}
+
+export interface Convention {
+  id: string;
+  association_id: string;
+  name: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  location?: string;
+  status: string;
+  created_at: string;
+}
+
+export interface ConventionMember {
+  id: string;
+  convention_id: string;
+  profile_id: string;
+  role: string;
+  created_at: string;
+}
+
+export class DataAccessLayer {
+  private db: any;
+  private dbType: 'postgresql' | 'edge-config';
+
+  constructor(dbType: 'postgresql' | 'edge-config' = 'postgresql') {
+    this.dbType = dbType;
+    
+    if (dbType === 'edge-config') {
+      this.db = getEdgeConfigDatabase();
+    } else {
+      this.db = getGelClient();
+    }
+  }
+
+  // User operations
+  async createUser(userData: Omit<User, 'id' | 'created_at'>): Promise<User> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        INSERT INTO users (email, hashed_password, role, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, NOW())
+        RETURNING id, email, role, created_at
+      `, [userData.email, userData.hashed_password, userData.role]);
+      
+      return result as User;
+    } else {
+      // Edge Config: Generate ID and store as key-value
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const user: User = {
+        id: userId,
+        ...userData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`users:${userId}`, user);
+      return user;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        SELECT * FROM users WHERE email = <str>$1
+      `, [email]);
+      
+      return result as User || null;
+    } else {
+      // Edge Config: Get all users and find by email
+      const users = await this.db.getAll('users') as User[];
+      return users.find(user => user.email === email) || null;
+    }
+  }
+
+  async getUserById(id: string): Promise<User | null> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        SELECT * FROM users WHERE id = <str>$1
+      `, [id]);
+      
+      return result as User || null;
+    } else {
+      return await this.db.get(`users:${id}`) as User || null;
+    }
+  }
+
+  // Profile operations
+  async createProfile(profileData: Omit<Profile, 'created_at'>): Promise<Profile> {
+    if (this.dbType === 'postgresql') {
+      await this.db.query(`
+        INSERT INTO profiles (user_id, first_name, last_name, display_name, two_factor_enabled, totp_secret, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <bool>$5, <str>$6, NOW())
+      `, [
+        profileData.user_id,
+        profileData.first_name,
+        profileData.last_name,
+        profileData.display_name,
+        profileData.two_factor_enabled,
+        profileData.totp_secret || null
+      ]);
+    } else {
+      // Edge Config: Store profile data
+      const profile: Profile = {
+        ...profileData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`profiles:${profileData.user_id}`, profile);
+    }
+
+    return profileData as Profile;
+  }
+
+  async getProfileByUserId(userId: string): Promise<Profile | null> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        SELECT * FROM profiles WHERE user_id = <str>$1
+      `, [userId]);
+      
+      return result as Profile || null;
+    } else {
+      return await this.db.get(`profiles:${userId}`) as Profile || null;
+    }
+  }
+
+  // Association operations
+  async createAssociation(associationData: Omit<Association, 'id' | 'created_at'>): Promise<Association> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        INSERT INTO associations (name, description, website, email, phone, address, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, NOW())
+        RETURNING id, name, description, website, email, phone, address, created_at
+      `, [
+        associationData.name,
+        associationData.description || null,
+        associationData.website || null,
+        associationData.email || null,
+        associationData.phone || null,
+        associationData.address || null
+      ]);
+      
+      return result as Association;
+    } else {
+      // Edge Config: Generate ID and store
+      const associationId = `assoc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const association: Association = {
+        id: associationId,
+        ...associationData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`associations:${associationId}`, association);
+      return association;
+    }
+  }
+
+  async getAssociationById(id: string): Promise<Association | null> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        SELECT * FROM associations WHERE id = <str>$1
+      `, [id]);
+      
+      return result as Association || null;
+    } else {
+      return await this.db.get(`associations:${id}`) as Association || null;
+    }
+  }
+
+  async getAllAssociations(): Promise<Association[]> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.query(`
+        SELECT * FROM associations ORDER BY created_at DESC
+      `);
+      
+      return result as Association[] || [];
+    } else {
+      return await this.db.getAll('associations') as Association[] || [];
+    }
+  }
+
+  // Association member operations
+  async createAssociationMember(memberData: Omit<AssociationMember, 'id' | 'created_at'>): Promise<AssociationMember> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        INSERT INTO association_members (association_id, profile_id, role, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, NOW())
+        RETURNING id, association_id, profile_id, role, created_at
+      `, [memberData.association_id, memberData.profile_id, memberData.role]);
+      
+      return result as AssociationMember;
+    } else {
+      // Edge Config: Generate ID and store
+      const memberId = `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const member: AssociationMember = {
+        id: memberId,
+        ...memberData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`association_members:${memberId}`, member);
+      return member;
+    }
+  }
+
+  async getAssociationMembersByProfileId(profileId: string): Promise<AssociationMember[]> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.query(`
+        SELECT am.*, a.name as association_name
+        FROM association_members am
+        JOIN associations a ON am.association_id = a.id
+        WHERE am.profile_id = <str>$1
+      `, [profileId]);
+      
+      return result as AssociationMember[] || [];
+    } else {
+      // Edge Config: Get all members and filter, then get association names
+      const members = await this.db.getAll('association_members') as AssociationMember[];
+      const filteredMembers = members.filter(member => member.profile_id === profileId);
+      
+      // Get association names for each member
+      const membersWithNames = await Promise.all(
+        filteredMembers.map(async (member) => {
+          const association = await this.getAssociationById(member.association_id);
+          return {
+            ...member,
+            association_name: association?.name
+          };
+        })
+      );
+      
+      return membersWithNames;
+    }
+  }
+
+  // Convention operations
+  async createConvention(conventionData: Omit<Convention, 'id' | 'created_at'>): Promise<Convention> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        INSERT INTO conventions (association_id, name, description, start_date, end_date, location, status, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, <str>$7, NOW())
+        RETURNING id, association_id, name, description, start_date, end_date, location, status, created_at
+      `, [
+        conventionData.association_id,
+        conventionData.name,
+        conventionData.description || null,
+        conventionData.start_date,
+        conventionData.end_date,
+        conventionData.location || null,
+        conventionData.status
+      ]);
+      
+      return result as Convention;
+    } else {
+      // Edge Config: Generate ID and store
+      const conventionId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const convention: Convention = {
+        id: conventionId,
+        ...conventionData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`conventions:${conventionId}`, convention);
+      return convention;
+    }
+  }
+
+  async getConventionsByAssociation(associationId: string): Promise<Convention[]> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.query(`
+        SELECT * FROM conventions WHERE association_id = <str>$1 ORDER BY start_date DESC
+      `, [associationId]);
+      
+      return result as Convention[] || [];
+    } else {
+      // Edge Config: Get all conventions and filter
+      const conventions = await this.db.getAll('conventions') as Convention[];
+      return conventions.filter(conv => conv.association_id === associationId);
+    }
+  }
+
+  async createConventionMember(memberData: Omit<ConventionMember, 'id' | 'created_at'>): Promise<ConventionMember> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        INSERT INTO convention_members (convention_id, profile_id, role, created_at)
+        VALUES (<str>$1, <str>$2, <str>$3, NOW())
+        RETURNING id, convention_id, profile_id, role, created_at
+      `, [memberData.convention_id, memberData.profile_id, memberData.role]);
+      
+      return result as ConventionMember;
+    } else {
+      // Edge Config: Generate ID and store
+      const memberId = `conv_member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const member: ConventionMember = {
+        id: memberId,
+        ...memberData,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.set(`convention_members:${memberId}`, member);
+      return member;
+    }
+  }
+
+  // System settings operations
+  async setSystemSetting(key: string, value: string): Promise<void> {
+    if (this.dbType === 'postgresql') {
+      await this.db.query(`
+        INSERT INTO system_settings (key, value, updated_at)
+        VALUES (<str>$1, <str>$2, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = <str>$2, updated_at = NOW()
+      `, [key, value]);
+    } else {
+      await this.db.set(`system_settings:${key}`, value);
+    }
+  }
+
+  async getSystemSetting(key: string): Promise<string | null> {
+    if (this.dbType === 'postgresql') {
+      const result = await this.db.querySingle(`
+        SELECT value FROM system_settings WHERE key = <str>$1
+      `, [key]);
+      
+      return (result as any)?.value || null;
+    } else {
+      return await this.db.get(`system_settings:${key}`) as string || null;
+    }
+  }
+
+  // Health check
+  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }> {
+    const startTime = Date.now();
+    
+    try {
+      if (this.dbType === 'postgresql') {
+        await this.db.querySingle('SELECT 1');
+      } else {
+        await this.db.isAvailable();
+      }
+      
+      const latency = Date.now() - startTime;
+      return { status: 'healthy', latency };
+    } catch (error) {
+      return { status: 'unhealthy' };
+    }
+  }
+
+  // Get adapter type
+  getAdapterType(): 'postgresql' | 'edge-config' {
+    return this.dbType;
+  }
+}
+
+// Factory function to create data access layer
+export function createDataAccessLayer(dbType?: 'postgresql' | 'edge-config'): DataAccessLayer {
+  // Auto-detect database type if not specified
+  if (!dbType) {
+    dbType = process.env.EDGE_CONFIG_ID ? 'edge-config' : 'postgresql';
+  }
+  
+  return new DataAccessLayer(dbType);
+}
+
+// Singleton instance
+let dataAccess: DataAccessLayer | null = null;
+
+export function getDataAccess(): DataAccessLayer {
+  if (!dataAccess) {
+    dataAccess = createDataAccessLayer();
+  }
+  return dataAccess;
+}
+
+export default DataAccessLayer;

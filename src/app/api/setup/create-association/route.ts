@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'gel';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
       address, 
       type, 
       status,
-      adminUserId 
+      adminUserId,
+      databaseType = 'postgresql'
     } = await request.json();
 
     if (!name || !email || !adminUserId) {
@@ -21,58 +22,29 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get connection string from environment or use the one from setup
-    const connectionString = process.env.GEL_DATABASE_URL;
-    if (!connectionString) {
-      return NextResponse.json({ 
-        error: 'Database connection not configured' 
-      }, { status: 500 });
-    }
-
-    const client = createClient(connectionString);
+    // Create data access layer
+    const dataAccess = createDataAccessLayer(databaseType);
 
     // Create association
-    const association = await client.querySingle(`
-      INSERT INTO associations (
-        name, 
-        description, 
-        email, 
-        website, 
-        phone, 
-        address, 
-        type, 
-        status,
-        created_at
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, <str>$7, <str>$8, NOW()
-      )
-      RETURNING id, name, email
-    `, [
-      name, 
-      description || null, 
-      email, 
-      website || null, 
-      phone || null, 
-      address || null, 
-      type || 'convention_organizer', 
-      status || 'active'
-    ]);
+    const association = await dataAccess.createAssociation({
+      name,
+      description: description || undefined,
+      email,
+      website: website || undefined,
+      phone: phone || undefined,
+      address: address || undefined
+    });
 
     // Add admin user as association member
-    await client.query(`
-      INSERT INTO association_members (
-        association_id, 
-        profile_id, 
-        role, 
-        joined_at
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, NOW()
-      )
-    `, [(association as any).id, adminUserId, 'admin']);
+    await dataAccess.createAssociationMember({
+      association_id: association.id,
+      profile_id: adminUserId,
+      role: 'admin'
+    });
 
     return NextResponse.json({
       success: true,
-      associationId: (association as any).id,
+      associationId: association.id,
       message: 'Association created successfully'
     });
   } catch (error) {

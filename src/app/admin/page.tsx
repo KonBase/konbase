@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  Palette,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
@@ -37,6 +38,7 @@ import { AssociationManagement } from '@/components/admin/AssociationManagement'
 import { UserManagement } from '@/components/admin/UserManagement';
 import { GlobalSettings } from '@/components/admin/GlobalSettings';
 import { AuditLogs } from '@/components/admin/AuditLogs';
+import { BrandingManagement } from '@/components/admin/BrandingManagement';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -264,6 +266,7 @@ export default function AdminPage() {
           <Tab label="Associations" icon={<Building size={20} />} />
           <Tab label="Users" icon={<Users size={20} />} />
           <Tab label="Global Settings" icon={<Settings size={20} />} />
+          <Tab label="Branding" icon={<Palette size={20} />} />
           <Tab label="Audit Logs" icon={<Activity size={20} />} />
         </Tabs>
 
@@ -284,6 +287,10 @@ export default function AdminPage() {
         </TabPanel>
 
         <TabPanel value={tabValue} index={4}>
+          <BrandingManagement />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={5}>
           <AuditLogs />
         </TabPanel>
       </Paper>

@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
-import { geldb } from '@/lib/db/gel'
+import { getDataAccess } from '@/lib/db/data-access'
 
 export async function GET() {
   try {
-    // Check database connection
-    await geldb.querySingle('SELECT 1 as health_check')
+    const dataAccess = getDataAccess();
+    const healthCheck = await dataAccess.healthCheck();
     
     return NextResponse.json({
-      status: 'healthy',
+      status: healthCheck.status,
       timestamp: new Date().toISOString(),
       services: {
-        database: 'connected',
-        application: 'running'
-      }
+        database: healthCheck.status === 'healthy' ? 'connected' : 'disconnected',
+        application: 'running',
+        databaseType: dataAccess.getAdapterType()
+      },
+      latency: healthCheck.latency
     })
   } catch (error) {
     return NextResponse.json({

@@ -15,25 +15,17 @@ export interface EdgeConfigCollection {
 
 export class EdgeConfigDatabase {
   private edgeConfigId: string;
+  private readAccessToken: string;
 
   constructor(edgeConfigId?: string) {
     this.edgeConfigId = edgeConfigId || process.env.EDGE_CONFIG_ID || '';
+    this.readAccessToken = process.env.EDGE_CONFIG_READ_ACCESS_TOKEN || '';
     
     if (!this.edgeConfigId) {
       throw new Error('EDGE_CONFIG_ID environment variable is required for Edge Config database');
     }
   }
 
-  // Get a single item by key
-  async get<T = any>(key: string): Promise<T | null> {
-    try {
-      const value = await get(key);
-      return value as T || null;
-    } catch (error) {
-      console.error(`Error getting key ${key} from Edge Config:`, error);
-      return null;
-    }
-  }
 
   // Get multiple items by prefix
   async getByPrefix<T = any>(prefix: string): Promise<T[]> {
@@ -103,6 +95,46 @@ export class EdgeConfigDatabase {
   // Get equipment sets
   async getEquipmentSets(): Promise<any[]> {
     return this.getByPrefix('equipment_sets');
+  }
+
+  // Set a value (Note: Edge Config is read-only, this is for development/testing)
+  async set<T = any>(key: string, value: T): Promise<void> {
+    // Edge Config is read-only in production
+    // For development, we'll use a simple in-memory store
+    if (process.env.NODE_ENV === 'development') {
+      // Store in memory for development
+      if (typeof global !== 'undefined') {
+        (global as any).edgeConfigStore = (global as any).edgeConfigStore || {};
+        (global as any).edgeConfigStore[key] = value;
+      }
+    } else {
+      console.warn('Edge Config is read-only. Cannot write to Edge Config in production.');
+      throw new Error('Edge Config is read-only. Use PostgreSQL for write operations.');
+    }
+  }
+
+  // Get a value (checks both Edge Config and in-memory store)
+  async get<T = any>(key: string): Promise<T | null> {
+    try {
+      // First try Edge Config
+      const edgeValue = await get(key);
+      if (edgeValue !== undefined) {
+        return edgeValue as T;
+      }
+      
+      // Then check in-memory store for development
+      if (process.env.NODE_ENV === 'development' && typeof global !== 'undefined') {
+        const memoryValue = (global as any).edgeConfigStore?.[key];
+        if (memoryValue !== undefined) {
+          return memoryValue as T;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error getting key ${key} from Edge Config:`, error);
+      return null;
+    }
   }
 
   // Health check for Edge Config

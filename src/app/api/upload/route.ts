@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
-import { geldb, executeQuery } from '@/lib/db/gel';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { getDataAccess } from '@/lib/db/data-access';
+import { getUnifiedStorage } from '@/lib/storage/unified';
 import { randomUUID } from 'crypto';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -56,6 +55,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get unified storage
+    const storage = getUnifiedStorage();
+    const isStorageReady = await storage.isStorageReady();
+    
+    if (!isStorageReady) {
+      return NextResponse.json(
+        { error: 'Storage service is not available' },
+        { status: 503 }
+      );
+    }
+
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
     const fileName = `${randomUUID()}.${fileExtension}`;
@@ -66,47 +76,49 @@ export async function POST(request: NextRequest) {
       uploadDir = itemId ? 'items' : 'images';
     }
 
-    const uploadPath = join(process.cwd(), 'uploads', uploadDir);
-    const filePath = join(uploadPath, fileName);
-    const relativePath = join('uploads', uploadDir, fileName);
+    const pathname = `${uploadDir}/${associationId}/${fileName}`;
 
-    // Ensure upload directory exists
-    await mkdir(uploadPath, { recursive: true });
+    // Upload file to unified storage
+    const fileInfo = await storage.uploadFile({
+      pathname,
+      file,
+      options: {
+        access: 'public',
+        contentType: file.type,
+        cacheControlMaxAge: file.type.startsWith('image/') ? 31536000 : 3600, // Images cached for 1 year, others for 1 hour
+      },
+    });
 
-    // Save file to disk
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
-
-    // Save file metadata to database
-    const document = await geldb.querySingle(`
-      INSERT INTO documents (
-        association_id, name, description, file_path, 
-        file_size, mime_type, uploaded_by, item_id, convention_id
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <int>$5, <str>$6, <str>$7, <str>$8, <str>$9
-      )
-      RETURNING *
-    `, [
-      associationId,
-      name || file.name,
-      description || null,
-      relativePath,
-      file.size,
-      file.type,
-      session.user.email, // This should be user ID
-      itemId || null,
-      conventionId || null
-    ]) as any;
+    // Save file metadata to database using unified data access
+    const dataAccess = getDataAccess();
+    
+    // For now, we'll store the file info in system settings since we don't have a documents table yet
+    // In a real implementation, you'd want to add a documents table to your database schema
+    const documentId = `doc_${randomUUID()}`;
+    await dataAccess.setSystemSetting(`document:${documentId}`, JSON.stringify({
+      id: documentId,
+      association_id: associationId,
+      name: name || file.name,
+      description: description || null,
+      file_path: pathname,
+      file_url: fileInfo.url,
+      file_size: file.size,
+      mime_type: file.type,
+      uploaded_by: session.user.email,
+      item_id: itemId || null,
+      convention_id: conventionId || null,
+      uploaded_at: new Date().toISOString(),
+    }));
 
     return NextResponse.json({
       data: {
-        id: document.id,
-        name: document.name,
-        file_path: document.file_path,
-        file_size: document.file_size,
-        mime_type: document.mime_type,
-        url: `/api/files/${document.id}`,
+        id: documentId,
+        name: name || file.name,
+        file_path: pathname,
+        file_url: fileInfo.url,
+        file_size: file.size,
+        mime_type: file.type,
+        url: fileInfo.url,
       },
       success: true,
       message: 'File uploaded successfully',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'gel';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -10,22 +10,20 @@ export async function POST(request: NextRequest) {
       email, 
       password, 
       enable2FA, 
-      connectionString 
+      databaseType = 'postgresql'
     } = await request.json();
 
-    if (!firstName || !lastName || !email || !password || !connectionString) {
+    if (!firstName || !lastName || !email || !password) {
       return NextResponse.json({ 
         error: 'All fields are required' 
       }, { status: 400 });
     }
 
-    // Create database client
-    const client = createClient(connectionString);
+    // Create data access layer
+    const dataAccess = createDataAccessLayer(databaseType);
 
     // Check if user already exists
-    const existingUser = await client.querySingle(`
-      SELECT id FROM users WHERE email = <str>$1
-    `, [email]);
+    const existingUser = await dataAccess.getUserByEmail(email);
 
     if (existingUser) {
       return NextResponse.json({ 
@@ -37,41 +35,24 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await client.querySingle(`
-      INSERT INTO users (
-        email, 
-        hashed_password, 
-        role, 
-        created_at
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, NOW()
-      )
-      RETURNING id, email, role
-    `, [email, hashedPassword, 'super_admin']);
+    const user = await dataAccess.createUser({
+      email,
+      hashed_password: hashedPassword,
+      role: 'super_admin'
+    });
 
     // Create profile
-    await client.query(`
-      INSERT INTO profiles (
-        user_id, 
-        first_name, 
-        last_name, 
-        display_name,
-        two_factor_enabled,
-        created_at
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <bool>$5, NOW()
-      )
-    `, [
-      (user as any).id, 
-      firstName, 
-      lastName, 
-      `${firstName} ${lastName}`,
-      enable2FA
-    ]);
+    await dataAccess.createProfile({
+      user_id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      display_name: `${firstName} ${lastName}`,
+      two_factor_enabled: enable2FA
+    });
 
     return NextResponse.json({
       success: true,
-      userId: (user as any).id,
+      userId: user.id,
       message: 'Admin user created successfully'
     });
   } catch (error) {

@@ -28,6 +28,7 @@ import {
   Cloud,
 } from 'lucide-react';
 import { EdgeConfigSetup } from './EdgeConfigSetup';
+import { BlobStorageSetup } from './BlobStorageSetup';
 
 interface DatabaseSetupProps {
   onNext: (data: any) => void;
@@ -47,6 +48,7 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
   const [testMessage, setTestMessage] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [edgeConfigReady, setEdgeConfigReady] = useState(false);
+  const [blobStorageReady, setBlobStorageReady] = useState(false);
 
   const handleTestConnection = async () => {
     setLoading(true);
@@ -97,6 +99,10 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
     setEdgeConfigReady(ready);
   };
 
+  const handleBlobStorageStatusChange = (ready: boolean) => {
+    setBlobStorageReady(ready);
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -119,6 +125,11 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
         <Tab 
           label="Vercel Edge Config" 
           icon={<Zap size={20} />}
+          iconPosition="start"
+        />
+        <Tab 
+          label="File Storage" 
+          icon={<Cloud size={20} />}
           iconPosition="start"
         />
       </Tabs>
@@ -215,13 +226,18 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
         <EdgeConfigSetup onStatusChange={handleEdgeConfigStatusChange} />
       )}
 
+      {selectedTab === 2 && (
+        <BlobStorageSetup onStatusChange={handleBlobStorageStatusChange} />
+      )}
+
       <Box display="flex" justifyContent="flex-end">
         <Button
           variant="contained"
           onClick={handleNext}
           disabled={
             (selectedTab === 0 && testResult !== 'success') ||
-            (selectedTab === 1 && !edgeConfigReady)
+            (selectedTab === 1 && !edgeConfigReady) ||
+            (selectedTab === 2 && !blobStorageReady)
           }
         >
           Next Step

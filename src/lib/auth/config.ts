@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import DiscordProvider from 'next-auth/providers/discord'
-import { geldb } from '@/lib/db/gel'
+import { getDataAccess } from '@/lib/db/data-access'
 import bcrypt from 'bcryptjs'
 import speakeasy from 'speakeasy'
 
@@ -25,10 +25,11 @@ export const authOptions: NextAuthOptions = {
         const totpCode = credentials?.totpCode?.toString()
         if (!email || !password) throw new Error('Missing email or password')
 
+        // Get data access layer
+        const dataAccess = getDataAccess()
+
         // Fetch user by email
-        const user = await geldb.querySingle(`
-          SELECT * FROM users WHERE email = <str>$1
-        `, [email]) as any
+        const user = await dataAccess.getUserByEmail(email)
 
         if (!user?.hashed_password) throw new Error('Invalid credentials')
         const ok = await bcrypt.compare(password, user.hashed_password)
@@ -36,12 +37,11 @@ export const authOptions: NextAuthOptions = {
 
         // 2FA check (from profile)
         // Load profile + associations
-        const profile = await geldb.querySingle(`
-          SELECT * FROM profiles WHERE user_id = <str>$1
-        `, [user.id]) as any
+        const profile = await dataAccess.getProfileByUserId(user.id)
 
         if (profile?.two_factor_enabled) {
           if (!totpCode) throw new Error('2FA code required')
+          if (!profile.totp_secret) throw new Error('2FA not properly configured')
           const valid = speakeasy.totp.verify({
             secret: profile.totp_secret,
             encoding: 'base32',
@@ -51,16 +51,7 @@ export const authOptions: NextAuthOptions = {
           if (!valid) throw new Error('Invalid 2FA code')
         }
 
-        const associations = await geldb.query(`
-          SELECT 
-            am.id, 
-            am.role, 
-            a.id as association_id, 
-            a.name as association_name
-          FROM association_members am
-          JOIN associations a ON am.association_id = a.id
-          WHERE am.profile_id = <str>$1
-        `, [profile?.user_id ?? user.id]) as any[]
+        const associations = await dataAccess.getAssociationMembersByProfileId(profile?.user_id ?? user.id)
 
         return {
           id: user.id,

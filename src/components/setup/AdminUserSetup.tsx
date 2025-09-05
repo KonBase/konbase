@@ -98,7 +98,7 @@ export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          connectionString: setupData.connectionString,
+          databaseType: setupData.databaseType || 'postgresql',
         }),
       });
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
-import { geldb, executeQuery } from '@/lib/db/gel';
+import { getDataAccess } from '@/lib/db/data-access';
 import { conventionSchema } from '@/lib/validations/schemas';
 import { z } from 'zod';
 
@@ -22,36 +22,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Association ID required' }, { status: 400 });
     }
 
-    let whereClause = 'WHERE c.association_id = <str>$1';
-    const params = [associationId];
-    let paramIndex = 2;
+    const dataAccess = getDataAccess();
+    let conventions = await dataAccess.getConventionsByAssociation(associationId);
 
+    // Apply filters
     if (query) {
-      whereClause += ` AND c.name ILIKE <str>$${paramIndex}`;
-      params.push(`%${query}%`);
-      paramIndex++;
+      conventions = conventions.filter(conv => 
+        conv.name.toLowerCase().includes(query.toLowerCase())
+      );
     }
 
     if (status) {
-      whereClause += ` AND c.status = <str>$${paramIndex}`;
-      params.push(status);
-      paramIndex++;
+      conventions = conventions.filter(conv => conv.status === status);
     }
 
-    const conventions = await geldb.query(`
-      SELECT 
-        c.*,
-        COUNT(cm.id) as member_count,
-        COUNT(ce.id) as equipment_count
-      FROM conventions c
-      LEFT JOIN convention_members cm ON c.id = cm.convention_id
-      LEFT JOIN convention_equipment ce ON c.id = ce.convention_id
-      ${whereClause}
-      GROUP BY c.id
-      ORDER BY c.start_date DESC
-    `, params);
+    // Add mock counts for now (in a real implementation, these would be calculated)
+    const conventionsWithCounts = conventions.map(conv => ({
+      ...conv,
+      member_count: 0, // TODO: Calculate actual member count
+      equipment_count: 0 // TODO: Calculate actual equipment count
+    }));
 
-    return NextResponse.json({ data: conventions, success: true });
+    return NextResponse.json({ data: conventionsWithCounts, success: true });
   } catch (error) {
     console.error('Error fetching conventions:', error);
     return NextResponse.json(
@@ -77,40 +69,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Association ID required' }, { status: 400 });
     }
 
+    const dataAccess = getDataAccess();
+
     // Create convention
-    const convention = await geldb.querySingle(`
-      INSERT INTO conventions (
-        association_id, 
-        name, 
-        description, 
-        start_date, 
-        end_date, 
-        location, 
-        status
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, <str>$7
-      )
-      RETURNING *
-    `, [
-      associationId,
-      validatedData.name,
-      validatedData.description || null,
-      validatedData.startDate,
-      validatedData.endDate,
-      validatedData.location || null,
-      validatedData.status || 'planning'
-    ]) as any;
+    const convention = await dataAccess.createConvention({
+      association_id: associationId,
+      name: validatedData.name,
+      description: validatedData.description || undefined,
+      start_date: validatedData.startDate,
+      end_date: validatedData.endDate,
+      location: validatedData.location || undefined,
+      status: validatedData.status || 'planning'
+    });
 
     // Add creator as admin
-    await geldb.query(`
-      INSERT INTO convention_members (
-        convention_id, 
-        profile_id, 
-        role
-      ) VALUES (
-        <str>$1, <str>$2, <str>$3
-      )
-    `, [convention.id, session.user.id, 'admin']);
+    await dataAccess.createConventionMember({
+      convention_id: convention.id,
+      profile_id: session.user.id,
+      role: 'admin'
+    });
 
     return NextResponse.json({ 
       data: convention, 
