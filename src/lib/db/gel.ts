@@ -1,12 +1,35 @@
 import { createClient } from 'gel';
 
-const geldbUrl = process.env.GEL_DATABASE_URL;
+// Lazy initialization to avoid build-time errors
+let geldbClient: ReturnType<typeof createClient> | null = null;
 
-if (!geldbUrl) {
-  throw new Error('GEL_DATABASE_URL environment variable is required');
+export function getGelClient() {
+  if (geldbClient) {
+    return geldbClient;
+  }
+
+  const geldbUrl = process.env.GEL_DATABASE_URL;
+
+  if (!geldbUrl) {
+    throw new Error('GEL_DATABASE_URL environment variable is required');
+  }
+
+  geldbClient = createClient(geldbUrl);
+  return geldbClient;
 }
 
-export const geldb = createClient(geldbUrl);
+// For backward compatibility
+export const geldb = {
+  get query() {
+    return getGelClient().query;
+  },
+  get querySingle() {
+    return getGelClient().querySingle;
+  },
+  get execute() {
+    return getGelClient().execute;
+  }
+};
 
 // Type-safe database queries with proper error handling
 export class DatabaseError extends Error {

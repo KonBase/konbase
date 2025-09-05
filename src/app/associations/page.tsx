@@ -20,7 +20,7 @@ import { Plus, Settings, Users, MoreVertical } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { Association, AssociationMember } from '@/types';
-import { Dialog } from '@/components/ui/Dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { AssociationForm } from '@/components/forms/AssociationForm';
 import { DataTable } from '@/components/tables/DataTable';
 

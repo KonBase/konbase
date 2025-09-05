@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Paper, Typography, Button as MuiButton, IconButton, Divider } from '@mui/material';
 import { TextField } from '@/components/ui/TextField';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { equipmentSetSchema, EquipmentSetFormData } from '@/lib/validations/schemas';
 import { Plus, Trash2 } from 'lucide-react';

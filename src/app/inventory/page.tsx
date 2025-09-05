@@ -31,7 +31,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { DataTable } from '@/components/tables/DataTable';
-import { Dialog } from '@/components/ui/Dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { Item, TableColumn } from '@/types';
 

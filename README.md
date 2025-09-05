@@ -415,6 +415,32 @@ server {
 
 This guide helps you deploy KonBase to Vercel with CI/CD automation and production-ready configuration.
 
+## Prerequisites
+
+1. **Database Setup**: GelDB is not directly compatible with Vercel's serverless environment. You'll need to use a managed PostgreSQL service.
+
+### Recommended Database Options:
+
+1. **Vercel Postgres** (Recommended)
+   - Native Vercel integration
+   - Automatic connection pooling
+   - Easy setup through Vercel dashboard
+
+2. **Supabase**
+   - PostgreSQL-compatible
+   - Good free tier
+   - Easy migration from GelDB
+
+3. **PlanetScale**
+   - MySQL-compatible (requires schema changes)
+   - Serverless-friendly
+   - Good performance
+
+4. **Railway**
+   - PostgreSQL support
+   - Easy deployment
+   - Good for development
+
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
@@ -423,7 +449,7 @@ This guide helps you deploy KonBase to Vercel with CI/CD automation and producti
 - Environment variables configured
 
 ### 2. One-Click Deploy
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/konbase)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KonBase/konbase)
 
 ### 3. Manual Setup
 ```bash

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Paper, Typography } from '@mui/material';
 import { TextField } from '@/components/ui/TextField';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { conventionSchema, ConventionFormData } from '@/lib/validations/schemas';
 
 interface ConventionFormProps {

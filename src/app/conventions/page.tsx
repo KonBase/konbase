@@ -36,7 +36,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { Convention } from '@/types';
-import { Dialog } from '@/components/ui/Dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { ConventionForm } from '@/components/forms/ConventionForm';
 
 export default function ConventionsPage() {

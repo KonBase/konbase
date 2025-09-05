@@ -30,7 +30,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { EquipmentSet } from '@/types';
-import { Dialog } from '@/components/ui/Dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { EquipmentSetForm } from '@/components/forms/EquipmentSetForm';
 
 export default function EquipmentSetsPage() {
