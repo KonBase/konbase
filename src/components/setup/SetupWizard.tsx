@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Stepper,
@@ -11,6 +11,9 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Chip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Database,
@@ -18,8 +21,9 @@ import {
   Building,
   CheckCircle,
   Shield,
-  Mail,
-  Key,
+  Store,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DatabaseSetup } from './DatabaseSetup';
@@ -36,12 +40,65 @@ const steps = [
   { label: 'Complete', icon: CheckCircle },
 ];
 
+interface DetectionResult {
+  database: {
+    configured: boolean;
+    type: string | null;
+    status: string;
+    details: any;
+  };
+  storage: {
+    configured: boolean;
+    type: string | null;
+    status: string;
+    details: any;
+  };
+  setup: {
+    canProceed: boolean;
+    nextStep: string;
+    message: string;
+  };
+}
+
 export const SetupWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [setupData, setSetupData] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detection, setDetection] = useState<DetectionResult | null>(null);
+  const [detectionLoading, setDetectionLoading] = useState(true);
+  const [setupMode, setSetupMode] = useState<'auto' | 'manual'>('auto');
   const router = useRouter();
+
+  useEffect(() => {
+    detectEnvironment();
+  }, []);
+
+  const detectEnvironment = async () => {
+    try {
+      setDetectionLoading(true);
+      const response = await fetch('/api/setup/auto-detect');
+      const data = await response.json();
+
+      if (data.success) {
+        setDetection(data.detection);
+        
+        // If auto-detection shows everything is configured, skip to admin setup
+        if (data.detection.setup.canProceed) {
+          setActiveStep(1); // Skip to Admin User step
+          setSetupMode('auto');
+        }
+      } else {
+        setError(data.message || 'Failed to detect environment');
+        setSetupMode('manual');
+      }
+    } catch (err) {
+      setError('Failed to connect to setup service');
+      setSetupMode('manual');
+    } finally {
+      setDetectionLoading(false);
+    }
+  };
 
   const handleNext = (stepData: any) => {
     setSetupData((prev: any) => ({ ...prev, ...stepData }));
@@ -60,7 +117,130 @@ export const SetupWizard: React.FC = () => {
     router.push('/auth/signin');
   };
 
+  const getDatabaseTypeDisplay = (type: string) => {
+    switch (type) {
+      case 'postgresql': return 'PostgreSQL';
+      case 'edgedb': return 'Vercel EdgeDB';
+      case 'redis': return 'Redis';
+      default: return type;
+    }
+  };
+
+  const getStorageTypeDisplay = (type: string) => {
+    switch (type) {
+      case 'vercel-blob': return 'Vercel Blob';
+      case 'local': return 'Local Storage';
+      default: return type;
+    }
+  };
+
   const renderStepContent = () => {
+    // Show auto-detection status if we're in auto mode and on step 0
+    if (activeStep === 0 && setupMode === 'auto') {
+      if (detectionLoading) {
+        return (
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <CircularProgress />
+            <Typography>Detecting environment configuration...</Typography>
+          </Box>
+        );
+      }
+
+      if (detection) {
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Environment Detection
+            </Typography>
+            
+            {/* Database Status */}
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Database size={24} />
+              <Typography variant="subtitle1">Database Configuration</Typography>
+              {detection.database.configured && <CheckCircle size={20} color="green" />}
+            </Box>
+
+            {detection.database.configured ? (
+              <Box mb={3}>
+                <Chip 
+                  label={getDatabaseTypeDisplay(detection.database.type!)} 
+                  color="success" 
+                  sx={{ mb: 1 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Database is configured and ready
+                </Typography>
+              </Box>
+            ) : (
+              <Alert severity="warning" sx={{ mb: 3 }}>
+                Database not configured. Please set up PostgreSQL, EdgeDB, or Redis.
+              </Alert>
+            )}
+
+            {/* Storage Status */}
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Store size={24} />
+              <Typography variant="subtitle1">Storage Configuration</Typography>
+              {detection.storage.configured && <CheckCircle size={20} color="green" />}
+            </Box>
+
+            {detection.storage.configured ? (
+              <Box mb={3}>
+                <Chip 
+                  label={getStorageTypeDisplay(detection.storage.type!)} 
+                  color="success" 
+                  sx={{ mb: 1 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Storage is configured and ready
+                </Typography>
+              </Box>
+            ) : (
+              <Alert severity="warning" sx={{ mb: 3 }}>
+                Storage not configured. Please set up Vercel Blob or Local Storage.
+              </Alert>
+            )}
+
+            {/* Setup Status */}
+            <Alert 
+              severity={detection.setup.canProceed ? 'success' : 'info'}
+              sx={{ mb: 3 }}
+            >
+              {detection.setup.message}
+            </Alert>
+
+            {detection.setup.canProceed ? (
+              <Button
+                variant="contained"
+                size="large"
+                endIcon={<ArrowRight size={20} />}
+                onClick={() => setActiveStep(1)}
+                sx={{ mt: 2 }}
+              >
+                Continue to Admin Setup
+              </Button>
+            ) : (
+              <Box display="flex" gap={2}>
+                <Button
+                  variant="outlined"
+                  onClick={detectEnvironment}
+                  startIcon={<RefreshCw size={16} />}
+                >
+                  Refresh Detection
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setSetupMode('manual')}
+                >
+                  Manual Setup
+                </Button>
+              </Box>
+            )}
+          </Box>
+        );
+      }
+    }
+
     switch (activeStep) {
       case 0:
         return (
@@ -137,6 +317,17 @@ export const SetupWizard: React.FC = () => {
               Let's set up your inventory and convention management system
             </Typography>
           </Box>
+
+          {/* Setup Mode Tabs */}
+          <Tabs 
+            value={setupMode} 
+            onChange={(e, newValue) => setSetupMode(newValue)}
+            sx={{ mb: 3 }}
+            centered
+          >
+            <Tab label="Auto Setup" value="auto" />
+            <Tab label="Manual Setup" value="manual" />
+          </Tabs>
 
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
             {steps.map((step, index) => {

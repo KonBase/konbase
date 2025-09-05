@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, Typography, Tabs, Tab } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { SetupWizard } from '@/components/setup/SetupWizard';
-import AutoSetupWizard from '@/components/setup/AutoSetupWizard';
 
 export default function SetupPage() {
   const [loading, setLoading] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     checkSetupStatus();
@@ -63,25 +61,7 @@ export default function SetupPage() {
   }
 
   if (needsSetup) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          KonBase Setup
-        </Typography>
-        
-        <Tabs 
-          value={activeTab} 
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          sx={{ mb: 3 }}
-        >
-          <Tab label="Auto Setup" />
-          <Tab label="Manual Setup" />
-        </Tabs>
-
-        {activeTab === 0 && <AutoSetupWizard />}
-        {activeTab === 1 && <SetupWizard />}
-      </Box>
-    );
+    return <SetupWizard />;
   }
 
   return null;
