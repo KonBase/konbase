@@ -1,9 +1,9 @@
 import { getGelClient } from './gel';
-import { getEdgeConfigDatabase } from './edge-config';
+import { getRedisClient } from './redis';
 import { getUnifiedDatabase } from './unified';
 
 // Data Access Layer that abstracts database operations
-// Works with both PostgreSQL (SQL) and Edge Config (key-value)
+// Works with PostgreSQL (SQL) and Redis (key-value)
 
 export interface User {
   id: string;
@@ -65,13 +65,13 @@ export interface ConventionMember {
 
 export class DataAccessLayer {
   private db: any;
-  private dbType: 'postgresql' | 'edge-config';
+  private dbType: 'postgresql' | 'redis';
 
-  constructor(dbType: 'postgresql' | 'edge-config' = 'postgresql') {
+  constructor(dbType: 'postgresql' | 'redis' = 'postgresql') {
     this.dbType = dbType;
     
-    if (dbType === 'edge-config') {
-      this.db = getEdgeConfigDatabase();
+    if (dbType === 'redis') {
+      this.db = getRedisClient();
     } else {
       this.db = getGelClient();
     }
@@ -88,7 +88,7 @@ export class DataAccessLayer {
       
       return result as User;
     } else {
-      // Edge Config: Generate ID and store as key-value
+      // Redis: Generate ID and store as key-value
       const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const user: User = {
         id: userId,
@@ -96,7 +96,8 @@ export class DataAccessLayer {
         created_at: new Date().toISOString()
       };
       
-      await this.db.set(`users:${userId}`, user);
+      await this.db.hSet(`users:${userId}`, user);
+      await this.db.set(`users:email:${userData.email}`, userId); // Index for email lookup
       return user;
     }
   }
@@ -109,9 +110,12 @@ export class DataAccessLayer {
       
       return result as User || null;
     } else {
-      // Edge Config: Get all users and find by email
-      const users = await this.db.getAll('users') as User[];
-      return users.find(user => user.email === email) || null;
+      // Redis: Use email index to find user ID, then get user data
+      const userId = await this.db.get(`users:email:${email}`);
+      if (!userId) return null;
+      
+      const userData = await this.db.hGetAll(`users:${userId}`);
+      return userData as User || null;
     }
   }
 
@@ -123,7 +127,9 @@ export class DataAccessLayer {
       
       return result as User || null;
     } else {
-      return await this.db.get(`users:${id}`) as User || null;
+      // Redis: Get user by ID
+      const userData = await this.db.hGetAll(`users:${id}`);
+      return userData as User || null;
     }
   }
 
@@ -142,13 +148,13 @@ export class DataAccessLayer {
         profileData.totp_secret || null
       ]);
     } else {
-      // Edge Config: Store profile data
+      // Redis: Store profile data
       const profile: Profile = {
         ...profileData,
         created_at: new Date().toISOString()
       };
       
-      await this.db.set(`profiles:${profileData.user_id}`, profile);
+      await this.db.hSet(`profiles:${profileData.user_id}`, profile);
     }
 
     return profileData as Profile;
@@ -162,7 +168,9 @@ export class DataAccessLayer {
       
       return result as Profile || null;
     } else {
-      return await this.db.get(`profiles:${userId}`) as Profile || null;
+      // Redis: Get profile by user ID
+      const profileData = await this.db.hGetAll(`profiles:${userId}`);
+      return profileData as Profile || null;
     }
   }
 
@@ -388,16 +396,21 @@ export class DataAccessLayer {
   }
 
   // Get adapter type
-  getAdapterType(): 'postgresql' | 'edge-config' {
+  getAdapterType(): 'postgresql' | 'redis' {
     return this.dbType;
   }
 }
 
 // Factory function to create data access layer
-export function createDataAccessLayer(dbType?: 'postgresql' | 'edge-config'): DataAccessLayer {
+export function createDataAccessLayer(dbType?: 'postgresql' | 'redis'): DataAccessLayer {
   // Auto-detect database type if not specified
   if (!dbType) {
-    dbType = process.env.EDGE_CONFIG_ID ? 'edge-config' : 'postgresql';
+    // Check for Redis first
+    if (process.env.REDIS_URL) {
+      dbType = 'redis';
+    } else {
+      dbType = 'postgresql'; // Default to PostgreSQL (includes EdgeDB)
+    }
   }
   
   return new DataAccessLayer(dbType);

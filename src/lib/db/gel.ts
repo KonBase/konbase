@@ -8,14 +8,56 @@ export function getGelClient() {
     return geldbClient;
   }
 
+  // Check for Vercel EdgeDB environment variables first
+  const edgedbInstance = process.env.EDGEDB_INSTANCE;
+  const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
+  
+  if (edgedbInstance && edgedbSecretKey) {
+    // Construct EdgeDB connection string for Vercel
+    const edgedbUrl = `edgedb://${edgedbInstance}:${edgedbSecretKey}@edgedb.cloud`;
+    geldbClient = createClient(edgedbUrl);
+    return geldbClient;
+  }
+
+  // Fallback to traditional URL-based connection
   const geldbUrl = process.env.GEL_DATABASE_URL;
 
   if (!geldbUrl) {
-    throw new Error('GEL_DATABASE_URL environment variable is required');
+    throw new Error('Either GEL_DATABASE_URL or EDGEDB_INSTANCE + EDGEDB_SECRET_KEY environment variables are required');
   }
 
   geldbClient = createClient(geldbUrl);
   return geldbClient;
+}
+
+// Helper function to detect connection type
+export function getConnectionType(): 'vercel-edgedb' | 'url' {
+  const edgedbInstance = process.env.EDGEDB_INSTANCE;
+  const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
+  
+  if (edgedbInstance && edgedbSecretKey) {
+    return 'vercel-edgedb';
+  }
+  
+  return 'url';
+}
+
+// Helper function to get connection info for debugging
+export function getConnectionInfo() {
+  const connectionType = getConnectionType();
+  
+  if (connectionType === 'vercel-edgedb') {
+    return {
+      type: 'vercel-edgedb',
+      instance: process.env.EDGEDB_INSTANCE,
+      hasSecretKey: !!process.env.EDGEDB_SECRET_KEY,
+    };
+  }
+  
+  return {
+    type: 'url',
+    url: process.env.GEL_DATABASE_URL ? 'configured' : 'not configured',
+  };
 }
 
 // For backward compatibility

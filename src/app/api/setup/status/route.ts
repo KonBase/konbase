@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUnifiedDatabase } from '@/lib/db/unified';
-import { isEdgeConfigConfigured } from '@/lib/db/edge-config';
+import { isRedisConfigured } from '@/lib/db/redis';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Setup status check error:', error);
     
-    // Check if Edge Config is configured as fallback
-    const edgeConfigConfigured = await isEdgeConfigConfigured();
+    // Check if Redis is configured as fallback
+    const redisConfigured = isRedisConfigured();
     
     return NextResponse.json({
       setupComplete: false,
-      databaseType: edgeConfigConfigured ? 'edge-config' : 'postgresql',
+      databaseType: redisConfigured ? 'redis' : 'postgresql',
       databaseAvailable: false,
       error: 'Database connection failed'
     });

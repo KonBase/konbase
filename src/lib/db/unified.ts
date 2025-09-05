@@ -1,7 +1,8 @@
 import { getGelClient } from './gel';
-import { getEdgeConfigDatabase, isEdgeConfigConfigured } from './edge-config';
+import { getRedisClient, isRedisConfigured } from './redis';
+import { RedisClientType } from 'redis';
 
-// Unified database interface that can work with both PostgreSQL and Edge Config
+// Unified database interface that can work with PostgreSQL and Redis
 export interface DatabaseAdapter {
   get<T = any>(key: string): Promise<T | null>;
   getByPrefix<T = any>(prefix: string): Promise<T[]>;
@@ -10,15 +11,74 @@ export interface DatabaseAdapter {
   healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }>;
 }
 
+// Redis adapter that implements DatabaseAdapter interface
+class RedisAdapter implements DatabaseAdapter {
+  private client: RedisClientType;
+
+  constructor(client: RedisClientType) {
+    this.client = client;
+  }
+
+  async get<T = any>(key: string): Promise<T | null> {
+    try {
+      const value = await this.client.get(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error('Redis get error:', error);
+      return null;
+    }
+  }
+
+  async getByPrefix<T = any>(prefix: string): Promise<T[]> {
+    try {
+      const keys = await this.client.keys(`${prefix}:*`);
+      const values = await Promise.all(
+        keys.map(async (key) => {
+          const value = await this.client.get(key);
+          return value ? JSON.parse(value) : null;
+        })
+      );
+      return values.filter(Boolean) as T[];
+    } catch (error) {
+      console.error('Redis getByPrefix error:', error);
+      return [];
+    }
+  }
+
+  async getAll<T = any>(collection: string): Promise<T[]> {
+    return this.getByPrefix<T>(collection);
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      await this.client.ping();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }> {
+    const startTime = Date.now();
+    try {
+      await this.client.ping();
+      const latency = Date.now() - startTime;
+      return { status: 'healthy', latency };
+    } catch (error) {
+      return { status: 'unhealthy' };
+    }
+  }
+}
+
 export class UnifiedDatabaseAdapter implements DatabaseAdapter {
   private adapter: DatabaseAdapter;
-  private adapterType: 'postgresql' | 'edge-config';
+  private adapterType: 'postgresql' | 'redis';
 
-  constructor(adapterType: 'postgresql' | 'edge-config' = 'postgresql') {
+  constructor(adapterType: 'postgresql' | 'redis' = 'postgresql') {
     this.adapterType = adapterType;
     
-    if (adapterType === 'edge-config') {
-      this.adapter = getEdgeConfigDatabase();
+    if (adapterType === 'redis') {
+      this.adapter = new RedisAdapter(getRedisClient());
     } else {
       // Create a PostgreSQL adapter wrapper
       this.adapter = new PostgreSQLAdapter();
@@ -45,7 +105,7 @@ export class UnifiedDatabaseAdapter implements DatabaseAdapter {
     return this.adapter.healthCheck();
   }
 
-  getAdapterType(): 'postgresql' | 'edge-config' {
+  getAdapterType(): 'postgresql' | 'redis' {
     return this.adapterType;
   }
 }
@@ -110,9 +170,9 @@ class PostgreSQLAdapter implements DatabaseAdapter {
 
 // Auto-detect database type based on environment
 export function createDatabaseAdapter(): UnifiedDatabaseAdapter {
-  // Check if Edge Config is configured first
-  if (process.env.EDGE_CONFIG_ID) {
-    return new UnifiedDatabaseAdapter('edge-config');
+  // Check if Redis is configured first
+  if (process.env.REDIS_URL) {
+    return new UnifiedDatabaseAdapter('redis');
   }
   
   // Fall back to PostgreSQL

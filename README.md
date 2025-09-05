@@ -127,12 +127,19 @@ KonBase supports multiple database solutions to fit different use cases:
 - **Features**: Full SQL support, ACID compliance, complex relationships
 - **Use Cases**: Production applications, complex data relationships
 
-### 2. Vercel Edge Config (Ultra-fast)
-- **Best for**: Configuration data, feature flags, small datasets
+### 2. Vercel EdgeDB (Ultra-fast)
+- **Best for**: High-performance applications, modern database features
 - **Performance**: < 15ms latency at P99
-- **Features**: Global edge distribution, ultra-low latency, built-in caching
-- **Use Cases**: High-performance applications, configuration management
-- **⚠️ Limitation**: Read-only in production (requires PostgreSQL for setup operations)
+- **Features**: Global edge distribution, ultra-low latency, modern query language
+- **Use Cases**: Production applications, high-performance requirements
+- **Setup**: Uses `EDGEDB_INSTANCE` and `EDGEDB_SECRET_KEY` environment variables
+
+### 3. Redis (Ultra-fast, key-value)
+- **Best for**: High-performance applications, caching, session storage
+- **Performance**: < 5ms latency at P99
+- **Features**: In-memory storage, ultra-low latency, high throughput
+- **Use Cases**: Production applications, real-time features, caching
+- **Setup**: Uses `REDIS_URL` environment variable
 
 ## 📁 File Storage Options
 
@@ -169,9 +176,12 @@ NEXTAUTH_URL=http://localhost:3000
 # Option 1: PostgreSQL
 GEL_DATABASE_URL=postgresql://username:password@localhost:5432/konbase
 
-# Option 2: Edge Config
-EDGE_CONFIG_ID=your-edge-config-id
-EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
+# Option 2: Vercel EdgeDB (Ultra-fast)
+EDGEDB_INSTANCE=your-edgedb-instance
+EDGEDB_SECRET_KEY=your-edgedb-secret-key
+
+# Option 3: Redis (Ultra-fast)
+REDIS_URL=redis://user:password@localhost:6379
 
 # File Storage Configuration (choose one)
 # Option 1: Vercel Blob (Recommended)
@@ -199,14 +209,27 @@ APP_URL=http://localhost:3000
 3. Set the `GEL_DATABASE_URL` environment variable
 4. Run migrations: `npm run db:migrate`
 
-#### Edge Config Setup
-⚠️ **Important**: Edge Config is **read-only** in production. For setup operations (creating admin users, associations), you must also configure PostgreSQL.
-
+#### Vercel EdgeDB Setup
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Navigate to **Storage** → **Edge Config**
-3. Create a new Edge Config
-4. Set `EDGE_CONFIG_ID` and `EDGE_CONFIG_READ_ACCESS_TOKEN`
-5. **Also set** `GEL_DATABASE_URL` for setup operations
+2. Navigate to **Storage** → **EdgeDB**
+3. Create a new EdgeDB instance
+4. Get your instance ID and secret key
+5. Set `EDGEDB_INSTANCE` and `EDGEDB_SECRET_KEY` environment variables
+
+#### Redis Setup
+1. **Local Development**: Install Redis locally or use Docker
+   ```bash
+   # Using Docker
+   docker run -d -p 6379:6379 redis:alpine
+   
+   # Set environment variable
+   REDIS_URL=redis://localhost:6379
+   ```
+
+2. **Production**: Use Redis cloud service (Redis Cloud, AWS ElastiCache, etc.)
+   ```bash
+   REDIS_URL=redis://user:password@host:port
+   ```
 
 ### File Storage Setup
 
@@ -268,9 +291,12 @@ NEXTAUTH_URL=https://your-app.vercel.app
 # PostgreSQL
 GEL_DATABASE_URL=postgresql://user:pass@host:port/db
 
-# Edge Config
-EDGE_CONFIG_ID=your-edge-config-id
-EDGE_CONFIG_READ_ACCESS_TOKEN=your-read-access-token
+# Vercel EdgeDB (Ultra-fast)
+EDGEDB_INSTANCE=your-edgedb-instance
+EDGEDB_SECRET_KEY=your-edgedb-secret-key
+
+# Redis (Ultra-fast)
+REDIS_URL=redis://user:password@host:port
 ```
 
 **Storage (choose one):**
