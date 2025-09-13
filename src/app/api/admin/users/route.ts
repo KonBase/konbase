@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const dataAccess = createDataAccessLayer();
+    const dataAccess = createDataAccessLayer('postgresql');
 
     // Check if user is super admin
     const user = (await dataAccess.executeQuerySingle(
@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
         u.*,
         p.first_name,
         p.last_name,
-        p.phone,
         p.avatar_url,
         p.two_factor_enabled,
         p.totp_secret,
@@ -60,7 +59,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN profiles p ON u.id = p.user_id
       LEFT JOIN association_members am ON u.id = am.profile_id
       ${whereClause}
-      GROUP BY u.id, p.first_name, p.last_name, p.phone, p.avatar_url, p.two_factor_enabled, p.totp_secret
+      GROUP BY u.id, p.first_name, p.last_name, p.avatar_url, p.two_factor_enabled, p.totp_secret
       ORDER BY u.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `,
@@ -110,7 +109,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const dataAccess = createDataAccessLayer();
+    const dataAccess = createDataAccessLayer('postgresql');
 
     // Check if user is super admin
     const user = (await dataAccess.executeQuerySingle(
@@ -128,14 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      email,
-      firstName,
-      lastName,
-      phone,
-      role = 'member',
-      password,
-    } = body;
+    const { email, firstName, lastName, role = 'member', password } = body;
 
     if (!email || !firstName || !lastName) {
       return NextResponse.json(
@@ -188,12 +180,12 @@ export async function POST(request: NextRequest) {
     await dataAccess.executeQuery(
       `
       INSERT INTO profiles (
-        user_id, first_name, last_name, phone
+        user_id, first_name, last_name
       ) VALUES (
-        $1, $2, $3, $4
+        $1, $2, $3
       )
     `,
-      [newUser.id, firstName, lastName, phone || null]
+      [newUser.id, firstName, lastName]
     );
 
     return NextResponse.json(

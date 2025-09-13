@@ -5,13 +5,13 @@ import { createDataAccessLayer } from '@/lib/db/data-access';
 import bcrypt from 'bcryptjs';
 
 export async function GET() {
-  const dataAccess = createDataAccessLayer();
+  const dataAccess = createDataAccessLayer('postgresql');
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const profile = (await dataAccess.executeQuerySingle(
     `
-    SELECT * FROM profiles WHERE user_id = <str>$1
+    SELECT * FROM profiles WHERE user_id = $1
   `,
     [session.user.id]
   )) as unknown;
@@ -19,7 +19,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const dataAccess = createDataAccessLayer();
+  const dataAccess = createDataAccessLayer('postgresql');
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,8 +29,8 @@ export async function PATCH(req: NextRequest) {
   const profile = (await dataAccess.executeQuerySingle(
     `
     UPDATE profiles 
-    SET display_name = <str>$1, avatar_url = <str>$2, preferences = <json>$3
-    WHERE user_id = <str>$4
+    SET display_name = $1, avatar_url = $2, preferences = $3
+    WHERE user_id = $4
     RETURNING *
   `,
     [display_name, avatar_url, preferences, session.user.id]
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const dataAccess = createDataAccessLayer();
+  const dataAccess = createDataAccessLayer('postgresql');
   // change password
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   const { currentPassword, newPassword } = await req.json();
   const user = (await dataAccess.executeQuerySingle(
     `
-    SELECT * FROM users WHERE id = <str>$1
+    SELECT * FROM users WHERE id = $1
   `,
     [session.user.id]
   )) as { hashed_password: string } | null;
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(newPassword, 10);
   await dataAccess.executeQuery(
     `
-    UPDATE users SET hashed_password = <str>$1 WHERE id = <str>$2
+    UPDATE users SET hashed_password = $1 WHERE id = $2
   `,
     [hashed, session.user.id]
   );

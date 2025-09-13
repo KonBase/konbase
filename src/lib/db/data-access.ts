@@ -1,4 +1,3 @@
-import { getDataAccess as getGelDataAccess } from './gel';
 import { getRedisClient } from './redis';
 import { executeQuery, executeQuerySingle } from './postgres';
 

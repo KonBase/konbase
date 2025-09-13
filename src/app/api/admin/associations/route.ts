@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/config';
 import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET(request: NextRequest) {
-  const dataAccess = createDataAccessLayer();
+  const dataAccess = createDataAccessLayer('postgresql');
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Check if user is super admin
     const user = (await dataAccess.executeQuerySingle(
       `
-      SELECT role FROM users WHERE id = <str>$1
+      SELECT role FROM users WHERE id = $1
     `,
       [session.user.id]
     )) as { role: string } | null;
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1;
 
     if (search) {
-      whereClause = `WHERE a.name ILIKE <str>$${paramIndex} OR a.email ILIKE <str>$${paramIndex}`;
+      whereClause = `WHERE a.name ILIKE $${paramIndex} OR a.email ILIKE $${paramIndex}`;
       params.push(`%${search}%`);
       paramIndex++;
     }
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       ${whereClause}
       GROUP BY a.id
       ORDER BY a.created_at DESC
-      LIMIT <int>$${paramIndex} OFFSET <int>$${paramIndex + 1}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `,
       [...params, limit, offset]
     );
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const dataAccess = createDataAccessLayer();
+  const dataAccess = createDataAccessLayer('postgresql');
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     // Check if user is super admin
     const user = (await dataAccess.executeQuerySingle(
       `
-      SELECT role FROM users WHERE id = <str>$1
+      SELECT role FROM users WHERE id = $1
     `,
       [session.user.id]
     )) as { role: string } | null;
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       INSERT INTO associations (
         name, description, email, website, status
       ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <str>$5
+        $1, $2, $3, $4, $5
       )
       RETURNING *
     `,
