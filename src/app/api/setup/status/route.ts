@@ -1,40 +1,53 @@
 import { NextResponse } from 'next/server';
-import { getUnifiedDatabase } from '@/lib/db/unified';
-import { isRedisConfigured } from '@/lib/db/redis';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET() {
   try {
-    const db = getUnifiedDatabase();
-    const adapterType = db.getAdapterType();
-
-    // Check if database is available
-    const isAvailable = await db.isAvailable();
-
-    if (!isAvailable) {
+    // Check if PostgreSQL is configured
+    if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
       return NextResponse.json({
         setupComplete: false,
-        databaseType: adapterType,
-        error: `${adapterType} database is not available`,
+        databaseType: 'postgresql',
+        databaseAvailable: false,
+        error: 'PostgreSQL database configuration not found',
+      });
+    }
+
+    const dataAccess = createDataAccessLayer('postgresql');
+
+    // Check if database is available
+    const healthCheck = await dataAccess.healthCheck();
+
+    if (healthCheck.status !== 'healthy') {
+      return NextResponse.json({
+        setupComplete: false,
+        databaseType: 'postgresql',
+        databaseAvailable: false,
+        error: 'PostgreSQL database is not available',
       });
     }
 
     // Check if setup is complete by looking for system settings
-    const setupComplete = await db.get('system_settings:setup_complete');
+    const setupComplete = await dataAccess.getSystemSetting('setup_complete');
 
     // Check if there are any users (indicates setup has been done)
-    const users = await db.getAll('users');
-    const userCount = users.length;
+    const users = await dataAccess.executeQuery(
+      'SELECT COUNT(*) as count FROM users'
+    );
+    const userCount = (users[0] as { count: number })?.count || 0;
 
     // Check if there are any associations
-    const associations = await db.getAll('associations');
-    const associationCount = associations.length;
+    const associations = await dataAccess.executeQuery(
+      'SELECT COUNT(*) as count FROM associations'
+    );
+    const associationCount = (associations[0] as { count: number })?.count || 0;
 
     const isSetupComplete =
       setupComplete === 'true' || (userCount > 0 && associationCount > 0);
 
     return NextResponse.json({
       setupComplete: isSetupComplete,
-      databaseType: adapterType,
+      databaseType: 'postgresql',
       userCount,
       associationCount,
       databaseAvailable: true,
@@ -43,12 +56,9 @@ export async function GET() {
     // eslint-disable-next-line no-console
     console.error('Setup status check error:', error);
 
-    // Check if Redis is configured as fallback
-    const redisConfigured = isRedisConfigured();
-
     return NextResponse.json({
       setupComplete: false,
-      databaseType: redisConfigured ? 'redis' : 'postgresql',
+      databaseType: 'postgresql',
       databaseAvailable: false,
       error: 'Database connection failed',
     });

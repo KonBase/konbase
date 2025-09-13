@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
-import { getDataAccess } from '@/lib/db/data-access';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 import { conventionSchema } from '@/lib/validations/schemas';
 import { z } from 'zod';
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const dataAccess = getDataAccess();
+    const dataAccess = createDataAccessLayer('postgresql');
     let conventions =
       await dataAccess.getConventionsByAssociation(associationId);
 
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const dataAccess = getDataAccess();
+    const dataAccess = createDataAccessLayer('postgresql');
 
     // Create convention
     const convention = await dataAccess.createConvention({

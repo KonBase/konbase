@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getDataAccess } from '@/lib/db/data-access';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET() {
   try {
-    const dataAccess = getDataAccess();
+    const dataAccess = createDataAccessLayer('postgresql');
     const healthCheck = await dataAccess.healthCheck();
 
     return NextResponse.json({
@@ -13,7 +13,7 @@ export async function GET() {
         database:
           healthCheck.status === 'healthy' ? 'connected' : 'disconnected',
         application: 'running',
-        databaseType: dataAccess.getAdapterType(),
+        databaseType: 'postgresql',
       },
       latency: healthCheck.latency,
     });

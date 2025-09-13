@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
-import { getDataAccess } from '@/lib/db/data-access';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const dataAccess = getDataAccess();
+  const dataAccess = createDataAccessLayer('postgresql');
 
   // Find one association for user (first membership) - could be driven by UI selector
   const memberships = await dataAccess.getAssociationMembersByProfileId(
