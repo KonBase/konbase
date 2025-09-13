@@ -132,7 +132,7 @@ export class DataAccessLayer {
       const result = await this.getPostgresDb().querySingle(
         `
         INSERT INTO users (email, hashed_password, role, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, NOW())
+        VALUES ($1, $2, $3, NOW())
         RETURNING id, email, role, created_at
       `,
         [userData.email, userData.hashed_password, userData.role]
@@ -160,9 +160,7 @@ export class DataAccessLayer {
   async getUserByEmail(email: string): Promise<User | null> {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
-        `
-        SELECT * FROM users WHERE email = <str>$1
-      `,
+        `SELECT * FROM users WHERE email = $1`,
         [email]
       );
 
@@ -181,7 +179,7 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
         `
-        SELECT * FROM users WHERE id = <str>$1
+        SELECT * FROM users WHERE id = $1
       `,
         [id]
       );
@@ -202,7 +200,7 @@ export class DataAccessLayer {
       await this.getPostgresDb().query(
         `
         INSERT INTO profiles (user_id, first_name, last_name, display_name, two_factor_enabled, totp_secret, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <bool>$5, <str>$6, NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
       `,
         [
           profileData.user_id,
@@ -233,7 +231,7 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
         `
-        SELECT * FROM profiles WHERE user_id = <str>$1
+        SELECT * FROM profiles WHERE user_id = $1
       `,
         [userId]
       );
@@ -254,7 +252,7 @@ export class DataAccessLayer {
       const result = await this.getPostgresDb().querySingle(
         `
         INSERT INTO associations (name, description, website, email, phone, address, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
         RETURNING id, name, description, website, email, phone, address, created_at
       `,
         [
@@ -289,7 +287,7 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
         `
-        SELECT * FROM associations WHERE id = <str>$1
+        SELECT * FROM associations WHERE id = $1
       `,
         [id]
       );
@@ -333,9 +331,9 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
         `
-        INSERT INTO association_members (association_id, profile_id, role, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, NOW())
-        RETURNING id, association_id, profile_id, role, created_at
+        INSERT INTO association_members (association_id, profile_id, role, joined_at)
+        VALUES ($1, $2, $3, NOW())
+        RETURNING id, association_id, profile_id, role, joined_at as created_at
       `,
         [memberData.association_id, memberData.profile_id, memberData.role]
       );
@@ -367,7 +365,7 @@ export class DataAccessLayer {
         SELECT am.*, a.name as association_name
         FROM association_members am
         JOIN associations a ON am.association_id = a.id
-        WHERE am.profile_id = <str>$1
+        WHERE am.profile_id = $1
       `,
         [profileId]
       );
@@ -414,7 +412,7 @@ export class DataAccessLayer {
       const result = await this.getPostgresDb().querySingle(
         `
         INSERT INTO conventions (association_id, name, description, start_date, end_date, location, status, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, <str>$7, NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
         RETURNING id, association_id, name, description, start_date, end_date, location, status, created_at
       `,
         [
@@ -452,7 +450,7 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().query(
         `
-        SELECT * FROM conventions WHERE association_id = <str>$1 ORDER BY start_date DESC
+        SELECT * FROM conventions WHERE association_id = $1 ORDER BY start_date DESC
       `,
         [associationId]
       );
@@ -481,7 +479,7 @@ export class DataAccessLayer {
       const result = await this.getPostgresDb().querySingle(
         `
         INSERT INTO convention_members (convention_id, profile_id, role, created_at)
-        VALUES (<str>$1, <str>$2, <str>$3, NOW())
+        VALUES ($1, $2, $3, NOW())
         RETURNING id, convention_id, profile_id, role, created_at
       `,
         [memberData.convention_id, memberData.profile_id, memberData.role]
@@ -511,8 +509,8 @@ export class DataAccessLayer {
       await this.getPostgresDb().query(
         `
         INSERT INTO system_settings (key, value, updated_at)
-        VALUES (<str>$1, <str>$2, NOW())
-        ON CONFLICT (key) DO UPDATE SET value = <str>$2, updated_at = NOW()
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
       `,
         [key, value]
       );
@@ -525,7 +523,7 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const result = await this.getPostgresDb().querySingle(
         `
-        SELECT value FROM system_settings WHERE key = <str>$1
+        SELECT value FROM system_settings WHERE key = $1
       `,
         [key]
       );
