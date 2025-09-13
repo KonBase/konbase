@@ -12,65 +12,48 @@ export async function POST(request: NextRequest) {
   try {
     const operationPromise = async () => {
       const {
-        siteName,
-        siteDescription,
-        maintenanceMode,
-        registrationEnabled,
-        emailVerificationRequired,
-        sessionTimeout,
-        maxLoginAttempts,
-        passwordMinLength,
-        twoFactorRequired,
-        smtpHost,
-        smtpPort,
-        smtpUser,
-        smtpPassword,
-        fromEmail,
-        fromName,
+        systemName,
+        systemDescription,
+        systemEmail,
+        systemUrl,
+        enableRegistration,
+        enableInvitations,
+        enableTwoFactor,
         enableAuditLogs,
         enableNotifications,
         enableChat,
         enableFileUploads,
-        enableAnalytics,
-        adminUserId,
-        associationId,
-        databaseType = 'postgresql',
+        maxFileSize,
+        allowedFileTypes,
+        enableEmailNotifications,
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPassword,
+        enableBlobStorage,
+        blobReadWriteToken,
+        enableEdgeConfig,
+        edgeConfigId,
+        edgeConfigReadAccessToken,
       } = await request.json();
 
       // eslint-disable-next-line no-console
-      console.log('Configuring system with database type:', databaseType);
+      console.log('Configuring system settings...');
 
-      // Auto-detect database type if not specified
-      let actualDatabaseType = databaseType;
-      if (databaseType === 'auto' || !databaseType) {
-        if (process.env.REDIS_URL) {
-          actualDatabaseType = 'redis';
-        } else if (
-          process.env.EDGEDB_INSTANCE &&
-          process.env.EDGEDB_SECRET_KEY
-        ) {
-          actualDatabaseType = 'postgresql'; // EdgeDB uses PostgreSQL interface
-        } else if (process.env.GEL_DATABASE_URL) {
-          actualDatabaseType = 'postgresql';
-        } else {
-          return NextResponse.json(
-            {
-              error: 'No database configuration found',
-              suggestion:
-                'Please configure REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL',
-            },
-            { status: 400 }
-          );
-        }
+      // Check if PostgreSQL is configured
+      if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
+        return NextResponse.json(
+          {
+            error: 'PostgreSQL database configuration not found',
+            suggestion:
+              'Please configure POSTGRES_URL or DATABASE_URL environment variable',
+          },
+          { status: 400 }
+        );
       }
 
-      // eslint-disable-next-line no-console
-      console.log('Using database type:', actualDatabaseType);
-
-      // Create data access layer
-      const dataAccess = createDataAccessLayer(
-        actualDatabaseType as 'postgresql' | 'redis'
-      );
+      // Get PostgreSQL data access layer
+      const dataAccess = createDataAccessLayer('postgresql');
 
       // Test database connection first
       // eslint-disable-next-line no-console
@@ -91,129 +74,54 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // System settings
-      const settings = [
-        { key: 'site_name', value: siteName, description: 'Site name' },
-        {
-          key: 'site_description',
-          value: siteDescription,
-          description: 'Site description',
-        },
-        {
-          key: 'maintenance_mode',
-          value: maintenanceMode.toString(),
-          description: 'Maintenance mode',
-        },
-        {
-          key: 'registration_enabled',
-          value: registrationEnabled.toString(),
-          description: 'User registration enabled',
-        },
-        {
-          key: 'email_verification_required',
-          value: emailVerificationRequired.toString(),
-          description: 'Email verification required',
-        },
-        {
-          key: 'session_timeout',
-          value: sessionTimeout.toString(),
-          description: 'Session timeout in minutes',
-        },
-        {
-          key: 'max_login_attempts',
-          value: maxLoginAttempts.toString(),
-          description: 'Maximum login attempts',
-        },
-        {
-          key: 'password_min_length',
-          value: passwordMinLength.toString(),
-          description: 'Minimum password length',
-        },
-        {
-          key: 'two_factor_required',
-          value: twoFactorRequired.toString(),
-          description: 'Two-factor authentication required',
-        },
-        { key: 'smtp_host', value: smtpHost, description: 'SMTP host' },
-        {
-          key: 'smtp_port',
-          value: smtpPort.toString(),
-          description: 'SMTP port',
-        },
-        { key: 'smtp_user', value: smtpUser, description: 'SMTP username' },
-        {
-          key: 'smtp_password',
-          value: smtpPassword,
-          description: 'SMTP password',
-        },
-        {
-          key: 'from_email',
-          value: fromEmail,
-          description: 'From email address',
-        },
-        { key: 'from_name', value: fromName, description: 'From name' },
-        {
-          key: 'enable_audit_logs',
-          value: enableAuditLogs.toString(),
-          description: 'Enable audit logs',
-        },
-        {
-          key: 'enable_notifications',
-          value: enableNotifications.toString(),
-          description: 'Enable notifications',
-        },
-        {
-          key: 'enable_chat',
-          value: enableChat.toString(),
-          description: 'Enable chat system',
-        },
-        {
-          key: 'enable_file_uploads',
-          value: enableFileUploads.toString(),
-          description: 'Enable file uploads',
-        },
-        {
-          key: 'enable_analytics',
-          value: enableAnalytics.toString(),
-          description: 'Enable analytics',
-        },
-      ];
+      // Configure system settings
+      const settings = {
+        systemName: systemName || 'KonBase',
+        systemDescription: systemDescription || 'Association Management System',
+        systemEmail: systemEmail || 'admin@konbase.local',
+        systemUrl: systemUrl || 'http://localhost:3000',
+        enableRegistration: enableRegistration ?? true,
+        enableInvitations: enableInvitations ?? true,
+        enableTwoFactor: enableTwoFactor ?? true,
+        enableAuditLogs: enableAuditLogs ?? true,
+        enableNotifications: enableNotifications ?? true,
+        enableChat: enableChat ?? true,
+        enableFileUploads: enableFileUploads ?? true,
+        maxFileSize: maxFileSize || 10485760, // 10MB
+        allowedFileTypes: allowedFileTypes || [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'application/pdf',
+          'text/plain',
+        ],
+        enableEmailNotifications: enableEmailNotifications ?? false,
+        smtpHost: smtpHost || '',
+        smtpPort: smtpPort || 587,
+        smtpUser: smtpUser || '',
+        smtpPassword: smtpPassword || '',
+        enableBlobStorage: enableBlobStorage ?? false,
+        blobReadWriteToken: blobReadWriteToken || '',
+        enableEdgeConfig: enableEdgeConfig ?? false,
+        edgeConfigId: edgeConfigId || '',
+        edgeConfigReadAccessToken: edgeConfigReadAccessToken || '',
+      };
 
-      if (associationId) {
-        settings.push({
-          key: 'default_association_id',
-          value: associationId,
-          description: 'Default association id',
-        });
-      }
-      if (adminUserId) {
-        settings.push({
-          key: 'setup_admin_user_id',
-          value: adminUserId,
-          description: 'Admin user id used during setup',
-        });
+      // eslint-disable-next-line no-console
+      console.log('Saving system settings...');
+
+      // Save each setting individually
+      for (const [key, value] of Object.entries(settings)) {
+        await dataAccess.setSystemSetting(key, JSON.stringify(value));
       }
 
       // eslint-disable-next-line no-console
-      console.log('Setting system configuration...');
-
-      // Set each system setting
-      for (const setting of settings) {
-        await dataAccess.setSystemSetting(setting.key, setting.value);
-      }
-
-      // Mark setup as complete
-      // eslint-disable-next-line no-console
-      console.log('Marking setup as complete...');
-      await dataAccess.setSystemSetting('setup_complete', 'true');
-
-      // eslint-disable-next-line no-console
-      console.log('System configuration completed successfully');
+      console.log('System settings saved successfully');
 
       return NextResponse.json({
         success: true,
-        message: 'System configured successfully',
-        databaseType: actualDatabaseType,
+        message: 'System configuration saved successfully',
+        settings: settings,
         healthCheck: healthCheck,
       });
     };
@@ -239,14 +147,14 @@ export async function POST(request: NextRequest) {
     // Provide more specific error messages
     if (error instanceof Error) {
       if (
-        error.message.includes('GEL_DATABASE_URL') ||
-        error.message.includes('REDIS_URL')
+        error.message.includes('POSTGRES_URL') ||
+        error.message.includes('DATABASE_URL')
       ) {
         return NextResponse.json(
           {
-            error: 'Database configuration is required for setup operations',
+            error: 'PostgreSQL database configuration is required',
             suggestion:
-              'Please provide REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL environment variable',
+              'Please provide POSTGRES_URL or DATABASE_URL environment variable',
           },
           { status: 400 }
         );
@@ -261,7 +169,7 @@ export async function POST(request: NextRequest) {
             error: 'Database connection failed',
             details: error.message,
             suggestion:
-              'Please check your database configuration and ensure the database is accessible',
+              'Please check your PostgreSQL database configuration and ensure the database is accessible',
           },
           { status: 500 }
         );

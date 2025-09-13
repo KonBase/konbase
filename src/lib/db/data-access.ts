@@ -81,8 +81,10 @@ export class DataAccessLayer {
     if (this.dbType === 'postgresql') {
       const { executeQuery, executeQuerySingle } = require('./postgres');
       return {
-        query: executeQuery,
-        querySingle: executeQuerySingle,
+        query: (sql: string, params: unknown[] = []) =>
+          executeQuery(sql, params),
+        querySingle: (sql: string, params: unknown[] = []) =>
+          executeQuerySingle(sql, params),
       };
     }
     throw new Error('PostgreSQL not configured');

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDataAccessLayer } from '@/lib/db/data-access';
+import { runMigrations } from '@/lib/db/migrations';
 import bcrypt from 'bcryptjs';
 
 // Set timeout for the entire operation
@@ -12,14 +13,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const operationPromise = async () => {
-      const {
-        firstName,
-        lastName,
-        email,
-        password,
-        enable2FA,
-        databaseType = 'postgresql',
-      } = await request.json();
+      const { firstName, lastName, email, password, enable2FA } =
+        await request.json();
 
       if (!firstName || !lastName || !email || !password) {
         return NextResponse.json(
@@ -31,39 +26,22 @@ export async function POST(request: NextRequest) {
       }
 
       // eslint-disable-next-line no-console
-      console.log('Creating admin user with database type:', databaseType);
+      console.log('Creating admin user with PostgreSQL database');
 
-      // Auto-detect database type if not specified
-      let actualDatabaseType = databaseType;
-      if (databaseType === 'auto' || !databaseType) {
-        if (process.env.REDIS_URL) {
-          actualDatabaseType = 'redis';
-        } else if (
-          process.env.EDGEDB_INSTANCE &&
-          process.env.EDGEDB_SECRET_KEY
-        ) {
-          actualDatabaseType = 'postgresql'; // EdgeDB uses PostgreSQL interface
-        } else if (process.env.GEL_DATABASE_URL) {
-          actualDatabaseType = 'postgresql';
-        } else {
-          return NextResponse.json(
-            {
-              error: 'No database configuration found',
-              suggestion:
-                'Please configure REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL',
-            },
-            { status: 400 }
-          );
-        }
+      // Check if PostgreSQL is configured
+      if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
+        return NextResponse.json(
+          {
+            error: 'PostgreSQL database configuration not found',
+            suggestion:
+              'Please configure POSTGRES_URL or DATABASE_URL environment variable',
+          },
+          { status: 400 }
+        );
       }
 
-      // eslint-disable-next-line no-console
-      console.log('Using database type:', actualDatabaseType);
-
-      // Create data access layer with timeout
-      const dataAccess = createDataAccessLayer(
-        actualDatabaseType as 'postgresql' | 'redis'
-      );
+      // Get PostgreSQL data access layer
+      const dataAccess = createDataAccessLayer('postgresql');
 
       // Test database connection first
       // eslint-disable-next-line no-console
@@ -83,6 +61,29 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+
+      // Run database migrations
+      // eslint-disable-next-line no-console
+      console.log('Running database migrations...');
+      const migrationResult = await runMigrations();
+
+      if (migrationResult.error) {
+        return NextResponse.json(
+          {
+            error: 'Database migration failed',
+            details: migrationResult.error,
+            suggestion:
+              'Please check your database configuration and try again',
+          },
+          { status: 500 }
+        );
+      }
+
+      // eslint-disable-next-line no-console
+      console.log('Migrations completed:', {
+        applied: migrationResult.applied.length,
+        skipped: migrationResult.skipped.length,
+      });
 
       // Check if user already exists
       // eslint-disable-next-line no-console
@@ -133,8 +134,12 @@ export async function POST(request: NextRequest) {
         success: true,
         userId: user.id,
         message: 'Admin user created successfully',
-        databaseType: actualDatabaseType,
+        databaseType: 'postgresql',
         healthCheck: healthCheck,
+        migrations: {
+          applied: migrationResult.applied,
+          skipped: migrationResult.skipped,
+        },
       });
     };
 
@@ -158,27 +163,15 @@ export async function POST(request: NextRequest) {
 
     // Provide more specific error messages
     if (error instanceof Error) {
-      if (error.message.includes('Edge Config is read-only')) {
-        return NextResponse.json(
-          {
-            error:
-              'Edge Config is read-only in production. Please use PostgreSQL for setup operations.',
-            suggestion:
-              'Set DATABASE_TYPE=postgresql or provide GEL_DATABASE_URL for setup',
-          },
-          { status: 400 }
-        );
-      }
-
       if (
-        error.message.includes('GEL_DATABASE_URL') ||
-        error.message.includes('REDIS_URL')
+        error.message.includes('POSTGRES_URL') ||
+        error.message.includes('DATABASE_URL')
       ) {
         return NextResponse.json(
           {
-            error: 'Database configuration is required for setup operations',
+            error: 'PostgreSQL database configuration is required',
             suggestion:
-              'Please provide REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL environment variable',
+              'Please provide POSTGRES_URL or DATABASE_URL environment variable',
           },
           { status: 400 }
         );
@@ -193,7 +186,7 @@ export async function POST(request: NextRequest) {
             error: 'Database connection failed',
             details: error.message,
             suggestion:
-              'Please check your database configuration and ensure the database is accessible',
+              'Please check your PostgreSQL database configuration and ensure the database is accessible',
           },
           { status: 500 }
         );

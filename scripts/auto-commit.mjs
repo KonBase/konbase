@@ -101,7 +101,7 @@ try {
     changeDescription = ` (${specificChanges.join(', ')})`;
   }
 
-  commitMessage = `Version ${newVersion}${changeDescription}: ${changes.join(', ')}`;
+  commitMessage = `Version ${newVersion}: ${changeDescription} ${changes.join(', ')}`;
 } catch (error) {
   console.error('Error getting git status:', error.message);
   commitMessage = `Version ${newVersion}: Automated commit`;
