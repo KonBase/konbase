@@ -17,16 +17,14 @@ export async function POST() {
       console.log('Starting database migration...');
 
       // Check if we have a database connection
-      const edgedbInstance = process.env.EDGEDB_INSTANCE;
-      const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
-      const gelDatabaseUrl = process.env.GEL_DATABASE_URL;
+      const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
-      if (!edgedbInstance && !edgedbSecretKey && !gelDatabaseUrl) {
+      if (!postgresUrl) {
         return NextResponse.json(
           {
             error: 'No database configuration found',
             suggestion:
-              'Please configure EDGEDB_INSTANCE + EDGEDB_SECRET_KEY or GEL_DATABASE_URL',
+              'Please configure POSTGRES_URL or DATABASE_URL environment variable',
           },
           { status: 400 }
         );
@@ -274,16 +272,14 @@ export async function GET() {
     console.log('Checking migration status...');
 
     // Check if we have a database connection
-    const edgedbInstance = process.env.EDGEDB_INSTANCE;
-    const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
-    const gelDatabaseUrl = process.env.GEL_DATABASE_URL;
+    const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
-    if (!edgedbInstance && !edgedbSecretKey && !gelDatabaseUrl) {
+    if (!postgresUrl) {
       return NextResponse.json(
         {
           error: 'No database configuration found',
           suggestion:
-            'Please configure EDGEDB_INSTANCE + EDGEDB_SECRET_KEY or GEL_DATABASE_URL',
+            'Please configure POSTGRES_URL or DATABASE_URL environment variable',
         },
         { status: 400 }
       );

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getConnectionInfo } from '@/lib/db/gel';
 import { getRedisConnectionInfo } from '@/lib/db/redis';
 import { createDataAccessLayer } from '@/lib/db/data-access';
+import { getPostgresConnectionInfo } from '@/lib/db/postgres';
 import fs from 'fs';
 import path from 'path';
 
@@ -36,29 +36,19 @@ export async function GET() {
     };
 
     // Detect database configuration
-    const edgedbInstance = process.env.EDGEDB_INSTANCE;
-    const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
+    const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
     const redisUrl = process.env.REDIS_URL;
-    const gelDatabaseUrl = process.env.GEL_DATABASE_URL;
 
-    if (edgedbInstance && edgedbSecretKey) {
+    if (postgresUrl) {
       detection.database.configured = true;
-      detection.database.type = 'edgedb';
+      detection.database.type = 'postgresql';
       detection.database.status = 'configured';
-      detection.database.details = {
-        instance: edgedbInstance,
-        hasSecretKey: !!edgedbSecretKey,
-      };
+      detection.database.details = getPostgresConnectionInfo();
     } else if (redisUrl) {
       detection.database.configured = true;
       detection.database.type = 'redis';
       detection.database.status = 'configured';
       detection.database.details = getRedisConnectionInfo();
-    } else if (gelDatabaseUrl) {
-      detection.database.configured = true;
-      detection.database.type = 'postgresql';
-      detection.database.status = 'configured';
-      detection.database.details = getConnectionInfo();
     }
 
     // Detect storage configuration

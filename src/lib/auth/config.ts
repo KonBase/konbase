@@ -25,67 +25,80 @@ export const authOptions: NextAuthOptions = {
         const totpCode = credentials?.totpCode?.toString();
         if (!email || !password) throw new Error('Missing email or password');
 
-        // Get data access layer
-        const dataAccess = getDataAccess();
+        try {
+          // Get data access layer
+          const dataAccess = getDataAccess();
 
-        // Fetch user by email
-        const user = await dataAccess.getUserByEmail(email);
+          // Fetch user by email
+          const user = await dataAccess.getUserByEmail(email);
 
-        if (!user?.hashed_password) throw new Error('Invalid credentials');
-        const ok = await bcrypt.compare(password, user.hashed_password);
-        if (!ok) throw new Error('Invalid credentials');
+          if (!user?.hashed_password) {
+            console.error('User not found or no password:', email);
+            throw new Error('Invalid credentials');
+          }
 
-        // 2FA check (from profile)
-        // Load profile + associations
-        const profile = await dataAccess.getProfileByUserId(user.id);
+          const ok = await bcrypt.compare(password, user.hashed_password);
+          if (!ok) {
+            console.error('Password mismatch for user:', email);
+            throw new Error('Invalid credentials');
+          }
 
-        if (profile?.two_factor_enabled) {
-          if (!totpCode) throw new Error('2FA code required');
-          if (!profile.totp_secret)
-            throw new Error('2FA not properly configured');
-          const valid = speakeasy.totp.verify({
-            secret: profile.totp_secret,
-            encoding: 'base32',
-            token: totpCode,
-            window: 1,
-          });
-          if (!valid) throw new Error('Invalid 2FA code');
-        }
+          // 2FA check (from profile)
+          // Load profile + associations
+          const profile = await dataAccess.getProfileByUserId(user.id);
 
-        const associations = await dataAccess.getAssociationMembersByProfileId(
-          profile?.user_id ?? user.id
-        );
+          if (profile?.two_factor_enabled) {
+            if (!totpCode) throw new Error('2FA code required');
+            if (!profile.totp_secret)
+              throw new Error('2FA not properly configured');
+            const valid = speakeasy.totp.verify({
+              secret: profile.totp_secret,
+              encoding: 'base32',
+              token: totpCode,
+              window: 1,
+            });
+            if (!valid) throw new Error('Invalid 2FA code');
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: profile?.display_name ?? user.email,
-          role: user.role,
-          profile,
-          associations:
-            associations?.map(assoc => ({
-              id: assoc.id,
-              role: assoc.role,
-              association: {
-                id: assoc.association_id,
-                name: assoc.association_name,
-              },
-            })) ?? [],
-        } as {
-          id: string;
-          name: string;
-          email: string;
-          role: string;
-          profile: unknown;
-          associations: Array<{
+          const associations =
+            await dataAccess.getAssociationMembersByProfileId(
+              profile?.user_id ?? user.id
+            );
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: profile?.display_name ?? user.email,
+            role: user.role,
+            profile,
+            associations:
+              associations?.map(assoc => ({
+                id: assoc.id,
+                role: assoc.role,
+                association: {
+                  id: assoc.association_id,
+                  name: assoc.association_name,
+                },
+              })) ?? [],
+          } as {
             id: string;
+            name: string;
+            email: string;
             role: string;
-            association: {
+            profile: unknown;
+            associations: Array<{
               id: string;
-              name: string;
-            };
-          }>;
-        };
+              role: string;
+              association: {
+                id: string;
+                name: string;
+              };
+            }>;
+          };
+        } catch (error) {
+          console.error('Authorization error:', error);
+          throw new Error('Authentication failed');
+        }
       },
     }),
     GoogleProvider({

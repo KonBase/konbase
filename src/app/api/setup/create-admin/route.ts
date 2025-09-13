@@ -165,13 +165,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       if (
         error.message.includes('POSTGRES_URL') ||
-        error.message.includes('DATABASE_URL')
+        error.message.includes('DATABASE_URL') ||
+        error.message.includes('GEL_DATABASE_URL')
       ) {
         return NextResponse.json(
           {
             error: 'PostgreSQL database configuration is required',
             suggestion:
-              'Please provide POSTGRES_URL or DATABASE_URL environment variable',
+              'Please provide POSTGRES_URL, DATABASE_URL, or GEL_DATABASE_URL environment variable',
           },
           { status: 400 }
         );

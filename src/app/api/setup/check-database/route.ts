@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getConnectionInfo, getConnectionType } from '@/lib/db/gel';
+import { getPostgresConnectionInfo } from '@/lib/db/postgres';
 import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET() {
   const dataAccess = createDataAccessLayer();
   try {
-    const connectionInfo = getConnectionInfo();
-    const connectionType = getConnectionType();
+    const connectionInfo = getPostgresConnectionInfo();
+    const connectionType = 'postgresql';
 
     // Test the connection
     const startTime = Date.now();
@@ -34,8 +34,8 @@ export async function GET() {
       {
         success: false,
         connection: {
-          type: getConnectionType(),
-          info: getConnectionInfo(),
+          type: 'postgresql',
+          info: getPostgresConnectionInfo(),
           status: 'disconnected',
         },
         error: error instanceof Error ? error.message : 'Unknown error',

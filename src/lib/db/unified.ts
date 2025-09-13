@@ -1,4 +1,4 @@
-import { getDataAccess } from './gel';
+import { getDataAccess } from './data-access';
 import { getRedisClient } from './redis';
 import { RedisClientType } from 'redis';
 
