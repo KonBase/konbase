@@ -77,10 +77,15 @@ export class DataAccessLayer {
   }
 
   private getPostgresDb() {
-    return this.db as {
-      query: (sql: string, params: unknown[]) => Promise<unknown>;
-      querySingle: (sql: string, params: unknown[]) => Promise<unknown>;
-    };
+    // For PostgreSQL, we need to use the actual database client
+    if (this.dbType === 'postgresql') {
+      const { executeQuery, executeQuerySingle } = require('./postgres');
+      return {
+        query: executeQuery,
+        querySingle: executeQuerySingle,
+      };
+    }
+    throw new Error('PostgreSQL not configured');
   }
 
   private getRedisDb() {
