@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }>(
     `
     SELECT association_id FROM association_members 
-    WHERE profile_id = <str>$1
+    WHERE profile_id = $1
   `,
     [session.user.id]
   );
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const items = (await dataAccess.executeQuery(
     `
     SELECT id, name, association_id FROM items
-    WHERE association_id = ANY(<str>$1) AND name ILIKE <str>$2
+    WHERE association_id = ANY($1) AND name ILIKE $2
     LIMIT 10
   `,
     [assocIds, `%${q}%`]
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   const conventions = (await dataAccess.executeQuery(
     `
     SELECT id, name, association_id FROM conventions
-    WHERE association_id = ANY(<str>$1) AND name ILIKE <str>$2
+    WHERE association_id = ANY($1) AND name ILIKE $2
     LIMIT 10
   `,
     [assocIds, `%${q}%`]

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     const user = await dataAccess.executeQuerySingle<{ id: string }>(
       `
-      SELECT * FROM users WHERE email = <str>$1
+      SELECT * FROM users WHERE email = $1
     `,
       [email]
     );
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       await dataAccess.executeQuery(
         `
         INSERT INTO password_reset_tokens (user_id, token, expires_at)
-        VALUES (<str>$1, <str>$2, <timestamp>$3)
+        VALUES ($1, $2, $3)
       `,
         [user.id, token, expires_at]
       );

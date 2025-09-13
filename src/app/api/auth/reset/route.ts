@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const t = (await dataAccess.executeQuerySingle(
     `
     SELECT * FROM password_reset_tokens 
-    WHERE token = <str>$1 
+    WHERE token = $1 
       AND used = false 
       AND expires_at > NOW()
   `,
@@ -24,13 +24,13 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 10);
   await dataAccess.executeQuery(
     `
-    UPDATE users SET hashed_password = <str>$1 WHERE id = <str>$2
+    UPDATE users SET hashed_password = $1 WHERE id = $2
   `,
     [hashed, t.user_id]
   );
   await dataAccess.executeQuery(
     `
-    UPDATE password_reset_tokens SET used = true WHERE id = <str>$1
+    UPDATE password_reset_tokens SET used = true WHERE id = $1
   `,
     [t.id]
   );

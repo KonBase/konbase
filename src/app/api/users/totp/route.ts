@@ -38,8 +38,8 @@ export async function PATCH(req: NextRequest) {
   await dataAccess.executeQuery(
     `
     UPDATE profiles 
-    SET two_factor_enabled = true, totp_secret = <str>$1, recovery_keys = <json>$2
-    WHERE user_id = <str>$3
+    SET two_factor_enabled = true, totp_secret = $1, recovery_keys = $2
+    WHERE user_id = $3
   `,
     [secret, recovery, session.user.id]
   );
@@ -54,8 +54,8 @@ export async function DELETE() {
   await dataAccess.executeQuery(
     `
     UPDATE profiles 
-    SET two_factor_enabled = false, totp_secret = null, recovery_keys = <json>$1
-    WHERE user_id = <str>$2
+    SET two_factor_enabled = false, totp_secret = null, recovery_keys = $1
+    WHERE user_id = $2
   `,
     [[], session.user.id]
   );

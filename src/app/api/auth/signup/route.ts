@@ -5,7 +5,8 @@ import { createDataAccessLayer } from '@/lib/db/data-access';
 export async function POST(req: Request) {
   const dataAccess = createDataAccessLayer();
   try {
-    const { email, password, displayName } = await req.json();
+    const { email, password, displayName, firstName, lastName } =
+      await req.json();
     if (!email || !password)
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
     const user = await dataAccess.executeQuerySingle<{ id: string }>(
       `
       INSERT INTO users (email, hashed_password)
-      VALUES (<str>$1, <str>$2)
+      VALUES ($1, $2)
       RETURNING id
     `,
       [email, hashed]
@@ -27,12 +28,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // Extract first and last name from displayName if not provided separately
+    const finalFirstName = firstName || displayName?.split(' ')[0] || 'User';
+    const finalLastName =
+      lastName || displayName?.split(' ').slice(1).join(' ') || '';
+
     await dataAccess.executeQuery(
       `
-      INSERT INTO profiles (user_id, display_name)
-      VALUES (<str>$1, <str>$2)
+      INSERT INTO profiles (user_id, first_name, last_name, display_name)
+      VALUES ($1, $2, $3, $4)
     `,
-      [user.id, displayName ?? email]
+      [user.id, finalFirstName, finalLastName, displayName ?? email]
     );
 
     return NextResponse.json({ ok: true });

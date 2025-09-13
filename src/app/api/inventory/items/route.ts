@@ -47,27 +47,27 @@ export async function GET(request: NextRequest) {
     }
 
     // Build dynamic query
-    const whereConditions = ['i.association_id = <str>$1'];
+    const whereConditions = ['i.association_id = $1'];
     const dbParams: string[] = [associationId];
     let paramIndex = 2;
 
     if (query) {
-      whereConditions.push(`i.name ILIKE <str>$${paramIndex}`);
+      whereConditions.push(`i.name ILIKE $${paramIndex}`);
       dbParams.push(`%${query}%`);
       paramIndex++;
     }
     if (categoryId) {
-      whereConditions.push(`i.category_id = <str>$${paramIndex}`);
+      whereConditions.push(`i.category_id = $${paramIndex}`);
       dbParams.push(categoryId);
       paramIndex++;
     }
     if (locationId) {
-      whereConditions.push(`i.location_id = <str>$${paramIndex}`);
+      whereConditions.push(`i.location_id = $${paramIndex}`);
       dbParams.push(locationId);
       paramIndex++;
     }
     if (condition) {
-      whereConditions.push(`i.condition = <str>$${paramIndex}`);
+      whereConditions.push(`i.condition = $${paramIndex}`);
       dbParams.push(condition);
       paramIndex++;
     }
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
         category_id, location_id, condition, purchase_price, 
         purchase_date, warranty_expires, notes
       ) VALUES (
-        <str>$1, <str>$2, <str>$3, <str>$4, <str>$5, <str>$6, <str>$7, <decimal>$8, <date>$9, <date>$10, <str>$11
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
       )
       RETURNING *
     `,

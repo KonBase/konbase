@@ -1,19 +1,27 @@
 import { createTheme } from '@mui/material/styles';
 
-// KonBase Design System Colors
+// KonBase Design System Colors - Matching Screenshot Design
 const konbaseColors = {
   blue: '#0c2e62', // Primary brand color
   cherry: '#d84165', // Secondary accent
   lightBlue: '#0fb4ea', // Info color
-  yellow: '#fce771', // Warning/highlight
+  yellow: '#fce771', // Warning/highlight/accent
   black: '#171716', // Text primary
   white: '#e6e6dc', // Background light
   furry: '#a2779c', // Tertiary
   gzdacz: '#ea8000', // Helper/warning
+  // Dark theme colors
+  darkBg: '#121212', // Main dark background
+  darkCard: '#1e1e1e', // Card background in dark theme
+  darkMuted: '#2a2a2a', // Muted elements
+  darkBorder: '#2a2a2a', // Borders in dark theme
 };
 
 export const theme = createTheme({
   cssVariables: true,
+  palette: {
+    mode: 'dark', // Default to dark theme
+  },
   colorSchemes: {
     light: {
       palette: {
@@ -106,12 +114,12 @@ export const theme = createTheme({
           dark: '#388e3c',
         },
         background: {
-          default: '#121212',
-          paper: '#1e1e1e',
+          default: konbaseColors.darkBg,
+          paper: konbaseColors.darkCard,
         },
         text: {
-          primary: '#ffffff',
-          secondary: 'rgba(255, 255, 255, 0.7)',
+          primary: konbaseColors.white,
+          secondary: 'rgba(230, 230, 220, 0.7)',
         },
       },
     },
@@ -207,6 +215,7 @@ export const theme = createTheme({
           borderRadius: 12,
           boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.12)',
           border: '1px solid rgba(0,0,0,0.05)',
+          backgroundColor: konbaseColors.darkCard,
         },
       },
     },

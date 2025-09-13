@@ -134,7 +134,7 @@ export async function POST() {
             // Record migration as applied
             await dataAccess.executeQuery(
               `
-              INSERT INTO schema_migrations (version) VALUES (<str>$1)
+              INSERT INTO schema_migrations (version) VALUES ($1)
             `,
               [file]
             );
@@ -171,7 +171,7 @@ export async function POST() {
               await dataAccess.executeQuery('BEGIN');
               await dataAccess.executeQuery(
                 `
-                INSERT INTO schema_migrations (version) VALUES (<str>$1)
+                INSERT INTO schema_migrations (version) VALUES ($1)
                 ON CONFLICT (version) DO NOTHING
               `,
                 [file]
