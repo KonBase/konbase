@@ -1,5 +1,4 @@
-import { createBlobStorageAdapter, BlobStorageAdapter, BlobFile } from './blob';
-import { join } from 'path';
+import { createBlobStorageAdapter, BlobStorageAdapter } from './blob';
 
 export interface FileUpload {
   pathname: string;
@@ -38,6 +37,7 @@ export class UnifiedStorage {
     try {
       this.isAvailable = await this.blobAdapter.isStorageAvailable();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Storage availability check failed:', error);
       this.isAvailable = false;
     }
@@ -105,7 +105,7 @@ export class UnifiedStorage {
     }
 
     const result = await this.blobAdapter.listFiles(options);
-    
+
     const files: FileInfo[] = result.blobs.map(blob => ({
       url: blob.url,
       pathname: blob.pathname,
@@ -126,7 +126,7 @@ export class UnifiedStorage {
     }
 
     const storageType = this.blobAdapter.getStorageType();
-    
+
     if (storageType === 'vercel-blob') {
       // For Vercel Blob, we need to fetch from URL
       try {
@@ -137,6 +137,7 @@ export class UnifiedStorage {
         const arrayBuffer = await response.arrayBuffer();
         return Buffer.from(arrayBuffer);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching file content from Vercel Blob:', error);
         return null;
       }
@@ -168,7 +169,11 @@ export class UnifiedStorage {
   }
 
   // Utility methods for common file operations
-  async uploadUserAvatar(userId: string, file: Buffer | File, contentType: string): Promise<FileInfo> {
+  async uploadUserAvatar(
+    userId: string,
+    file: Buffer | File,
+    contentType: string
+  ): Promise<FileInfo> {
     const pathname = `avatars/${userId}-${Date.now()}.${this.getFileExtension(contentType)}`;
     return this.uploadFile({
       pathname,
@@ -181,7 +186,11 @@ export class UnifiedStorage {
     });
   }
 
-  async uploadAssociationLogo(associationId: string, file: Buffer | File, contentType: string): Promise<FileInfo> {
+  async uploadAssociationLogo(
+    associationId: string,
+    file: Buffer | File,
+    contentType: string
+  ): Promise<FileInfo> {
     const pathname = `logos/${associationId}-${Date.now()}.${this.getFileExtension(contentType)}`;
     return this.uploadFile({
       pathname,
@@ -194,7 +203,12 @@ export class UnifiedStorage {
     });
   }
 
-  async uploadDocument(associationId: string, fileName: string, file: Buffer | File, contentType: string): Promise<FileInfo> {
+  async uploadDocument(
+    associationId: string,
+    fileName: string,
+    file: Buffer | File,
+    contentType: string
+  ): Promise<FileInfo> {
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const pathname = `documents/${associationId}/${Date.now()}-${sanitizedFileName}`;
     return this.uploadFile({
@@ -216,9 +230,10 @@ export class UnifiedStorage {
       'application/pdf': 'pdf',
       'text/plain': 'txt',
       'application/msword': 'doc',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'docx',
     };
-    
+
     return extensions[contentType] || 'bin';
   }
 }

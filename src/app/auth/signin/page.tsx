@@ -1,91 +1,97 @@
-'use client'
-import { useState, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { 
-  Box, 
-  Button, 
-  Container, 
-  Typography, 
-  Alert, 
-  Stack, 
-  Card, 
+'use client';
+import { useState, Suspense } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Box,
+  Button,
+  Container,
+  Typography,
+  Alert,
+  Stack,
+  Card,
   CardContent,
   Divider,
   IconButton,
   InputAdornment,
-  Link
-} from '@mui/material'
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Shield, 
+  Link,
+} from '@mui/material';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
   ArrowLeft,
   Github,
-  Chrome
-} from 'lucide-react'
-import TextField from '@/components/ui/TextField'
+  Chrome,
+} from 'lucide-react';
+import TextField from '@/components/ui/TextField';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   totpCode: z.string().optional(),
-})
+});
 
 function SignInForm() {
-  const router = useRouter()
-  const params = useSearchParams()
-  const [error, setError] = useState<string | null>(params.get('error'))
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })
+  const router = useRouter();
+  const params = useSearchParams();
+  const [error, setError] = useState<string | null>(params.get('error'));
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
-    setError(null)
-    setIsLoading(true)
-    
+    setError(null);
+    setIsLoading(true);
+
     try {
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
         password: values.password,
         totpCode: values.totpCode,
-      })
-      
+      });
+
       if (res?.ok) {
-        router.push('/dashboard')
+        router.push('/dashboard');
       } else {
-        setError(res?.error === 'CredentialsSignin' ? 'Invalid email or password' : res?.error || 'Login failed')
+        setError(
+          res?.error === 'CredentialsSignin'
+            ? 'Invalid email or password'
+            : res?.error || 'Login failed'
+        );
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleOAuthSignIn = async (provider: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signIn(provider, { callbackUrl: '/dashboard' })
-    } catch (err) {
-      setError('OAuth sign-in failed')
-      setIsLoading(false)
+      await signIn(provider, { callbackUrl: '/dashboard' });
+    } catch {
+      setError('OAuth sign-in failed');
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
+    <Container maxWidth='sm' sx={{ py: 6 }}>
       <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant='h4' component='h1' gutterBottom>
           Welcome Back
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant='body1' color='text.secondary'>
           Sign in to your KonBase account
         </Typography>
       </Box>
@@ -93,23 +99,23 @@ function SignInForm() {
       <Card elevation={2}>
         <CardContent sx={{ p: 4 }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity='error' sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
+          <Box component='form' onSubmit={form.handleSubmit(onSubmit)}>
             <Stack spacing={3}>
               <TextField
-                name="email"
+                name='email'
                 control={form.control}
-                label="Email Address"
-                type="email"
+                label='Email Address'
+                type='email'
                 required
-                autoComplete="email"
+                autoComplete='email'
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Mail size={20} />
                     </InputAdornment>
                   ),
@@ -117,25 +123,29 @@ function SignInForm() {
               />
 
               <TextField
-                name="password"
+                name='password'
                 control={form.control}
-                label="Password"
+                label='Password'
                 type={showPassword ? 'text' : 'password'}
                 required
-                autoComplete="current-password"
+                autoComplete='current-password'
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Lock size={20} />
                     </InputAdornment>
                   ),
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment position='end'>
                       <IconButton
                         onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
+                        edge='end'
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -143,14 +153,14 @@ function SignInForm() {
               />
 
               <TextField
-                name="totpCode"
+                name='totpCode'
                 control={form.control}
-                label="2FA Code (if enabled)"
-                placeholder="Enter 6-digit code"
-                autoComplete="one-time-code"
+                label='2FA Code (if enabled)'
+                placeholder='Enter 6-digit code'
+                autoComplete='one-time-code'
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Shield size={20} />
                     </InputAdornment>
                   ),
@@ -158,9 +168,9 @@ function SignInForm() {
               />
 
               <Button
-                type="submit"
-                variant="contained"
-                size="large"
+                type='submit'
+                variant='contained'
+                size='large'
                 fullWidth
                 disabled={isLoading}
                 sx={{ py: 1.5 }}
@@ -171,14 +181,14 @@ function SignInForm() {
           </Box>
 
           <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Or continue with
             </Typography>
           </Divider>
 
-          <Stack direction="row" spacing={2}>
+          <Stack direction='row' spacing={2}>
             <Button
-              variant="outlined"
+              variant='outlined'
               fullWidth
               onClick={() => handleOAuthSignIn('google')}
               disabled={isLoading}
@@ -187,7 +197,7 @@ function SignInForm() {
               Google
             </Button>
             <Button
-              variant="outlined"
+              variant='outlined'
               fullWidth
               onClick={() => handleOAuthSignIn('discord')}
               disabled={isLoading}
@@ -199,16 +209,16 @@ function SignInForm() {
 
           <Box sx={{ textAlign: 'center', mt: 3 }}>
             <Link
-              component="button"
-              variant="body2"
+              component='button'
+              variant='body2'
               onClick={() => router.push('/auth/forgot')}
               sx={{ mr: 2 }}
             >
               Forgot Password?
             </Link>
             <Link
-              component="button"
-              variant="body2"
+              component='button'
+              variant='body2'
               onClick={() => router.push('/auth/signup')}
             >
               Create Account
@@ -219,7 +229,7 @@ function SignInForm() {
 
       <Box sx={{ textAlign: 'center', mt: 3 }}>
         <Button
-          variant="text"
+          variant='text'
           startIcon={<ArrowLeft size={16} />}
           onClick={() => router.push('/')}
         >
@@ -227,7 +237,7 @@ function SignInForm() {
         </Button>
       </Box>
     </Container>
-  )
+  );
 }
 
 export default function SignInPage() {
@@ -235,5 +245,5 @@ export default function SignInPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <SignInForm />
     </Suspense>
-  )
+  );
 }

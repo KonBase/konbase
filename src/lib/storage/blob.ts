@@ -1,5 +1,4 @@
 import { put, del, head, list } from '@vercel/blob';
-import { join } from 'path';
 
 export interface BlobFile {
   url: string;
@@ -34,8 +33,9 @@ export class BlobStorageAdapter {
         // In browser environment, local storage is not supported
         this.isAvailable = typeof window === 'undefined';
       }
-    } catch (error) {
-      console.error('Blob storage availability check failed:', error);
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error('Blob storage availability check failed');
       this.isAvailable = false;
     }
   }
@@ -76,7 +76,9 @@ export class BlobStorageAdapter {
     } else {
       // Local storage implementation - for browser environment, we'll use a different approach
       // In a real implementation, this would be handled by the server
-      throw new Error('Local storage is not supported in browser environment. Use Vercel Blob instead.');
+      throw new Error(
+        'Local storage is not supported in browser environment. Use Vercel Blob instead.'
+      );
     }
   }
 
@@ -91,7 +93,9 @@ export class BlobStorageAdapter {
       });
     } else {
       // Local storage deletion - not supported in browser
-      throw new Error('Local storage is not supported in browser environment. Use Vercel Blob instead.');
+      throw new Error(
+        'Local storage is not supported in browser environment. Use Vercel Blob instead.'
+      );
     }
   }
 
@@ -117,8 +121,9 @@ export class BlobStorageAdapter {
         // Local storage info - not supported in browser
         return null;
       }
-    } catch (error) {
-      console.error('Error getting file info:', error);
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error('Error getting file info');
       return null;
     }
   }
@@ -164,9 +169,12 @@ export class BlobStorageAdapter {
     return this.config.type;
   }
 
-  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }> {
+  async healthCheck(): Promise<{
+    status: 'healthy' | 'unhealthy';
+    latency?: number;
+  }> {
     const startTime = Date.now();
-    
+
     try {
       if (this.config.type === 'vercel-blob') {
         // Test with a small operation
@@ -175,10 +183,10 @@ export class BlobStorageAdapter {
         // Test local storage
         await this.listFiles({ limit: 1 });
       }
-      
+
       const latency = Date.now() - startTime;
       return { status: 'healthy', latency };
-    } catch (error) {
+    } catch {
       return { status: 'unhealthy' };
     }
   }
@@ -187,8 +195,11 @@ export class BlobStorageAdapter {
 // Factory function to create blob storage adapter
 export function createBlobStorageAdapter(): BlobStorageAdapter {
   const blobReadWriteToken = process.env.BLOB_READ_WRITE_TOKEN;
-  const storageType = process.env.STORAGE_TYPE as 'vercel-blob' | 'local' | undefined;
-  
+  const storageType = process.env.STORAGE_TYPE as
+    | 'vercel-blob'
+    | 'local'
+    | undefined;
+
   // Auto-detect storage type
   let type: 'vercel-blob' | 'local';
   if (storageType === 'vercel-blob' || blobReadWriteToken) {

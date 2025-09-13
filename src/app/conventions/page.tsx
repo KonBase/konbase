@@ -23,8 +23,6 @@ import {
   Filter,
   Calendar,
   MapPin,
-  Users,
-  Package,
   MoreVertical,
   Edit,
   Eye,
@@ -45,9 +43,13 @@ export default function ConventionsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedConvention, setSelectedConvention] = useState<string | null>(null);
+  const [, setSelectedConvention] = useState<string | null>(null);
 
-  const { data: conventions = [], isLoading, refetch } = useQuery({
+  const {
+    data: conventions = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['conventions', searchQuery, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -56,7 +58,8 @@ export default function ConventionsPage() {
 
       const response = await fetch(`/api/conventions?${params}`, {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch conventions');
@@ -66,27 +69,40 @@ export default function ConventionsPage() {
     enabled: !!session,
   });
 
-  const handleCreateConvention = async (data: any) => {
+  type CreateConventionPayload = {
+    name: string;
+    description?: string;
+    startDate: string;
+    endDate: string;
+    location?: string;
+  };
+
+  const handleCreateConvention = async (data: CreateConventionPayload) => {
     try {
       const response = await fetch('/api/conventions', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) throw new Error('Failed to create convention');
-      
+
       await refetch();
       setCreateDialogOpen(false);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error creating convention:', error);
     }
   };
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, conventionId: string) => {
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    conventionId: string
+  ) => {
     setAnchorEl(event.currentTarget);
     setSelectedConvention(conventionId);
   };
@@ -98,46 +114,61 @@ export default function ConventionsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planning': return 'info';
-      case 'active': return 'success';
-      case 'completed': return 'default';
-      case 'cancelled': return 'error';
-      default: return 'default';
+      case 'planning':
+        return 'info';
+      case 'active':
+        return 'success';
+      case 'completed':
+        return 'default';
+      case 'cancelled':
+        return 'error';
+      default:
+        return 'default';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'planning': return <Calendar size={16} />;
-      case 'active': return <Play size={16} />;
-      case 'completed': return <CheckCircle size={16} />;
-      case 'cancelled': return <Pause size={16} />;
-      default: return <Calendar size={16} />;
+      case 'planning':
+        return <Calendar size={16} />;
+      case 'active':
+        return <Play size={16} />;
+      case 'completed':
+        return <CheckCircle size={16} />;
+      case 'cancelled':
+        return <Pause size={16} />;
+      default:
+        return <Calendar size={16} />;
     }
   };
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
         <Typography>Loading conventions...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth='lg' sx={{ py: 4 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
+        mb={4}
+      >
         <Box>
-          <Typography variant="h4" component="h1">
+          <Typography variant='h4' component='h1'>
             Convention Management
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color='text.secondary'>
             Plan, manage, and track your conventions and events
           </Typography>
         </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Plus size={20} />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
@@ -149,24 +180,24 @@ export default function ConventionsPage() {
       {/* Filters */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" gap={2} alignItems="center">
+          <Box display='flex' gap={2} alignItems='center'>
             <TextField
-              placeholder="Search conventions..."
+              placeholder='Search conventions...'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
+                  <InputAdornment position='start'>
                     <Search size={20} />
                   </InputAdornment>
                 ),
               }}
-              variant="outlined"
-              size="small"
+              variant='outlined'
+              size='small'
               sx={{ flex: 1 }}
             />
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<Filter size={16} />}
               onClick={() => {
                 setSearchQuery('');
@@ -182,14 +213,14 @@ export default function ConventionsPage() {
       {/* Conventions Grid */}
       {conventions.length === 0 ? (
         <Card sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant='h6' gutterBottom>
             No conventions found
           </Typography>
-          <Typography color="text.secondary" mb={3}>
+          <Typography color='text.secondary' mb={3}>
             Create your first convention to get started with KonBase.
           </Typography>
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Plus size={20} />}
             onClick={() => setCreateDialogOpen(true)}
           >
@@ -197,47 +228,67 @@ export default function ConventionsPage() {
           </Button>
         </Card>
       ) : (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 3 }}>
-          {conventions.map((convention) => (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: 3,
+          }}
+        >
+          {conventions.map(convention => (
             <Box key={convention.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
                 <CardContent sx={{ flex: 1 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems='flex-start'
+                    mb={2}
+                  >
                     <Box>
-                      <Typography variant="h6" component="h2" gutterBottom>
+                      <Typography variant='h6' component='h2' gutterBottom>
                         {convention.name}
                       </Typography>
                       <Chip
                         label={convention.status}
-                        size="small"
-                        color={getStatusColor(convention.status) as any}
-                        variant="outlined"
+                        size='small'
+                        color={getStatusColor(convention.status)}
+                        variant='outlined'
                         icon={getStatusIcon(convention.status)}
                       />
                     </Box>
                     <IconButton
-                      size="small"
-                      onClick={(e) => handleMenuClick(e, convention.id)}
+                      size='small'
+                      onClick={e => handleMenuClick(e, convention.id)}
                     >
                       <MoreVertical size={20} />
                     </IconButton>
                   </Box>
 
-                  <Typography color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography color='text.secondary' sx={{ mb: 2 }}>
                     {convention.description || 'No description provided.'}
                   </Typography>
 
-                  <Box display="flex" flexDirection="column" gap={1}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Calendar size={16} color="#666" />
-                      <Typography variant="body2">
-                        {new Date(convention.start_date).toLocaleDateString()} - {new Date(convention.end_date).toLocaleDateString()}
+                  <Box display='flex' flexDirection='column' gap={1}>
+                    <Box display='flex' alignItems='center' gap={1}>
+                      <Calendar size={16} color='#666' />
+                      <Typography variant='body2'>
+                        {new Date(convention.start_date).toLocaleDateString()} -{' '}
+                        {new Date(convention.end_date).toLocaleDateString()}
                       </Typography>
                     </Box>
                     {convention.location && (
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <MapPin size={16} color="#666" />
-                        <Typography variant="body2">{convention.location}</Typography>
+                      <Box display='flex' alignItems='center' gap={1}>
+                        <MapPin size={16} color='#666' />
+                        <Typography variant='body2'>
+                          {convention.location}
+                        </Typography>
                       </Box>
                     )}
                   </Box>
@@ -245,7 +296,7 @@ export default function ConventionsPage() {
 
                 <CardActions>
                   <Button
-                    size="small"
+                    size='small'
                     startIcon={<Eye size={16} />}
                     href={`/conventions/${convention.id}`}
                   >
@@ -253,7 +304,7 @@ export default function ConventionsPage() {
                   </Button>
                   {convention.status === 'planning' && (
                     <Button
-                      size="small"
+                      size='small'
                       startIcon={<Edit size={16} />}
                       href={`/conventions/${convention.id}/edit`}
                     >
@@ -271,13 +322,10 @@ export default function ConventionsPage() {
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        title="Create New Convention"
-        maxWidth="md"
+        title='Create New Convention'
+        maxWidth='md'
       >
-        <ConventionForm
-          onSubmit={handleCreateConvention}
-          title=""
-        />
+        <ConventionForm onSubmit={handleCreateConvention} title='' />
       </Dialog>
 
       {/* Convention Menu */}
@@ -286,24 +334,30 @@ export default function ConventionsPage() {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => {
-          // Navigate to convention details
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Navigate to convention details
+            handleMenuClose();
+          }}
+        >
           <Eye size={16} style={{ marginRight: 8 }} />
           View Details
         </MenuItem>
-        <MenuItem onClick={() => {
-          // Navigate to edit convention
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Navigate to edit convention
+            handleMenuClose();
+          }}
+        >
           <Edit size={16} style={{ marginRight: 8 }} />
           Edit Convention
         </MenuItem>
-        <MenuItem onClick={() => {
-          // Delete convention
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Delete convention
+            handleMenuClose();
+          }}
+        >
           <Trash2 size={16} style={{ marginRight: 8 }} />
           Delete Convention
         </MenuItem>
@@ -311,13 +365,13 @@ export default function ConventionsPage() {
 
       {/* Floating Action Button for mobile */}
       <Fab
-        color="primary"
-        aria-label="create convention"
+        color='primary'
+        aria-label='create convention'
         sx={{
           position: 'fixed',
           bottom: 16,
           right: 16,
-          display: { xs: 'flex', sm: 'none' }
+          display: { xs: 'flex', sm: 'none' },
         }}
         onClick={() => setCreateDialogOpen(true)}
       >

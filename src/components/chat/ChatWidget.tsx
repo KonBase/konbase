@@ -10,13 +10,9 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
-  Divider,
   Chip,
   Button,
-  Paper,
   InputAdornment,
-  Menu,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -30,8 +26,6 @@ import {
   Settings,
   Smile,
   Paperclip,
-  Mic,
-  MicOff,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -67,19 +61,18 @@ export const ChatWidget: React.FC = () => {
   const [message, setMessage] = useState('');
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const { data: channelsData, refetch: refetchChannels } = useQuery({
+  const { data: channelsData } = useQuery({
     queryKey: ['chat-channels'],
     queryFn: async () => {
       const response = await fetch('/api/chat/channels', {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch channels');
@@ -93,12 +86,16 @@ export const ChatWidget: React.FC = () => {
     queryKey: ['chat-messages', selectedChannel],
     queryFn: async () => {
       if (!selectedChannel) return { messages: [] };
-      
-      const response = await fetch(`/api/chat/messages?channel=${selectedChannel}`, {
-        headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
-        },
-      });
+
+      const response = await fetch(
+        `/api/chat/messages?channel=${selectedChannel}`,
+        {
+          headers: {
+            'x-association-id':
+              session?.user?.associations?.[0]?.association?.id || '',
+          },
+        }
+      );
       if (!response.ok) throw new Error('Failed to fetch messages');
       const result = await response.json();
       return result.data;
@@ -123,39 +120,46 @@ export const ChatWidget: React.FC = () => {
   useEffect(() => {
     if (!session?.user?.id || !selectedChannel) return;
 
-    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'}/chat`);
+    const ws = new WebSocket(
+      `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'}/chat`
+    );
     wsRef.current = ws;
-    
+
     ws.onopen = () => {
+      // eslint-disable-next-line no-console
       console.log('Chat WebSocket connected');
       // Join the selected channel
-      ws.send(JSON.stringify({ 
-        type: 'join', 
-        channel: selectedChannel,
-        userId: session.user.id,
-        associationId: session.user.associations?.[0]?.association?.id 
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'join',
+          channel: selectedChannel,
+          userId: session.user.id,
+          associationId: session.user.associations?.[0]?.association?.id,
+        })
+      );
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       const data = JSON.parse(event.data);
       if (data.type === 'message') {
         setMessages(prev => [...prev, data.message]);
         scrollToBottom();
       } else if (data.type === 'typing') {
         // Handle typing indicators
+        // eslint-disable-next-line no-console
         console.log(`${data.user} is typing...`);
       }
     };
 
     ws.onclose = () => {
+      // eslint-disable-next-line no-console
       console.log('Chat WebSocket disconnected');
     };
 
     return () => {
       ws.close();
     };
-  }, [session?.user?.id, selectedChannel]);
+  }, [session?.user?.id, session?.user?.associations, selectedChannel]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -185,9 +189,10 @@ export const ChatWidget: React.FC = () => {
     try {
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
         body: JSON.stringify({
           channel_id: selectedChannel,
@@ -201,6 +206,7 @@ export const ChatWidget: React.FC = () => {
         refetchMessages();
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to send message:', error);
     }
   };
@@ -214,19 +220,23 @@ export const ChatWidget: React.FC = () => {
 
   const handleTyping = () => {
     if (wsRef.current && selectedChannel) {
-      wsRef.current.send(JSON.stringify({
-        type: 'typing',
-        channel: selectedChannel,
-        userId: session?.user?.id,
-      }));
+      wsRef.current.send(
+        JSON.stringify({
+          type: 'typing',
+          channel: selectedChannel,
+          userId: session?.user?.id,
+        })
+      );
     }
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -238,7 +248,7 @@ export const ChatWidget: React.FC = () => {
   return (
     <>
       <IconButton
-        color="inherit"
+        color='inherit'
         onClick={handleClick}
         sx={{ position: 'relative' }}
       >
@@ -271,17 +281,29 @@ export const ChatWidget: React.FC = () => {
           horizontal: 'right',
         }}
         PaperProps={{
-          sx: { width: 400, height: 500, display: 'flex', flexDirection: 'column' }
+          sx: {
+            width: 400,
+            height: 500,
+            display: 'flex',
+            flexDirection: 'column',
+          },
         }}
       >
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Chat</Typography>
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+          >
+            <Typography variant='h6'>Chat</Typography>
             <Box>
-              <IconButton size="small" onClick={() => setSettingsDialogOpen(true)}>
+              <IconButton
+                size='small'
+                onClick={() => setSettingsDialogOpen(true)}
+              >
                 <Settings size={16} />
               </IconButton>
-              <IconButton size="small" onClick={() => setMenuAnchor(anchorEl)}>
+              <IconButton size='small' onClick={() => setAnchorEl(anchorEl)}>
                 <MoreVertical size={16} />
               </IconButton>
             </Box>
@@ -290,17 +312,17 @@ export const ChatWidget: React.FC = () => {
 
         {!selectedChannel ? (
           <Box sx={{ p: 2, flex: 1 }}>
-            <Typography variant="subtitle1" gutterBottom>
+            <Typography variant='subtitle1' gutterBottom>
               Select a Channel
             </Typography>
             <List>
-              {channels.map((channel) => (
+              {channels.map(channel => (
                 <ListItem
                   key={channel.id}
-                  component="button"
+                  component='button'
                   onClick={() => handleChannelSelect(channel.id)}
-                  sx={{ 
-                    borderRadius: 1, 
+                  sx={{
+                    borderRadius: 1,
                     mb: 1,
                     cursor: 'pointer',
                     '&:hover': {
@@ -315,26 +337,30 @@ export const ChatWidget: React.FC = () => {
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="body2" fontWeight="medium">
+                      <Box display='flex' alignItems='center' gap={1}>
+                        <Typography variant='body2' fontWeight='medium'>
                           {channel.name}
                         </Typography>
                         {channel.unread_count > 0 && (
                           <Chip
                             label={channel.unread_count}
-                            size="small"
-                            color="error"
+                            size='small'
+                            color='error'
                           />
                         )}
                       </Box>
                     }
                     secondary={
                       <Box>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant='caption' color='text.secondary'>
                           {channel.participants} participants
                         </Typography>
                         {channel.last_message && (
-                          <Typography variant="caption" color="text.secondary" display="block">
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            display='block'
+                          >
                             {channel.last_message.content.substring(0, 50)}...
                           </Typography>
                         )}
@@ -346,16 +372,22 @@ export const ChatWidget: React.FC = () => {
             </List>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box
+            sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+          >
             {/* Channel Header */}
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="subtitle1" fontWeight="medium">
+              <Box
+                display='flex'
+                justifyContent='space-between'
+                alignItems='center'
+              >
+                <Typography variant='subtitle1' fontWeight='medium'>
                   {selectedChannelData?.name}
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display='flex' alignItems='center' gap={1}>
                   <Users size={16} />
-                  <Typography variant="caption">
+                  <Typography variant='caption'>
                     {selectedChannelData?.participants}
                   </Typography>
                 </Box>
@@ -365,8 +397,11 @@ export const ChatWidget: React.FC = () => {
             {/* Messages */}
             <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
               <List>
-                {messages.map((msg) => (
-                  <ListItem key={msg.id} sx={{ alignItems: 'flex-start', py: 0.5 }}>
+                {messages.map(msg => (
+                  <ListItem
+                    key={msg.id}
+                    sx={{ alignItems: 'flex-start', py: 0.5 }}
+                  >
                     <ListItemAvatar>
                       <Avatar
                         src={msg.user_avatar}
@@ -377,19 +412,17 @@ export const ChatWidget: React.FC = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body2" fontWeight="medium">
+                        <Box display='flex' alignItems='center' gap={1}>
+                          <Typography variant='body2' fontWeight='medium'>
                             {msg.user_name}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant='caption' color='text.secondary'>
                             {formatTime(msg.created_at)}
                           </Typography>
                         </Box>
                       }
                       secondary={
-                        <Typography variant="body2">
-                          {msg.content}
-                        </Typography>
+                        <Typography variant='body2'>{msg.content}</Typography>
                       }
                     />
                   </ListItem>
@@ -402,23 +435,23 @@ export const ChatWidget: React.FC = () => {
             <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
               <TextField
                 fullWidth
-                placeholder="Type a message..."
+                placeholder='Type a message...'
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 onInput={handleTyping}
                 InputProps={{
                   endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton size="small">
+                    <InputAdornment position='end'>
+                      <IconButton size='small'>
                         <Paperclip size={16} />
                       </IconButton>
-                      <IconButton size="small">
+                      <IconButton size='small'>
                         <Smile size={16} />
                       </IconButton>
-                      <IconButton 
-                        size="small" 
-                        color="primary"
+                      <IconButton
+                        size='small'
+                        color='primary'
                         onClick={handleSendMessage}
                         disabled={!message.trim()}
                       >
@@ -427,17 +460,20 @@ export const ChatWidget: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                size="small"
+                size='small'
               />
             </Box>
           </Box>
         )}
 
         {/* Settings Dialog */}
-        <Dialog open={settingsDialogOpen} onClose={() => setSettingsDialogOpen(false)}>
+        <Dialog
+          open={settingsDialogOpen}
+          onClose={() => setSettingsDialogOpen(false)}
+        >
           <DialogTitle>Chat Settings</DialogTitle>
           <DialogContent>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box display='flex' alignItems='center' gap={2} mb={2}>
               <IconButton onClick={() => setIsMuted(!isMuted)}>
                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
               </IconButton>

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
-import { geldb } from '@/lib/db/gel';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
 export async function GET(request: NextRequest) {
+  const dataAccess = createDataAccessLayer();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -11,12 +12,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is super admin
-    const user = await geldb.querySingle(`
+    const user = (await dataAccess.executeQuerySingle(
+      `
       SELECT role FROM users WHERE id = <str>$1
-    `, [session.user.id]) as any;
+    `,
+      [session.user.id]
+    )) as { role: string } | null;
 
     if (user?.role !== 'super_admin') {
-      return NextResponse.json({ error: 'Super admin access required' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Super admin access required' },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -26,7 +33,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     let whereClause = '';
-    const params: any[] = [];
+    const params: string[] = [];
     let paramIndex = 1;
 
     if (search) {
@@ -36,7 +43,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get associations with counts
-    const associations = await geldb.query(`
+    const associations = await dataAccess.executeQuery(
+      `
       SELECT 
         a.*,
         COUNT(DISTINCT am.id) as member_count,
@@ -50,13 +58,18 @@ export async function GET(request: NextRequest) {
       GROUP BY a.id
       ORDER BY a.created_at DESC
       LIMIT <int>$${paramIndex} OFFSET <int>$${paramIndex + 1}
-    `, [...params, limit, offset]);
+    `,
+      [...params, limit, offset]
+    );
 
     // Get total count for pagination
-    const totalCount = await geldb.querySingle(`
+    const totalCount = (await dataAccess.executeQuerySingle(
+      `
       SELECT COUNT(*) as count FROM associations a
       ${whereClause}
-    `, params) as any;
+    `,
+      params
+    )) as { count: number } | null;
 
     const totalPages = Math.ceil((totalCount?.count || 0) / limit);
 
@@ -70,11 +83,12 @@ export async function GET(request: NextRequest) {
           totalPages,
           hasNext: page < totalPages,
           hasPrev: page > 1,
-        }
+        },
       },
-      success: true
+      success: true,
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Admin associations error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch associations', success: false },
@@ -84,6 +98,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const dataAccess = createDataAccessLayer();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -91,37 +106,53 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is super admin
-    const user = await geldb.querySingle(`
+    const user = (await dataAccess.executeQuerySingle(
+      `
       SELECT role FROM users WHERE id = <str>$1
-    `, [session.user.id]) as any;
+    `,
+      [session.user.id]
+    )) as { role: string } | null;
 
     if (user?.role !== 'super_admin') {
-      return NextResponse.json({ error: 'Super admin access required' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Super admin access required' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
     const { name, description, email, website, status = 'active' } = body;
 
     if (!name || !email) {
-      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Name and email are required' },
+        { status: 400 }
+      );
     }
 
     // Create association
-    const association = await geldb.querySingle(`
+    const association = await dataAccess.executeQuerySingle(
+      `
       INSERT INTO associations (
         name, description, email, website, status
       ) VALUES (
         <str>$1, <str>$2, <str>$3, <str>$4, <str>$5
       )
       RETURNING *
-    `, [name, description || null, email, website || null, status]);
+    `,
+      [name, description || null, email, website || null, status]
+    );
 
-    return NextResponse.json({
-      data: association,
-      success: true,
-      message: 'Association created successfully'
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: association,
+        success: true,
+        message: 'Association created successfully',
+      },
+      { status: 201 }
+    );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Create association error:', error);
     return NextResponse.json(
       { error: 'Failed to create association', success: false },

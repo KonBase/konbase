@@ -6,7 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Date formatting utilities
-export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions) {
+export function formatDate(
+  date: Date | string,
+  options?: Intl.DateTimeFormatOptions
+) {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return dateObj.toLocaleDateString('en-US', options);
 }
@@ -24,19 +27,20 @@ export function formatRelativeTime(date: Date | string) {
   if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  
+  if (diffInSeconds < 2592000)
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+
   return formatDate(dateObj);
 }
 
 // File utilities
 export function formatFileSize(bytes: number) {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
@@ -46,7 +50,8 @@ export function getFileIcon(mimeType: string) {
   if (mimeType.startsWith('audio/')) return '🎵';
   if (mimeType.includes('pdf')) return '📄';
   if (mimeType.includes('word')) return '📝';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet'))
+    return '📊';
   if (mimeType.includes('presentation')) return '📑';
   return '📁';
 }
@@ -65,7 +70,8 @@ export function generateSlug(text: string) {
 }
 
 export function generateRandomId(length: number = 8) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -89,7 +95,9 @@ export function isValidUrl(url: string) {
 }
 
 // Color utilities
-export function getRoleColor(role: string): 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' {
+export function getRoleColor(
+  role: string
+): 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' {
   switch (role.toLowerCase()) {
     case 'super_admin':
     case 'system_admin':
@@ -107,7 +115,9 @@ export function getRoleColor(role: string): 'primary' | 'secondary' | 'error' | 
   }
 }
 
-export function getStatusColor(status: string): 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' {
+export function getStatusColor(
+  status: string
+): 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' {
   switch (status.toLowerCase()) {
     case 'active':
     case 'completed':
@@ -131,19 +141,26 @@ export function getStatusColor(status: string): 'primary' | 'secondary' | 'error
 
 // Array utilities
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((groups, item) => {
-    const group = String(item[key]);
-    groups[group] = groups[group] || [];
-    groups[group].push(item);
-    return groups;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (groups, item) => {
+      const group = String(item[key]);
+      groups[group] = groups[group] || [];
+      groups[group].push(item);
+      return groups;
+    },
+    {} as Record<string, T[]>
+  );
 }
 
-export function sortBy<T>(array: T[], key: keyof T, order: 'asc' | 'desc' = 'asc'): T[] {
+export function sortBy<T>(
+  array: T[],
+  key: keyof T,
+  order: 'asc' | 'desc' = 'asc'
+): T[] {
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
+
     if (aVal < bVal) return order === 'asc' ? -1 : 1;
     if (aVal > bVal) return order === 'asc' ? 1 : -1;
     return 0;
@@ -153,7 +170,7 @@ export function sortBy<T>(array: T[], key: keyof T, order: 'asc' | 'desc' = 'asc
 // Local storage utilities
 export function getLocalStorage<T>(key: string, defaultValue: T): T {
   if (typeof window === 'undefined') return defaultValue;
-  
+
   try {
     const item = window.localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -164,11 +181,12 @@ export function getLocalStorage<T>(key: string, defaultValue: T): T {
 
 export function setLocalStorage<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Error saving to localStorage:', error);
+  } catch {
+    // eslint-disable-next-line no-console
+    console.error('Error saving to localStorage');
   }
 }
 
@@ -195,29 +213,29 @@ export function formatNumber(number: number) {
 export function formatPhoneNumber(phone: string) {
   const cleaned = phone.replace(/\D/g, '');
   const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-  
+
   if (match) {
     return `(${match[1]}) ${match[2]}-${match[3]}`;
   }
-  
+
   return phone;
 }
 
 // Search utilities
 export function highlightText(text: string, query: string) {
   if (!query) return text;
-  
+
   const regex = new RegExp(`(${query})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
 }
 
 // Debounce utility
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -228,11 +246,12 @@ export function debounce<T extends (...args: any[]) => any>(
 export function deepClone<T>(obj: T): T {
   if (obj === null || typeof obj !== 'object') return obj;
   if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
-  if (obj instanceof Array) return obj.map(item => deepClone(item)) as unknown as T;
+  if (obj instanceof Array)
+    return obj.map(item => deepClone(item)) as unknown as T;
   if (typeof obj === 'object') {
     const clonedObj = {} as T;
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         clonedObj[key] = deepClone(obj[key]);
       }
     }

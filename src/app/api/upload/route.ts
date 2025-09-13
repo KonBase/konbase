@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
   'image/jpeg',
-  'image/png', 
+  'image/png',
   'image/webp',
   'application/pdf',
   'text/plain',
@@ -26,7 +26,10 @@ export async function POST(request: NextRequest) {
 
     const associationId = request.headers.get('x-association-id');
     if (!associationId) {
-      return NextResponse.json({ error: 'Association ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Association ID required' },
+        { status: 400 }
+      );
     }
 
     const formData = await request.formData();
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Get unified storage
     const storage = getUnifiedStorage();
     const isStorageReady = await storage.isStorageReady();
-    
+
     if (!isStorageReady) {
       return NextResponse.json(
         { error: 'Storage service is not available' },
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
     const fileName = `${randomUUID()}.${fileExtension}`;
-    
+
     // Determine upload directory based on file type
     let uploadDir = 'documents';
     if (file.type.startsWith('image/')) {
@@ -91,40 +94,46 @@ export async function POST(request: NextRequest) {
 
     // Save file metadata to database using unified data access
     const dataAccess = getDataAccess();
-    
+
     // For now, we'll store the file info in system settings since we don't have a documents table yet
     // In a real implementation, you'd want to add a documents table to your database schema
     const documentId = `doc_${randomUUID()}`;
-    await dataAccess.setSystemSetting(`document:${documentId}`, JSON.stringify({
-      id: documentId,
-      association_id: associationId,
-      name: name || file.name,
-      description: description || null,
-      file_path: pathname,
-      file_url: fileInfo.url,
-      file_size: file.size,
-      mime_type: file.type,
-      uploaded_by: session.user.email,
-      item_id: itemId || null,
-      convention_id: conventionId || null,
-      uploaded_at: new Date().toISOString(),
-    }));
-
-    return NextResponse.json({
-      data: {
+    await dataAccess.setSystemSetting(
+      `document:${documentId}`,
+      JSON.stringify({
         id: documentId,
+        association_id: associationId,
         name: name || file.name,
+        description: description || null,
         file_path: pathname,
         file_url: fileInfo.url,
         file_size: file.size,
         mime_type: file.type,
-        url: fileInfo.url,
-      },
-      success: true,
-      message: 'File uploaded successfully',
-    }, { status: 201 });
+        uploaded_by: session.user.email,
+        item_id: itemId || null,
+        convention_id: conventionId || null,
+        uploaded_at: new Date().toISOString(),
+      })
+    );
 
+    return NextResponse.json(
+      {
+        data: {
+          id: documentId,
+          name: name || file.name,
+          file_path: pathname,
+          file_url: fileInfo.url,
+          file_size: file.size,
+          mime_type: file.type,
+          url: fileInfo.url,
+        },
+        success: true,
+        message: 'File uploaded successfully',
+      },
+      { status: 201 }
+    );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error uploading file:', error);
     return NextResponse.json(
       { error: 'Failed to upload file', success: false },

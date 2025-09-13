@@ -37,20 +37,24 @@ export const Dialog: React.FC<DialogProps> = ({
         sx: {
           borderRadius: 2,
           boxShadow: 24,
-        }
+        },
       }}
     >
       {title && (
         <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6" component="div">
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+          >
+            <Typography variant='h6' component='div'>
               {title}
             </Typography>
             <IconButton
-              aria-label="close"
+              aria-label='close'
               onClick={onClose}
               sx={{
-                color: (theme) => theme.palette.grey[500],
+                color: theme => theme.palette.grey[500],
               }}
             >
               <X size={24} />
@@ -58,16 +62,10 @@ export const Dialog: React.FC<DialogProps> = ({
           </Box>
         </DialogTitle>
       )}
-      
-      <DialogContent dividers>
-        {children}
-      </DialogContent>
-      
-      {actions && (
-        <DialogActions sx={{ p: 2 }}>
-          {actions}
-        </DialogActions>
-      )}
+
+      <DialogContent dividers>{children}</DialogContent>
+
+      {actions && <DialogActions sx={{ p: 2 }}>{actions}</DialogActions>}
     </MuiDialog>
   );
 };

@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+echo "📝 Validating commit message..."
+
+# Check if commit message follows our format
+# Format: Version 0.RRRR.MMDDVVV: description
+# Example: Version 0.2025.0913001: Add new feature
+commit_regex='^Version [0-9]+\.[0-9]+\.[0-9]{7}: .+'
+
+if ! grep -qE "$commit_regex" "$1"; then
+  echo "❌ Commit message must follow format: Version 0.RRRR.MMDDVVV: description"
+  echo "   Example: Version 0.2025.0913001: Add new feature"
+  exit 1
+fi
+
+echo "✅ Commit message format is valid!"

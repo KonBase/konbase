@@ -8,13 +8,10 @@ import {
   Card,
   CardContent,
   Button,
-  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  InputAdornment,
   Chip,
 } from '@mui/material';
 import {
@@ -25,27 +22,42 @@ import {
   Users,
   AlertTriangle,
   BarChart3,
-  PieChart as PieChartIcon,
-  FileText,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Cell } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Cell,
+} from 'recharts';
 
 export default function ReportsPage() {
   const { data: session } = useSession();
   const [selectedReport, setSelectedReport] = useState('inventory-summary');
   const [dateRange, setDateRange] = useState('30');
-  const [associationId] = useState(session?.user?.associations?.[0]?.association?.id || '');
+  const [associationId] = useState(
+    session?.user?.associations?.[0]?.association?.id || ''
+  );
 
   const { data: reportData, isLoading } = useQuery({
     queryKey: ['reports', selectedReport, dateRange, associationId],
     queryFn: async () => {
-      const response = await fetch(`/api/reports/${selectedReport}?days=${dateRange}`, {
-        headers: {
-          'x-association-id': associationId,
-        },
-      });
+      const response = await fetch(
+        `/api/reports/${selectedReport}?days=${dateRange}`,
+        {
+          headers: {
+            'x-association-id': associationId,
+          },
+        }
+      );
       if (!response.ok) throw new Error('Failed to fetch report data');
       const result = await response.json();
       return result.data;
@@ -97,22 +109,35 @@ export default function ReportsPage() {
     switch (selectedReport) {
       case 'inventory-summary':
         return (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: 3,
+            }}
+          >
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Items by Condition</Typography>
-                <ResponsiveContainer width="100%" height={300}>
+                <Typography variant='h6' gutterBottom>
+                  Items by Condition
+                </Typography>
+                <ResponsiveContainer width='100%' height={300}>
                   <PieChart>
                     <PieChart
                       data={reportData.conditionBreakdown}
-                      cx="50%"
-                      cy="50%"
+                      cx='50%'
+                      cy='50%'
                       outerRadius={80}
-                      dataKey="value"
+                      dataKey='value'
                     >
-                      {reportData.conditionBreakdown?.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={`hsl(${index * 60}, 70%, 50%)`} />
-                      ))}
+                      {reportData.conditionBreakdown?.map(
+                        (entry: { value: number }, index: number) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={`hsl(${index * 60}, 70%, 50%)`}
+                          />
+                        )
+                      )}
                     </PieChart>
                     <Tooltip />
                   </PieChart>
@@ -121,14 +146,16 @@ export default function ReportsPage() {
             </Card>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Items by Category</Typography>
-                <ResponsiveContainer width="100%" height={300}>
+                <Typography variant='h6' gutterBottom>
+                  Items by Category
+                </Typography>
+                <ResponsiveContainer width='100%' height={300}>
                   <BarChart data={reportData.categoryBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='name' />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#8884d8" />
+                    <Bar dataKey='count' fill='#8884d8' />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -140,14 +167,21 @@ export default function ReportsPage() {
         return (
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Equipment Usage Over Time</Typography>
-              <ResponsiveContainer width="100%" height={400}>
+              <Typography variant='h6' gutterBottom>
+                Equipment Usage Over Time
+              </Typography>
+              <ResponsiveContainer width='100%' height={400}>
                 <LineChart data={reportData.usageOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='date' />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="itemsUsed" stroke="#8884d8" strokeWidth={2} />
+                  <Line
+                    type='monotone'
+                    dataKey='itemsUsed'
+                    stroke='#8884d8'
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -157,23 +191,41 @@ export default function ReportsPage() {
       case 'maintenance-alerts':
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {reportData.alerts?.map((alert: any, index: number) => (
-              <Card key={index} sx={{ borderLeft: 4, borderLeftColor: 'warning.main' }}>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="h6">{alert.itemName}</Typography>
-                      <Typography color="text.secondary">{alert.issue}</Typography>
+            {reportData.alerts?.map(
+              (
+                alert: {
+                  itemName: string;
+                  issue: string;
+                  priority: 'high' | 'medium' | 'low' | 'none';
+                },
+                index: number
+              ) => (
+                <Card
+                  key={index}
+                  sx={{ borderLeft: 4, borderLeftColor: 'warning.main' }}
+                >
+                  <CardContent>
+                    <Box
+                      display='flex'
+                      justifyContent='space-between'
+                      alignItems='center'
+                    >
+                      <Box>
+                        <Typography variant='h6'>{alert.itemName}</Typography>
+                        <Typography color='text.secondary'>
+                          {alert.issue}
+                        </Typography>
+                      </Box>
+                      <Chip
+                        label={alert.priority}
+                        color={alert.priority === 'high' ? 'error' : 'warning'}
+                        size='small'
+                      />
                     </Box>
-                    <Chip
-                      label={alert.priority}
-                      color={alert.priority === 'high' ? 'error' : 'warning'}
-                      size="small"
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              )
+            )}
           </Box>
         );
 
@@ -190,14 +242,17 @@ export default function ReportsPage() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch(`/api/reports/${selectedReport}/export?days=${dateRange}`, {
-        headers: {
-          'x-association-id': associationId,
-        },
-      });
-      
+      const response = await fetch(
+        `/api/reports/${selectedReport}/export?days=${dateRange}`,
+        {
+          headers: {
+            'x-association-id': associationId,
+          },
+        }
+      );
+
       if (!response.ok) throw new Error('Export failed');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -208,32 +263,38 @@ export default function ReportsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Export failed:', error);
     }
   };
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
         <Typography>Loading reports...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth='lg' sx={{ py: 4 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
+        mb={4}
+      >
         <Box>
-          <Typography variant="h4" component="h1">
+          <Typography variant='h4' component='h1'>
             Reports & Analytics
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color='text.secondary'>
             Generate insights and track performance metrics
           </Typography>
         </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Download size={20} />}
           onClick={handleExport}
           disabled={!reportData}
@@ -245,17 +306,17 @@ export default function ReportsPage() {
       {/* Report Selection */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+          <Box display='flex' gap={2} alignItems='center' flexWrap='wrap'>
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Report Type</InputLabel>
               <Select
                 value={selectedReport}
-                onChange={(e) => setSelectedReport(e.target.value)}
-                label="Report Type"
+                onChange={e => setSelectedReport(e.target.value)}
+                label='Report Type'
               >
-                {reportTypes.map((report) => (
+                {reportTypes.map(report => (
                   <MenuItem key={report.id} value={report.id}>
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Box display='flex' alignItems='center' gap={1}>
                       <report.icon size={16} />
                       {report.name}
                     </Box>
@@ -268,13 +329,13 @@ export default function ReportsPage() {
               <InputLabel>Date Range</InputLabel>
               <Select
                 value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                label="Date Range"
+                onChange={e => setDateRange(e.target.value)}
+                label='Date Range'
               >
-                <MenuItem value="7">Last 7 days</MenuItem>
-                <MenuItem value="30">Last 30 days</MenuItem>
-                <MenuItem value="90">Last 90 days</MenuItem>
-                <MenuItem value="365">Last year</MenuItem>
+                <MenuItem value='7'>Last 7 days</MenuItem>
+                <MenuItem value='30'>Last 30 days</MenuItem>
+                <MenuItem value='90'>Last 90 days</MenuItem>
+                <MenuItem value='365'>Last year</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -284,17 +345,17 @@ export default function ReportsPage() {
       {/* Report Description */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display='flex' alignItems='center' gap={2}>
             {(() => {
               const report = reportTypes.find(r => r.id === selectedReport);
               const IconComponent = report?.icon || BarChart3;
-              return <IconComponent size={24} color="#666" />;
+              return <IconComponent size={24} color='#666' />;
             })()}
             <Box>
-              <Typography variant="h6">
+              <Typography variant='h6'>
                 {reportTypes.find(r => r.id === selectedReport)?.name}
               </Typography>
-              <Typography color="text.secondary">
+              <Typography color='text.secondary'>
                 {reportTypes.find(r => r.id === selectedReport)?.description}
               </Typography>
             </Box>

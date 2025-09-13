@@ -7,11 +7,13 @@ KonBase now supports both **PostgreSQL GelDB** and **Vercel Edge Config** as dat
 ## Database Options
 
 ### 1. PostgreSQL GelDB (Traditional)
+
 - **Best for**: Complex queries, large datasets, transactional operations
 - **Performance**: 50-200ms query latency
 - **Features**: Full SQL support, ACID compliance, complex relationships
 
 ### 2. Vercel Edge Config (Ultra-fast)
+
 - **Best for**: Configuration data, feature flags, small datasets
 - **Performance**: < 15ms latency at P99
 - **Features**: Global edge distribution, ultra-low latency, built-in caching
@@ -19,11 +21,13 @@ KonBase now supports both **PostgreSQL GelDB** and **Vercel Edge Config** as dat
 ## File Storage Options
 
 ### 1. Vercel Blob (Recommended)
+
 - **Best for**: Production applications, global distribution
 - **Performance**: < 15ms latency at P99
 - **Features**: Global CDN, automatic scaling, built-in caching
 
 ### 2. Local Storage (Development)
+
 - **Best for**: Development, testing, small deployments
 - **Performance**: Direct file system access
 - **Features**: No external dependencies, easy debugging
@@ -56,12 +60,14 @@ KonBase now supports both **PostgreSQL GelDB** and **Vercel Edge Config** as dat
 ### PostgreSQL Setup
 
 #### 1. Database Requirements
+
 - PostgreSQL 12 or higher
 - Minimum 1GB RAM
 - SSL support recommended
 - Regular backups configured
 
 #### 2. Environment Variables
+
 ```bash
 # PostgreSQL Configuration
 GEL_DATABASE_URL=postgresql://username:password@host:port/database
@@ -71,6 +77,7 @@ DATABASE_TYPE=postgresql
 ```
 
 #### 3. Vercel Deployment
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -86,6 +93,7 @@ vercel --prod
 ```
 
 #### 4. Database Migrations
+
 ```bash
 # Run migrations after deployment
 npm run migrate:gel
@@ -94,6 +102,7 @@ npm run migrate:gel
 ### Edge Config Setup
 
 #### 1. Create Edge Config
+
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Navigate to **Storage** → **Edge Config**
 3. Click **Create Edge Config**
@@ -101,11 +110,13 @@ npm run migrate:gel
 5. Copy the **Edge Config ID**
 
 #### 2. Configure Access Token
+
 1. In Edge Config settings, go to **Access Tokens**
 2. Create **Read Access Token**
 3. Copy the token value
 
 #### 3. Environment Variables
+
 ```bash
 # Edge Config Configuration
 EDGE_CONFIG_ID=your-edge-config-id
@@ -116,6 +127,7 @@ DATABASE_TYPE=edge-config
 ```
 
 #### 4. Vercel Deployment
+
 ```bash
 # Set environment variables
 vercel env add EDGE_CONFIG_ID
@@ -128,17 +140,20 @@ vercel --prod
 ### Vercel Blob Setup
 
 #### 1. Create Blob Store
+
 1. Go to [Vercel Storage Dashboard](https://vercel.com/dashboard/storage)
 2. Click **Create Blob Store**
 3. Choose a region close to your users
 4. Name your store (e.g., "konbase-files")
 
 #### 2. Configure Access Token
+
 1. In your blob store settings, go to **Access Tokens**
 2. Create **Read/Write Token**
 3. Copy the token value
 
 #### 3. Environment Variables
+
 ```bash
 # Vercel Blob Configuration
 BLOB_READ_WRITE_TOKEN=your-blob-read-write-token
@@ -148,6 +163,7 @@ STORAGE_TYPE=vercel-blob
 ```
 
 #### 4. Vercel Deployment
+
 ```bash
 # Set environment variables
 vercel env add BLOB_READ_WRITE_TOKEN
@@ -159,6 +175,7 @@ vercel --prod
 ## Environment Configuration
 
 ### Development (.env.local)
+
 ```bash
 # NextAuth Configuration
 NEXTAUTH_SECRET=development-secret-key-change-in-production
@@ -191,6 +208,7 @@ APP_URL=http://localhost:3000
 ```
 
 ### Production (Vercel Environment Variables)
+
 ```bash
 # NextAuth Configuration
 NEXTAUTH_SECRET=your-production-secret-key-minimum-32-characters
@@ -227,26 +245,31 @@ APP_URL=https://your-app.vercel.app
 The application includes a comprehensive setup wizard that works with both database and storage types:
 
 ### 1. Database Selection
+
 - Choose between PostgreSQL and Edge Config
 - Real-time connection testing
 - Configuration validation
 
 ### 2. File Storage Configuration
+
 - Choose between Vercel Blob and Local Storage
 - Real-time storage testing
 - Performance monitoring
 
 ### 3. Admin User Creation
+
 - Create super administrator account
 - Configure 2FA (optional)
 - Works with both database types
 
 ### 4. Association Setup
+
 - Create first association
 - Configure association details
 - Set up admin membership
 
 ### 5. System Configuration
+
 - Configure system settings
 - Set up email (optional)
 - Complete setup process
@@ -254,10 +277,13 @@ The application includes a comprehensive setup wizard that works with both datab
 ## API Endpoints
 
 ### Health Check
+
 ```bash
 GET /api/health
 ```
+
 Returns database status and type:
+
 ```json
 {
   "status": "healthy",
@@ -270,10 +296,13 @@ Returns database status and type:
 ```
 
 ### Setup Status
+
 ```bash
 GET /api/setup/status
 ```
+
 Returns setup completion status:
+
 ```json
 {
   "setupComplete": false,
@@ -285,10 +314,13 @@ Returns setup completion status:
 ```
 
 ### Edge Config Check
+
 ```bash
 GET /api/setup/check-edge-config
 ```
+
 Returns Edge Config configuration status:
+
 ```json
 {
   "success": true,
@@ -300,10 +332,13 @@ Returns Edge Config configuration status:
 ```
 
 ### Blob Storage Check
+
 ```bash
 GET /api/setup/check-blob-storage
 ```
+
 Returns blob storage configuration status:
+
 ```json
 {
   "success": true,
@@ -320,6 +355,7 @@ Returns blob storage configuration status:
 ```
 
 ### File Upload
+
 ```bash
 POST /api/upload
 Content-Type: multipart/form-data
@@ -334,7 +370,9 @@ Content-Type: multipart/form-data
 # Headers
 - x-association-id: string (required)
 ```
+
 Returns uploaded file information:
+
 ```json
 {
   "data": {
@@ -354,32 +392,35 @@ Returns uploaded file information:
 ## Performance Comparison
 
 ### Database Options
-| Feature | PostgreSQL | Edge Config |
-|---------|------------|-------------|
-| Query Latency | 50-200ms | < 15ms |
-| Global Distribution | ❌ | ✅ |
-| Complex Queries | ✅ | ❌ |
-| Write Operations | ✅ | Limited |
-| Data Size Limits | Large | Small |
-| ACID Compliance | ✅ | ❌ |
-| Connection Overhead | High | None |
+
+| Feature             | PostgreSQL | Edge Config |
+| ------------------- | ---------- | ----------- |
+| Query Latency       | 50-200ms   | < 15ms      |
+| Global Distribution | ❌         | ✅          |
+| Complex Queries     | ✅         | ❌          |
+| Write Operations    | ✅         | Limited     |
+| Data Size Limits    | Large      | Small       |
+| ACID Compliance     | ✅         | ❌          |
+| Connection Overhead | High       | None        |
 
 ### Storage Options
-| Feature | Vercel Blob | Local Storage |
-|---------|-------------|---------------|
-| Upload Latency | < 15ms | < 5ms |
-| Download Latency | < 15ms | < 5ms |
-| Global Distribution | ✅ | ❌ |
-| CDN Caching | ✅ | ❌ |
-| File Size Limits | Large | Limited by disk |
-| Automatic Scaling | ✅ | ❌ |
-| Backup & Recovery | ✅ | Manual |
+
+| Feature             | Vercel Blob | Local Storage   |
+| ------------------- | ----------- | --------------- |
+| Upload Latency      | < 15ms      | < 5ms           |
+| Download Latency    | < 15ms      | < 5ms           |
+| Global Distribution | ✅          | ❌              |
+| CDN Caching         | ✅          | ❌              |
+| File Size Limits    | Large       | Limited by disk |
+| Automatic Scaling   | ✅          | ❌              |
+| Backup & Recovery   | ✅          | Manual          |
 
 ## Troubleshooting
 
 ### Common Issues
 
 #### PostgreSQL Issues
+
 1. **Connection Timeout**
    - Check database URL format
    - Verify network connectivity
@@ -391,6 +432,7 @@ Returns uploaded file information:
    - Verify schema compatibility
 
 #### Edge Config Issues
+
 1. **"Edge Config is not configured"**
    - Check `EDGE_CONFIG_ID` environment variable
    - Verify Edge Config exists in Vercel dashboard
@@ -401,6 +443,7 @@ Returns uploaded file information:
    - Ensure Edge Config is not empty
 
 #### Blob Storage Issues
+
 1. **"Storage service is not available"**
    - Check `BLOB_READ_WRITE_TOKEN` environment variable
    - Verify blob store exists in Vercel dashboard
@@ -440,6 +483,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Migration Between Database Types
 
 ### From PostgreSQL to Edge Config
+
 1. Export data from PostgreSQL
 2. Transform to Edge Config format
 3. Import to Edge Config
@@ -447,6 +491,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 5. Test thoroughly
 
 ### From Edge Config to PostgreSQL
+
 1. Export data from Edge Config
 2. Transform to PostgreSQL format
 3. Import to PostgreSQL
@@ -456,6 +501,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Migration Between Storage Types
 
 ### From Local to Vercel Blob
+
 1. Create blob store in Vercel
 2. Get read/write token
 3. Set environment variables
@@ -463,6 +509,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 5. Test file uploads and downloads
 
 ### From Vercel Blob to Local
+
 1. Export files from blob store
 2. Download to local directory
 3. Update environment variables
@@ -472,6 +519,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Best Practices
 
 ### PostgreSQL
+
 - Use connection pooling
 - Implement proper indexing
 - Regular backups
@@ -479,6 +527,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Use SSL connections
 
 ### Edge Config
+
 - Keep data size small (< 1MB per key)
 - Use consistent key naming
 - Leverage built-in caching
@@ -486,6 +535,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Regular data validation
 
 ### Vercel Blob
+
 - Optimize images before upload
 - Use appropriate cache settings
 - Monitor storage usage and costs
@@ -493,6 +543,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Regular backup of critical files
 
 ### Local Storage
+
 - Regular file system backups
 - Monitor disk space usage
 - Implement file cleanup
@@ -500,6 +551,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Regular maintenance
 
 ### General
+
 - Use environment-specific configurations
 - Implement proper error handling
 - Monitor application health
@@ -509,12 +561,14 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Monitoring
 
 ### Health Monitoring
+
 - Use `/api/health` endpoint
 - Monitor database connectivity
 - Track response times
 - Set up alerts
 
 ### Performance Monitoring
+
 - Monitor query latency
 - Track error rates
 - Monitor resource usage
@@ -523,6 +577,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Security Considerations
 
 ### PostgreSQL
+
 - Use strong passwords
 - Enable SSL
 - Regular security updates
@@ -530,6 +585,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Audit logging
 
 ### Edge Config
+
 - Secure access tokens
 - Regular token rotation
 - Monitor access patterns
@@ -537,6 +593,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Access logging
 
 ### Vercel Blob
+
 - Secure read/write tokens
 - Regular token rotation
 - Monitor storage access
@@ -544,6 +601,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - Access control implementation
 
 ### Local Storage
+
 - Secure file permissions
 - Regular security updates
 - Access control
@@ -553,6 +611,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ## Support
 
 ### Documentation
+
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Vercel Edge Config Documentation](https://vercel.com/docs/edge-config)
 - [Vercel Blob Documentation](https://vercel.com/docs/vercel-blob)
@@ -560,6 +619,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 - [KonBase Blob Integration](./VERCEL-BLOB-INTEGRATION.md)
 
 ### Community
+
 - GitHub Issues
 - Discord Community
 - Stack Overflow
@@ -569,10 +629,12 @@ curl -X POST https://your-app.vercel.app/api/upload \
 KonBase now provides flexible database and storage options to suit different use cases:
 
 ### Database Options
+
 - **PostgreSQL**: For complex applications with large datasets
 - **Edge Config**: For high-performance applications with configuration data
 
 ### Storage Options
+
 - **Vercel Blob**: For production applications requiring global file distribution
 - **Local Storage**: For development and small deployments
 

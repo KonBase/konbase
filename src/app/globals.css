@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-background: #ffffff;
@@ -47,12 +47,12 @@
   }
 }
 
-html, 
-body { 
-  height: 100%; 
+html,
+body {
+  height: 100%;
 }
 
-body { 
-  background-color: var(--color-background); 
-  color: var(--color-foreground); 
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
 }

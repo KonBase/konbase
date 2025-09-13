@@ -1,38 +1,25 @@
 import React from 'react';
 
 // Core Types for KonBase Modernized System
-export type UserRoleType = 
-  | 'super_admin' 
-  | 'system_admin' 
-  | 'admin' 
-  | 'manager' 
-  | 'member' 
+export type UserRoleType =
+  | 'super_admin'
+  | 'system_admin'
+  | 'admin'
+  | 'manager'
+  | 'member'
   | 'guest';
 
-export type ConventionRoleType = 
-  | 'admin' 
-  | 'manager' 
-  | 'participant' 
-  | 'guest';
+export type ConventionRoleType = 'admin' | 'manager' | 'participant' | 'guest';
 
-export type ConventionStatus = 
-  | 'planning' 
-  | 'active' 
-  | 'completed' 
+export type ConventionStatus =
+  | 'planning'
+  | 'active'
+  | 'completed'
   | 'cancelled';
 
-export type ItemCondition = 
-  | 'excellent' 
-  | 'good' 
-  | 'fair' 
-  | 'poor' 
-  | 'broken';
+export type ItemCondition = 'excellent' | 'good' | 'fair' | 'poor' | 'broken';
 
-export type NotificationType = 
-  | 'info' 
-  | 'warning' 
-  | 'error' 
-  | 'success';
+export type NotificationType = 'info' | 'warning' | 'error' | 'success';
 
 // Association Types
 export interface Association {
@@ -44,7 +31,7 @@ export interface Association {
   email?: string;
   phone?: string;
   address?: string;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -61,7 +48,7 @@ export interface Profile {
   two_factor_enabled: boolean;
   totp_secret?: string;
   recovery_keys?: string[];
-  preferences: Record<string, any>;
+  preferences: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -152,7 +139,7 @@ export interface Convention {
   end_date: Date;
   location?: string;
   status: ConventionStatus;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -204,7 +191,7 @@ export interface Notification {
   message: string;
   type: NotificationType;
   read: boolean;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -227,8 +214,8 @@ export interface AuditLog {
   action: string;
   resource_type: string;
   resource_id?: string;
-  old_values?: Record<string, any>;
-  new_values?: Record<string, any>;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   created_at: Date;
@@ -244,17 +231,17 @@ export interface FormFieldProps {
   helperText?: string;
 }
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   id: keyof T | string;
   label: string;
   sortable?: boolean;
   width?: string | number;
   align?: 'left' | 'center' | 'right';
-  format?: (value: any, row?: T) => React.ReactNode;
+  format?: (value: unknown, row?: T) => React.ReactNode;
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;

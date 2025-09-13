@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const operationPromise = async () => {
-      const { 
+      const {
         siteName,
         siteDescription,
         maintenanceMode,
@@ -34,9 +34,10 @@ export async function POST(request: NextRequest) {
         enableAnalytics,
         adminUserId,
         associationId,
-        databaseType = 'postgresql'
+        databaseType = 'postgresql',
       } = await request.json();
 
+      // eslint-disable-next-line no-console
       console.log('Configuring system with database type:', databaseType);
 
       // Auto-detect database type if not specified
@@ -44,128 +45,234 @@ export async function POST(request: NextRequest) {
       if (databaseType === 'auto' || !databaseType) {
         if (process.env.REDIS_URL) {
           actualDatabaseType = 'redis';
-        } else if (process.env.EDGEDB_INSTANCE && process.env.EDGEDB_SECRET_KEY) {
+        } else if (
+          process.env.EDGEDB_INSTANCE &&
+          process.env.EDGEDB_SECRET_KEY
+        ) {
           actualDatabaseType = 'postgresql'; // EdgeDB uses PostgreSQL interface
         } else if (process.env.GEL_DATABASE_URL) {
           actualDatabaseType = 'postgresql';
         } else {
-          return NextResponse.json({ 
-            error: 'No database configuration found',
-            suggestion: 'Please configure REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL'
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              error: 'No database configuration found',
+              suggestion:
+                'Please configure REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL',
+            },
+            { status: 400 }
+          );
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log('Using database type:', actualDatabaseType);
-      
+
       // Create data access layer
-      const dataAccess = createDataAccessLayer(actualDatabaseType as 'postgresql' | 'redis');
+      const dataAccess = createDataAccessLayer(
+        actualDatabaseType as 'postgresql' | 'redis'
+      );
 
       // Test database connection first
+      // eslint-disable-next-line no-console
       console.log('Testing database connection...');
       const healthCheck = await dataAccess.healthCheck();
+      // eslint-disable-next-line no-console
       console.log('Database health check:', healthCheck);
 
       if (healthCheck.status !== 'healthy') {
-        return NextResponse.json({ 
-          error: 'Database connection failed',
-          details: `Database is ${healthCheck.status}`,
-          suggestion: 'Please check your database configuration and ensure the database is accessible'
-        }, { status: 500 });
+        return NextResponse.json(
+          {
+            error: 'Database connection failed',
+            details: `Database is ${healthCheck.status}`,
+            suggestion:
+              'Please check your database configuration and ensure the database is accessible',
+          },
+          { status: 500 }
+        );
       }
 
       // System settings
       const settings = [
         { key: 'site_name', value: siteName, description: 'Site name' },
-        { key: 'site_description', value: siteDescription, description: 'Site description' },
-        { key: 'maintenance_mode', value: maintenanceMode.toString(), description: 'Maintenance mode' },
-        { key: 'registration_enabled', value: registrationEnabled.toString(), description: 'User registration enabled' },
-        { key: 'email_verification_required', value: emailVerificationRequired.toString(), description: 'Email verification required' },
-        { key: 'session_timeout', value: sessionTimeout.toString(), description: 'Session timeout in minutes' },
-        { key: 'max_login_attempts', value: maxLoginAttempts.toString(), description: 'Maximum login attempts' },
-        { key: 'password_min_length', value: passwordMinLength.toString(), description: 'Minimum password length' },
-        { key: 'two_factor_required', value: twoFactorRequired.toString(), description: 'Two-factor authentication required' },
+        {
+          key: 'site_description',
+          value: siteDescription,
+          description: 'Site description',
+        },
+        {
+          key: 'maintenance_mode',
+          value: maintenanceMode.toString(),
+          description: 'Maintenance mode',
+        },
+        {
+          key: 'registration_enabled',
+          value: registrationEnabled.toString(),
+          description: 'User registration enabled',
+        },
+        {
+          key: 'email_verification_required',
+          value: emailVerificationRequired.toString(),
+          description: 'Email verification required',
+        },
+        {
+          key: 'session_timeout',
+          value: sessionTimeout.toString(),
+          description: 'Session timeout in minutes',
+        },
+        {
+          key: 'max_login_attempts',
+          value: maxLoginAttempts.toString(),
+          description: 'Maximum login attempts',
+        },
+        {
+          key: 'password_min_length',
+          value: passwordMinLength.toString(),
+          description: 'Minimum password length',
+        },
+        {
+          key: 'two_factor_required',
+          value: twoFactorRequired.toString(),
+          description: 'Two-factor authentication required',
+        },
         { key: 'smtp_host', value: smtpHost, description: 'SMTP host' },
-        { key: 'smtp_port', value: smtpPort.toString(), description: 'SMTP port' },
+        {
+          key: 'smtp_port',
+          value: smtpPort.toString(),
+          description: 'SMTP port',
+        },
         { key: 'smtp_user', value: smtpUser, description: 'SMTP username' },
-        { key: 'smtp_password', value: smtpPassword, description: 'SMTP password' },
-        { key: 'from_email', value: fromEmail, description: 'From email address' },
+        {
+          key: 'smtp_password',
+          value: smtpPassword,
+          description: 'SMTP password',
+        },
+        {
+          key: 'from_email',
+          value: fromEmail,
+          description: 'From email address',
+        },
         { key: 'from_name', value: fromName, description: 'From name' },
-        { key: 'enable_audit_logs', value: enableAuditLogs.toString(), description: 'Enable audit logs' },
-        { key: 'enable_notifications', value: enableNotifications.toString(), description: 'Enable notifications' },
-        { key: 'enable_chat', value: enableChat.toString(), description: 'Enable chat system' },
-        { key: 'enable_file_uploads', value: enableFileUploads.toString(), description: 'Enable file uploads' },
-        { key: 'enable_analytics', value: enableAnalytics.toString(), description: 'Enable analytics' },
+        {
+          key: 'enable_audit_logs',
+          value: enableAuditLogs.toString(),
+          description: 'Enable audit logs',
+        },
+        {
+          key: 'enable_notifications',
+          value: enableNotifications.toString(),
+          description: 'Enable notifications',
+        },
+        {
+          key: 'enable_chat',
+          value: enableChat.toString(),
+          description: 'Enable chat system',
+        },
+        {
+          key: 'enable_file_uploads',
+          value: enableFileUploads.toString(),
+          description: 'Enable file uploads',
+        },
+        {
+          key: 'enable_analytics',
+          value: enableAnalytics.toString(),
+          description: 'Enable analytics',
+        },
       ];
 
+      if (associationId) {
+        settings.push({
+          key: 'default_association_id',
+          value: associationId,
+          description: 'Default association id',
+        });
+      }
+      if (adminUserId) {
+        settings.push({
+          key: 'setup_admin_user_id',
+          value: adminUserId,
+          description: 'Admin user id used during setup',
+        });
+      }
+
+      // eslint-disable-next-line no-console
       console.log('Setting system configuration...');
-      
+
       // Set each system setting
       for (const setting of settings) {
         await dataAccess.setSystemSetting(setting.key, setting.value);
       }
 
       // Mark setup as complete
+      // eslint-disable-next-line no-console
       console.log('Marking setup as complete...');
       await dataAccess.setSystemSetting('setup_complete', 'true');
 
+      // eslint-disable-next-line no-console
       console.log('System configuration completed successfully');
 
       return NextResponse.json({
         success: true,
         message: 'System configured successfully',
         databaseType: actualDatabaseType,
-        healthCheck: healthCheck
+        healthCheck: healthCheck,
       });
     };
 
     // Race between operation and timeout
     const result = await Promise.race([operationPromise(), timeoutPromise]);
     return result as NextResponse;
-
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Configure system error:', error);
-    
+
     // Handle timeout specifically
     if (error instanceof Error && error.message === 'Request timeout') {
       return NextResponse.json(
-        { 
+        {
           error: 'Request timeout - database operation took too long',
-          suggestion: 'Please check your database connection and try again'
+          suggestion: 'Please check your database connection and try again',
         },
         { status: 504 }
       );
     }
-    
+
     // Provide more specific error messages
     if (error instanceof Error) {
-      if (error.message.includes('GEL_DATABASE_URL') || error.message.includes('REDIS_URL')) {
+      if (
+        error.message.includes('GEL_DATABASE_URL') ||
+        error.message.includes('REDIS_URL')
+      ) {
         return NextResponse.json(
-          { 
+          {
             error: 'Database configuration is required for setup operations',
-            suggestion: 'Please provide REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL environment variable'
+            suggestion:
+              'Please provide REDIS_URL, EDGEDB_INSTANCE + EDGEDB_SECRET_KEY, or GEL_DATABASE_URL environment variable',
           },
           { status: 400 }
         );
       }
 
-      if (error.message.includes('connection') || error.message.includes('timeout')) {
+      if (
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
+      ) {
         return NextResponse.json(
-          { 
+          {
             error: 'Database connection failed',
             details: error.message,
-            suggestion: 'Please check your database configuration and ensure the database is accessible'
+            suggestion:
+              'Please check your database configuration and ensure the database is accessible',
           },
           { status: 500 }
         );
       }
     }
-    
+
     return NextResponse.json(
-      { 
-        error: 'Failed to configure system', 
+      {
+        error: 'Failed to configure system',
         details: error instanceof Error ? error.message : 'Unknown error',
-        suggestion: 'Please check your database configuration and try again'
+        suggestion: 'Please check your database configuration and try again',
       },
       { status: 500 }
     );

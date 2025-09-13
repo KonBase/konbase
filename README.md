@@ -25,9 +25,11 @@ KonBase is a comprehensive inventory and convention management system built for 
 ## 🚀 Quick Start
 
 ### One-Click Deploy
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KonBase/konbase)
 
 ### Local Development
+
 ```bash
 # Clone the repository
 git clone https://github.com/KonBase/konbase.git
@@ -62,6 +64,7 @@ npm run dev
 ## ✨ Key Features
 
 ### 🏢 Association Management
+
 - **Association Registration**: Complete profile management with custom branding
 - **User Management**: Role-based access control with permission levels
 - **Inventory Management**: Categorization, location tracking, and warranty management
@@ -70,6 +73,7 @@ npm run dev
 - **Local Backup**: Automated backup capabilities
 
 ### 🎪 Convention Management
+
 - **Event Creation**: Create conventions from association templates
 - **Equipment Tracking**: Issue and return tracking with real-time status
 - **Consumable Items**: Track usage and inventory levels
@@ -80,6 +84,7 @@ npm run dev
 - **Archiving**: Post-convention data archiving
 
 ### 🔐 Security Features
+
 - **Role-Based Access Control**: Granular permission system
 - **Super Admin Role**: Full system access and management
 - **Two-Factor Authentication**: Enhanced security for sensitive operations
@@ -87,6 +92,7 @@ npm run dev
 - **Audit Logging**: Complete security event tracking
 
 ### 🎨 Custom Branding
+
 - **Admin Panel Branding**: Customize logos, colors, and styling
 - **File Upload System**: Upload custom assets with Vercel Blob support
 - **Theme Customization**: CSS and HTML customization options
@@ -95,6 +101,7 @@ npm run dev
 ## 🛠 Tech Stack
 
 ### Frontend
+
 - **Next.js 15** - React framework with App Router and Server Components
 - **TypeScript** - Static typing for better developer experience
 - **Material UI v7** - Modern React component library
@@ -105,6 +112,7 @@ npm run dev
 - **Recharts** - Data visualization components
 
 ### Backend
+
 - **GelDB** - Modern PostgreSQL client with type safety
 - **Auth.js (NextAuth)** - Authentication with multiple providers
 - **PostgreSQL** - Robust relational database
@@ -112,6 +120,7 @@ npm run dev
 - **Row Level Security (RLS)** - Database-level security policies
 
 ### Storage & Deployment
+
 - **Vercel Blob** - Global file storage with CDN
 - **Docker** - Containerized deployment
 - **Docker Compose** - Multi-container orchestration
@@ -122,12 +131,14 @@ npm run dev
 KonBase supports multiple database solutions to fit different use cases:
 
 ### 1. PostgreSQL GelDB (Traditional)
+
 - **Best for**: Complex queries, large datasets, transactional operations
 - **Performance**: 50-200ms query latency
 - **Features**: Full SQL support, ACID compliance, complex relationships
 - **Use Cases**: Production applications, complex data relationships
 
 ### 2. Vercel EdgeDB (Ultra-fast)
+
 - **Best for**: High-performance applications, modern database features
 - **Performance**: < 15ms latency at P99
 - **Features**: Global edge distribution, ultra-low latency, modern query language
@@ -135,6 +146,7 @@ KonBase supports multiple database solutions to fit different use cases:
 - **Setup**: Uses `EDGEDB_INSTANCE` and `EDGEDB_SECRET_KEY` environment variables
 
 ### 3. Redis (Ultra-fast, key-value)
+
 - **Best for**: High-performance applications, caching, session storage
 - **Performance**: < 5ms latency at P99
 - **Features**: In-memory storage, ultra-low latency, high throughput
@@ -144,12 +156,14 @@ KonBase supports multiple database solutions to fit different use cases:
 ## 📁 File Storage Options
 
 ### 1. Vercel Blob (Recommended)
+
 - **Best for**: Production applications, global distribution
 - **Performance**: < 15ms latency at P99
 - **Features**: Global CDN, automatic scaling, built-in caching
 - **Use Cases**: Production deployments, global file distribution
 
 ### 2. Local Storage (Development)
+
 - **Best for**: Development, testing, small deployments
 - **Performance**: Direct file system access
 - **Features**: No external dependencies, easy debugging
@@ -158,6 +172,7 @@ KonBase supports multiple database solutions to fit different use cases:
 ## ⚙️ Setup Instructions
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - PostgreSQL database (or Docker for containerized setup)
 - Git
@@ -204,12 +219,14 @@ APP_URL=http://localhost:3000
 ### Database Setup
 
 #### PostgreSQL Setup
+
 1. Install PostgreSQL 12 or higher
 2. Create a database named `konbase`
 3. Set the `GEL_DATABASE_URL` environment variable
 4. Run migrations: `npm run db:migrate`
 
 #### Vercel EdgeDB Setup
+
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Navigate to **Storage** → **EdgeDB**
 3. Create a new EdgeDB instance
@@ -217,11 +234,13 @@ APP_URL=http://localhost:3000
 5. Set `EDGEDB_INSTANCE` and `EDGEDB_SECRET_KEY` environment variables
 
 #### Redis Setup
+
 1. **Local Development**: Install Redis locally or use Docker
+
    ```bash
    # Using Docker
    docker run -d -p 6379:6379 redis:alpine
-   
+
    # Set environment variable
    REDIS_URL=redis://localhost:6379
    ```
@@ -234,12 +253,14 @@ APP_URL=http://localhost:3000
 ### File Storage Setup
 
 #### Vercel Blob Setup
+
 1. Go to [Vercel Storage Dashboard](https://vercel.com/dashboard/storage)
 2. Create a new Blob Store
 3. Get the Read/Write Token
 4. Set `BLOB_READ_WRITE_TOKEN` environment variable
 
 #### Local Storage Setup
+
 1. Create uploads directory: `mkdir uploads`
 2. Set `LOCAL_STORAGE_PATH=./uploads`
 
@@ -263,9 +284,11 @@ Access the application at `http://localhost:3000`
 ### Vercel Deployment (Recommended)
 
 #### 1. One-Click Deploy
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KonBase/konbase)
 
 #### 2. Manual Setup
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -278,15 +301,18 @@ vercel --prod
 ```
 
 #### 3. Environment Variables
+
 Set the following in your Vercel dashboard:
 
 **Required:**
+
 ```bash
 NEXTAUTH_SECRET=your-production-secret-key
 NEXTAUTH_URL=https://your-app.vercel.app
 ```
 
 **Database (choose one):**
+
 ```bash
 # PostgreSQL
 GEL_DATABASE_URL=postgresql://user:pass@host:port/db
@@ -300,6 +326,7 @@ REDIS_URL=redis://user:password@host:port
 ```
 
 **Storage (choose one):**
+
 ```bash
 # Vercel Blob
 BLOB_READ_WRITE_TOKEN=your-blob-read-write-token
@@ -311,6 +338,7 @@ LOCAL_STORAGE_PATH=./uploads
 ### Docker Deployment
 
 #### Development
+
 ```bash
 # Start development environment
 docker-compose -f docker-compose.dev.yml up -d
@@ -320,6 +348,7 @@ open http://localhost:3000
 ```
 
 #### Production
+
 ```bash
 # Use the automated setup script
 ./scripts/setup-production.sh
@@ -332,31 +361,36 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Performance Comparison
 
-| Feature | PostgreSQL | Edge Config | Vercel Blob | Local Storage |
-|---------|------------|-------------|-------------|---------------|
-| Query Latency | 50-200ms | < 15ms | < 15ms | < 5ms |
-| Global Distribution | ❌ | ✅ | ✅ | ❌ |
-| Complex Queries | ✅ | ❌ | ❌ | ❌ |
-| Write Operations | ✅ | Limited | ✅ | ✅ |
-| Data Size Limits | Large | Small | Large | Limited |
-| ACID Compliance | ✅ | ❌ | ❌ | ❌ |
-| Connection Overhead | High | None | None | None |
+| Feature             | PostgreSQL | Edge Config | Vercel Blob | Local Storage |
+| ------------------- | ---------- | ----------- | ----------- | ------------- |
+| Query Latency       | 50-200ms   | < 15ms      | < 15ms      | < 5ms         |
+| Global Distribution | ❌         | ✅          | ✅          | ❌            |
+| Complex Queries     | ✅         | ❌          | ❌          | ❌            |
+| Write Operations    | ✅         | Limited     | ✅          | ✅            |
+| Data Size Limits    | Large      | Small       | Large       | Limited       |
+| ACID Compliance     | ✅         | ❌          | ❌          | ❌            |
+| Connection Overhead | High       | None        | None        | None          |
 
 ## 📚 API Documentation
 
 ### Health Check
+
 ```bash
 GET /api/health
 ```
+
 Returns system health status and database type.
 
 ### Setup Status
+
 ```bash
 GET /api/setup/status
 ```
+
 Returns setup completion status and configuration.
 
 ### File Upload
+
 ```bash
 POST /api/upload
 Content-Type: multipart/form-data
@@ -373,6 +407,7 @@ Content-Type: multipart/form-data
 ```
 
 ### File Serving
+
 ```bash
 GET /api/files/[...path]
 
@@ -382,6 +417,7 @@ GET /api/files/images/assoc_123/avatar_1234567890.jpg
 ```
 
 ### Database Health
+
 ```bash
 # PostgreSQL
 GET /api/setup/test-database
@@ -398,32 +434,38 @@ GET /api/setup/check-blob-storage
 The admin panel provides comprehensive system management:
 
 ### System Overview
+
 - **Dashboard**: Real-time system statistics
 - **Health Monitoring**: Database and storage status
 - **Performance Metrics**: Response times and usage statistics
 
 ### Association Management
+
 - **Create/Edit Associations**: Manage association profiles
 - **User Management**: Assign roles and permissions
 - **Settings Configuration**: Customize association settings
 
 ### User Management
+
 - **User Administration**: Create, edit, and manage users
 - **Role Assignment**: Assign and modify user roles
 - **Permission Management**: Granular access control
 
 ### Global Settings
+
 - **System Configuration**: Global application settings
 - **Email Configuration**: SMTP and notification settings
 - **Security Settings**: Authentication and security policies
 
 ### Branding Management
+
 - **Custom Branding**: Upload logos, favicons, and app icons
 - **Color Customization**: Set primary, secondary, and accent colors
 - **CSS Customization**: Custom styling and themes
 - **PWA Configuration**: Progressive Web App settings
 
 ### Audit Logs
+
 - **Activity Tracking**: Complete audit trail
 - **Security Events**: Login attempts and security events
 - **System Changes**: Configuration and data changes
@@ -433,6 +475,7 @@ The admin panel provides comprehensive system management:
 KonBase includes a comprehensive branding system that allows complete customization:
 
 ### Features
+
 - **Custom Logos**: Upload and manage logos for different contexts
 - **Color Themes**: Customize primary, secondary, and accent colors
 - **File Assets**: Upload custom favicons, app icons, and images
@@ -441,6 +484,7 @@ KonBase includes a comprehensive branding system that allows complete customizat
 - **PWA Support**: Custom manifest and app icons
 
 ### Usage
+
 1. Access the Admin Panel
 2. Navigate to the "Branding" tab
 3. Upload custom assets or modify colors
@@ -448,6 +492,7 @@ KonBase includes a comprehensive branding system that allows complete customizat
 5. Save configuration
 
 ### Asset Types
+
 - **Logo**: Main application logo
 - **Favicon**: Browser tab icon
 - **App Icon**: PWA and mobile app icon
@@ -458,6 +503,7 @@ KonBase includes a comprehensive branding system that allows complete customizat
 ### Common Issues
 
 #### Database Connection Issues
+
 ```bash
 # Check database health
 curl https://your-app.vercel.app/api/health
@@ -468,6 +514,7 @@ curl https://your-app.vercel.app/api/setup/test-database
 ```
 
 #### File Upload Issues
+
 ```bash
 # Check storage health
 curl https://your-app.vercel.app/api/setup/check-blob-storage
@@ -479,6 +526,7 @@ curl -X POST https://your-app.vercel.app/api/upload \
 ```
 
 #### Build Issues
+
 ```bash
 # Test build locally
 npm run build
@@ -491,6 +539,7 @@ npm run lint
 ```
 
 ### Debug Commands
+
 ```bash
 # View deployment logs
 vercel logs
@@ -507,6 +556,7 @@ curl https://your-app.vercel.app/api/files/documents/test.pdf
 We welcome contributions to KonBase! Here's how you can help:
 
 ### Ways to Contribute
+
 - **Code Contributions**: Fix bugs, add features, improve performance
 - **Documentation**: Improve or expand documentation
 - **Bug Reports**: Submit issues for any bugs you encounter
@@ -514,6 +564,7 @@ We welcome contributions to KonBase! Here's how you can help:
 - **Testing**: Help test the application and provide feedback
 
 ### Contribution Process
+
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
@@ -522,13 +573,16 @@ We welcome contributions to KonBase! Here's how you can help:
 6. Open a Pull Request
 
 ### Code Style
+
 - Follow the existing code style
 - Use TypeScript for type safety
 - Write tests for new features
 - Update documentation for significant changes
 
 ### Commit Messages
+
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
 - `feat:` for new features
 - `fix:` for bug fixes
 - `docs:` for documentation
@@ -546,6 +600,7 @@ Join our community to get help, share ideas, and connect with other KonBase user
 - **Discussions**: Participate in [GitHub Discussions](https://github.com/KonBase/konbase/discussions) for general topics
 
 ### Support the Project
+
 If you find KonBase helpful, consider supporting the project:
 
 - **GitHub Sponsors**: Support the development team directly through GitHub

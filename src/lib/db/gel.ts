@@ -1,81 +1,67 @@
-import { createClient } from 'gel';
+import { createDataAccessLayer } from './data-access';
 
 // Lazy initialization to avoid build-time errors
-let geldbClient: ReturnType<typeof createClient> | null = null;
+let dataAccess: ReturnType<typeof createDataAccessLayer> | null = null;
 
-export function getGelClient() {
-  if (geldbClient) {
-    return geldbClient;
+export function getDataAccess() {
+  if (dataAccess) {
+    return dataAccess;
   }
 
-  // Check for Vercel EdgeDB environment variables first
-  const edgedbInstance = process.env.EDGEDB_INSTANCE;
-  const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
-  
-  if (edgedbInstance && edgedbSecretKey) {
-    // Construct EdgeDB connection string for Vercel
-    const edgedbUrl = `edgedb://${edgedbInstance}:${edgedbSecretKey}@edgedb.cloud`;
-    geldbClient = createClient(edgedbUrl);
-    return geldbClient;
-  }
-
-  // Fallback to traditional URL-based connection
-  const geldbUrl = process.env.GEL_DATABASE_URL;
-
-  if (!geldbUrl) {
-    throw new Error('Either GEL_DATABASE_URL or EDGEDB_INSTANCE + EDGEDB_SECRET_KEY environment variables are required');
-  }
-
-  geldbClient = createClient(geldbUrl);
-  return geldbClient;
+  dataAccess = createDataAccessLayer();
+  return dataAccess;
 }
 
 // Helper function to detect connection type
-export function getConnectionType(): 'vercel-edgedb' | 'url' {
-  const edgedbInstance = process.env.EDGEDB_INSTANCE;
-  const edgedbSecretKey = process.env.EDGEDB_SECRET_KEY;
-  
-  if (edgedbInstance && edgedbSecretKey) {
-    return 'vercel-edgedb';
+export function getConnectionType(): 'postgres' | 'vercel' {
+  const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+  if (postgresUrl) {
+    return 'postgres';
   }
-  
-  return 'url';
+
+  return 'vercel';
 }
 
 // Helper function to get connection info for debugging
 export function getConnectionInfo() {
   const connectionType = getConnectionType();
-  
-  if (connectionType === 'vercel-edgedb') {
+
+  if (connectionType === 'postgres') {
     return {
-      type: 'vercel-edgedb',
-      instance: process.env.EDGEDB_INSTANCE,
-      hasSecretKey: !!process.env.EDGEDB_SECRET_KEY,
+      type: 'postgres',
+      url:
+        process.env.POSTGRES_URL || process.env.DATABASE_URL
+          ? 'configured'
+          : 'not configured',
     };
   }
-  
+
   return {
-    type: 'url',
-    url: process.env.GEL_DATABASE_URL ? 'configured' : 'not configured',
+    type: 'vercel',
+    url: 'vercel-postgres',
   };
 }
 
 // For backward compatibility
 export const geldb = {
   get query() {
-    return getGelClient().query;
+    return getDataAccess().executeQuery;
   },
   get querySingle() {
-    return getGelClient().querySingle;
+    return getDataAccess().executeQuerySingle;
   },
   get execute() {
-    return getGelClient().execute;
-  }
+    return getDataAccess().executeQuery;
+  },
 };
 
 // Type-safe database queries with proper error handling
 export class DatabaseError extends Error {
-  constructor(message: string, public code?: string) {
+  constructor(
+    message: string,
+    public code?: string
+  ) {
     super(message);
     this.name = 'DatabaseError';
   }
@@ -83,26 +69,31 @@ export class DatabaseError extends Error {
 
 // Helper function for consistent error handling
 export async function executeQuery<T>(
-  queryFn: () => Promise<{ data: T | null; error: any }>
+  queryFn: () => Promise<{ data: T | null; error: unknown }>
 ): Promise<T> {
   try {
     const { data, error } = await queryFn();
-    
+
     if (error) {
+      // eslint-disable-next-line no-console
       console.error('Database query error:', error);
-      throw new DatabaseError(error.message || 'Database operation failed', error.code);
+      throw new DatabaseError(
+        (error as { message?: string }).message || 'Database operation failed',
+        (error as { code?: string }).code
+      );
     }
-    
+
     if (data === null) {
       throw new DatabaseError('No data returned from query');
     }
-    
+
     return data;
   } catch (error) {
     if (error instanceof DatabaseError) {
       throw error;
     }
-    
+
+    // eslint-disable-next-line no-console
     console.error('Unexpected error in database query:', error);
     throw new DatabaseError('An unexpected database error occurred');
   }
@@ -115,15 +106,21 @@ export async function withAssociationAccess<T>(
   queryFn: () => Promise<T>
 ): Promise<T> {
   // Verify user has access to association
-  const member = await geldb.querySingle(`
+  const dataAccess = getDataAccess();
+  const member = await dataAccess.executeQuerySingle(
+    `
     SELECT role FROM association_members 
-    WHERE association_id = <str>$1 AND profile_id = <str>$2
-  `, [associationId, userId]);
+    WHERE association_id = $1 AND profile_id = $2
+  `,
+    [associationId, userId]
+  );
 
   if (!member) {
-    throw new DatabaseError('Access denied: User is not a member of this association');
+    throw new DatabaseError(
+      'Access denied: User is not a member of this association'
+    );
   }
-  
+
   return queryFn();
 }
 

@@ -2,14 +2,14 @@ import { createTheme } from '@mui/material/styles';
 
 // KonBase Design System Colors
 const konbaseColors = {
-  blue: '#0c2e62',      // Primary brand color
-  cherry: '#d84165',    // Secondary accent
+  blue: '#0c2e62', // Primary brand color
+  cherry: '#d84165', // Secondary accent
   lightBlue: '#0fb4ea', // Info color
-  yellow: '#fce771',    // Warning/highlight
-  black: '#171716',     // Text primary
-  white: '#e6e6dc',     // Background light
-  furry: '#a2779c',     // Tertiary
-  gzdacz: '#ea8000',    // Helper/warning
+  yellow: '#fce771', // Warning/highlight
+  black: '#171716', // Text primary
+  white: '#e6e6dc', // Background light
+  furry: '#a2779c', // Tertiary
+  gzdacz: '#ea8000', // Helper/warning
 };
 
 export const theme = createTheme({

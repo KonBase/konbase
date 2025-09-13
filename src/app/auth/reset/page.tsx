@@ -1,95 +1,108 @@
-'use client'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Button, 
-  Alert, 
-  Stack, 
-  Card, 
+'use client';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  Alert,
+  Stack,
+  Card,
   CardContent,
   IconButton,
   InputAdornment,
-  Link
-} from '@mui/material'
-import { 
-  Lock, 
-  Eye, 
-  EyeOff, 
+  Link,
+} from '@mui/material';
+import {
+  Lock,
+  Eye,
+  EyeOff,
   ArrowLeft,
   CheckCircle,
-  AlertTriangle
-} from 'lucide-react'
-import TextField from '@/components/ui/TextField'
-import { useState, Suspense } from 'react'
+  AlertTriangle,
+} from 'lucide-react';
+import TextField from '@/components/ui/TextField';
+import { useState, Suspense } from 'react';
 
-const schema = z.object({ 
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  confirm: z.string().min(8, 'Password must be at least 8 characters')
-}).refine(v => v.password === v.confirm, { 
-  message: 'Passwords do not match', 
-  path: ['confirm'] 
-})
+const schema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      ),
+    confirm: z.string().min(8, 'Password must be at least 8 characters'),
+  })
+  .refine(v => v.password === v.confirm, {
+    message: 'Passwords do not match',
+    path: ['confirm'],
+  });
 
 function ResetPasswordForm() {
-  const params = useSearchParams()
-  const token = params.get('token')
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  
-  const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })
-  
+  const params = useSearchParams();
+  const token = params.get('token');
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+  });
+
   const onSubmit = async (values: z.infer<typeof schema>) => {
-    setError(null)
-    setIsLoading(true)
-    
+    setError(null);
+    setIsLoading(true);
+
     try {
-      const res = await fetch('/api/auth/reset', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ token, password: values.password }) 
-      })
-      
+      const res = await fetch('/api/auth/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password: values.password }),
+      });
+
       if (res.ok) {
-        setSuccess(true)
+        setSuccess(true);
         setTimeout(() => {
-          router.push('/auth/signin')
-        }, 2000)
+          router.push('/auth/signin');
+        }, 2000);
       } else {
-        const errorData = await res.json()
-        setError(errorData.error || 'Password reset failed')
+        const errorData = await res.json();
+        setError(errorData.error || 'Password reset failed');
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (!token) {
     return (
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth='sm' sx={{ py: 6 }}>
         <Card elevation={2}>
           <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <AlertTriangle size={48} color="#f44336" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom color="error">
+            <AlertTriangle
+              size={48}
+              color='#f44336'
+              style={{ marginBottom: 16 }}
+            />
+            <Typography variant='h6' gutterBottom color='error'>
               Invalid Reset Link
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              This password reset link is invalid or has expired. Please request a new one.
+            <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
+              This password reset link is invalid or has expired. Please request
+              a new one.
             </Typography>
             <Button
-              variant="contained"
+              variant='contained'
               onClick={() => router.push('/auth/forgot')}
             >
               Request New Reset Link
@@ -97,34 +110,38 @@ function ResetPasswordForm() {
           </CardContent>
         </Card>
       </Container>
-    )
+    );
   }
 
   if (success) {
     return (
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth='sm' sx={{ py: 6 }}>
         <Card elevation={2}>
           <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <CheckCircle size={48} color="#4caf50" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom color="success.main">
+            <CheckCircle
+              size={48}
+              color='#4caf50'
+              style={{ marginBottom: 16 }}
+            />
+            <Typography variant='h6' gutterBottom color='success.main'>
               Password Reset Successfully!
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant='body1' color='text.secondary'>
               Your password has been updated. Redirecting to sign in...
             </Typography>
           </CardContent>
         </Card>
       </Container>
-    )
+    );
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
+    <Container maxWidth='sm' sx={{ py: 6 }}>
       <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant='h4' component='h1' gutterBottom>
           Reset Your Password
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant='body1' color='text.secondary'>
           Enter your new password below
         </Typography>
       </Box>
@@ -132,34 +149,38 @@ function ResetPasswordForm() {
       <Card elevation={2}>
         <CardContent sx={{ p: 4 }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity='error' sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
+          <Box component='form' onSubmit={form.handleSubmit(onSubmit)}>
             <Stack spacing={3}>
               <TextField
-                name="password"
+                name='password'
                 control={form.control}
-                label="New Password"
+                label='New Password'
                 type={showPassword ? 'text' : 'password'}
                 required
-                autoComplete="new-password"
-                helperText="Must contain uppercase, lowercase, and number"
+                autoComplete='new-password'
+                helperText='Must contain uppercase, lowercase, and number'
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Lock size={20} />
                     </InputAdornment>
                   ),
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment position='end'>
                       <IconButton
                         onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
+                        edge='end'
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -167,25 +188,31 @@ function ResetPasswordForm() {
               />
 
               <TextField
-                name="confirm"
+                name='confirm'
                 control={form.control}
-                label="Confirm New Password"
+                label='Confirm New Password'
                 type={showConfirmPassword ? 'text' : 'password'}
                 required
-                autoComplete="new-password"
+                autoComplete='new-password'
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Lock size={20} />
                     </InputAdornment>
                   ),
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment position='end'>
                       <IconButton
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        edge="end"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        edge='end'
                       >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -193,9 +220,9 @@ function ResetPasswordForm() {
               />
 
               <Button
-                type="submit"
-                variant="contained"
-                size="large"
+                type='submit'
+                variant='contained'
+                size='large'
                 fullWidth
                 disabled={isLoading}
                 sx={{ py: 1.5 }}
@@ -206,11 +233,11 @@ function ResetPasswordForm() {
           </Box>
 
           <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Remember your password?{' '}
               <Link
-                component="button"
-                variant="body2"
+                component='button'
+                variant='body2'
                 onClick={() => router.push('/auth/signin')}
               >
                 Sign In
@@ -222,7 +249,7 @@ function ResetPasswordForm() {
 
       <Box sx={{ textAlign: 'center', mt: 3 }}>
         <Button
-          variant="text"
+          variant='text'
           startIcon={<ArrowLeft size={16} />}
           onClick={() => router.push('/')}
         >
@@ -230,7 +257,7 @@ function ResetPasswordForm() {
         </Button>
       </Box>
     </Container>
-  )
+  );
 }
 
 export default function ResetPasswordPage() {
@@ -238,5 +265,5 @@ export default function ResetPasswordPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
-  )
+  );
 }

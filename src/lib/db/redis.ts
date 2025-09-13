@@ -11,7 +11,9 @@ export function getRedisClient(): RedisClientType {
   const redisUrl = process.env.REDIS_URL;
 
   if (!redisUrl) {
-    throw new Error('REDIS_URL environment variable is required for Redis connection');
+    throw new Error(
+      'REDIS_URL environment variable is required for Redis connection'
+    );
   }
 
   redisClient = createClient({
@@ -22,7 +24,8 @@ export function getRedisClient(): RedisClientType {
   });
 
   // Connect to Redis
-  redisClient.connect().catch((error) => {
+  redisClient.connect().catch(error => {
+    // eslint-disable-next-line no-console
     console.error('Failed to connect to Redis:', error);
     throw error;
   });
@@ -45,16 +48,20 @@ export function getRedisConnectionInfo() {
 }
 
 // Helper function to test Redis connection
-export async function testRedisConnection(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }> {
+export async function testRedisConnection(): Promise<{
+  status: 'healthy' | 'unhealthy';
+  latency?: number;
+}> {
   const startTime = Date.now();
-  
+
   try {
     const client = getRedisClient();
     await client.ping();
-    
+
     const latency = Date.now() - startTime;
     return { status: 'healthy', latency };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Redis connection test failed:', error);
     return { status: 'unhealthy' };
   }

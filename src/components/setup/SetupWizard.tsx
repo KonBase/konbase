@@ -10,7 +10,6 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Divider,
   Chip,
   Tabs,
   Tab,
@@ -45,20 +44,20 @@ interface DetectionResult {
     configured: boolean;
     type: string | null;
     status: string;
-    details: any;
+    details: Record<string, unknown>;
   };
   storage: {
     configured: boolean;
     type: string | null;
     status: string;
-    details: any;
+    details: Record<string, unknown>;
   };
   migrations: {
     configured: boolean;
     status: string;
     pendingCount: number;
     totalCount: number;
-    details: any;
+    details: Record<string, unknown>;
   };
   setup: {
     canProceed: boolean;
@@ -69,7 +68,7 @@ interface DetectionResult {
 
 export const SetupWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [setupData, setSetupData] = useState<any>({});
+  const [setupData, setSetupData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
@@ -89,7 +88,7 @@ export const SetupWizard: React.FC = () => {
 
       if (data.success) {
         setDetection(data.detection);
-        
+
         // If auto-detection shows everything is configured, skip to admin setup
         if (data.detection.setup.canProceed) {
           setActiveStep(1); // Skip to Admin User step
@@ -99,7 +98,7 @@ export const SetupWizard: React.FC = () => {
         setError(data.message || 'Failed to detect environment');
         setSetupMode('manual');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to setup service');
       setSetupMode('manual');
     } finally {
@@ -107,8 +106,8 @@ export const SetupWizard: React.FC = () => {
     }
   };
 
-  const handleNext = (stepData: any) => {
-    setSetupData((prev: any) => ({ ...prev, ...stepData }));
+  const handleNext = (stepData: Record<string, unknown>) => {
+    setSetupData((prev: Record<string, unknown>) => ({ ...prev, ...stepData }));
     setError(null);
     setActiveStep((prev: number) => prev + 1);
   };
@@ -126,18 +125,25 @@ export const SetupWizard: React.FC = () => {
 
   const getDatabaseTypeDisplay = (type: string) => {
     switch (type) {
-      case 'postgresql': return 'PostgreSQL';
-      case 'edgedb': return 'Vercel EdgeDB';
-      case 'redis': return 'Redis';
-      default: return type;
+      case 'postgresql':
+        return 'PostgreSQL';
+      case 'edgedb':
+        return 'Vercel EdgeDB';
+      case 'redis':
+        return 'Redis';
+      default:
+        return type;
     }
   };
 
   const getStorageTypeDisplay = (type: string) => {
     switch (type) {
-      case 'vercel-blob': return 'Vercel Blob';
-      case 'local': return 'Local Storage';
-      default: return type;
+      case 'vercel-blob':
+        return 'Vercel Blob';
+      case 'local':
+        return 'Local Storage';
+      default:
+        return type;
     }
   };
 
@@ -150,9 +156,9 @@ export const SetupWizard: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Refresh detection after successful migration
         await detectEnvironment();
@@ -161,7 +167,7 @@ export const SetupWizard: React.FC = () => {
         setError(data.error || 'Migration failed');
         return false;
       }
-    } catch (err) {
+    } catch {
       setError('Failed to run migrations');
       return false;
     } finally {
@@ -174,7 +180,12 @@ export const SetupWizard: React.FC = () => {
     if (activeStep === 0 && setupMode === 'auto') {
       if (detectionLoading) {
         return (
-          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          <Box
+            display='flex'
+            flexDirection='column'
+            alignItems='center'
+            gap={2}
+          >
             <CircularProgress />
             <Typography>Detecting environment configuration...</Typography>
           </Box>
@@ -184,97 +195,110 @@ export const SetupWizard: React.FC = () => {
       if (detection) {
         return (
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Environment Detection
             </Typography>
-            
+
             {/* Database Status */}
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box display='flex' alignItems='center' gap={2} mb={2}>
               <Database size={24} />
-              <Typography variant="subtitle1">Database Configuration</Typography>
-              {detection.database.configured && <CheckCircle size={20} color="green" />}
+              <Typography variant='subtitle1'>
+                Database Configuration
+              </Typography>
+              {detection.database.configured && (
+                <CheckCircle size={20} color='green' />
+              )}
             </Box>
 
             {detection.database.configured ? (
               <Box mb={3}>
-                <Chip 
-                  label={getDatabaseTypeDisplay(detection.database.type!)} 
-                  color="success" 
+                <Chip
+                  label={getDatabaseTypeDisplay(detection.database.type!)}
+                  color='success'
                   sx={{ mb: 1 }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Database is configured and ready
                 </Typography>
               </Box>
             ) : (
-              <Alert severity="warning" sx={{ mb: 3 }}>
-                Database not configured. Please set up PostgreSQL, EdgeDB, or Redis.
+              <Alert severity='warning' sx={{ mb: 3 }}>
+                Database not configured. Please set up PostgreSQL, EdgeDB, or
+                Redis.
               </Alert>
             )}
 
             {/* Storage Status */}
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box display='flex' alignItems='center' gap={2} mb={2}>
               <Store size={24} />
-              <Typography variant="subtitle1">Storage Configuration</Typography>
-              {detection.storage.configured && <CheckCircle size={20} color="green" />}
+              <Typography variant='subtitle1'>Storage Configuration</Typography>
+              {detection.storage.configured && (
+                <CheckCircle size={20} color='green' />
+              )}
             </Box>
 
             {detection.storage.configured ? (
               <Box mb={3}>
-                <Chip 
-                  label={getStorageTypeDisplay(detection.storage.type!)} 
-                  color="success" 
+                <Chip
+                  label={getStorageTypeDisplay(detection.storage.type!)}
+                  color='success'
                   sx={{ mb: 1 }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Storage is configured and ready
                 </Typography>
               </Box>
             ) : (
-              <Alert severity="warning" sx={{ mb: 3 }}>
-                Storage not configured. Please set up Vercel Blob or Local Storage.
+              <Alert severity='warning' sx={{ mb: 3 }}>
+                Storage not configured. Please set up Vercel Blob or Local
+                Storage.
               </Alert>
             )}
 
             {/* Migration Status */}
             {detection.migrations.configured && (
               <>
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                <Box display='flex' alignItems='center' gap={2} mb={2}>
                   <Database size={24} />
-                  <Typography variant="subtitle1">Database Migrations</Typography>
-                  {detection.migrations.status === 'up_to_date' && <CheckCircle size={20} color="green" />}
+                  <Typography variant='subtitle1'>
+                    Database Migrations
+                  </Typography>
+                  {detection.migrations.status === 'up_to_date' && (
+                    <CheckCircle size={20} color='green' />
+                  )}
                 </Box>
 
                 {detection.migrations.status === 'up_to_date' ? (
                   <Box mb={3}>
-                    <Chip 
-                      label="All migrations applied" 
-                      color="success" 
+                    <Chip
+                      label='All migrations applied'
+                      color='success'
                       sx={{ mb: 1 }}
                     />
-                    <Typography variant="body2" color="text.secondary">
-                      Database schema is up to date ({detection.migrations.totalCount} migrations)
+                    <Typography variant='body2' color='text.secondary'>
+                      Database schema is up to date (
+                      {detection.migrations.totalCount} migrations)
                     </Typography>
                   </Box>
                 ) : detection.migrations.pendingCount > 0 ? (
                   <Box mb={3}>
-                    <Chip 
-                      label={`${detection.migrations.pendingCount} pending migrations`} 
-                      color="warning" 
+                    <Chip
+                      label={`${detection.migrations.pendingCount} pending migrations`}
+                      color='warning'
                       sx={{ mb: 1 }}
                     />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Database schema needs updates
                     </Typography>
                   </Box>
                 ) : (
                   <Box mb={3}>
-                    <Chip 
-                      label="Migration status unknown" 
-                      color="default" 
+                    <Chip
+                      label='Migration status unknown'
+                      color='default'
                       sx={{ mb: 1 }}
                     />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Could not determine migration status
                     </Typography>
                   </Box>
@@ -283,7 +307,7 @@ export const SetupWizard: React.FC = () => {
             )}
 
             {/* Setup Status */}
-            <Alert 
+            <Alert
               severity={detection.setup.canProceed ? 'success' : 'info'}
               sx={{ mb: 3 }}
             >
@@ -292,8 +316,8 @@ export const SetupWizard: React.FC = () => {
 
             {detection.setup.canProceed ? (
               <Button
-                variant="contained"
-                size="large"
+                variant='contained'
+                size='large'
                 endIcon={<ArrowRight size={20} />}
                 onClick={() => setActiveStep(1)}
                 sx={{ mt: 2 }}
@@ -301,20 +325,27 @@ export const SetupWizard: React.FC = () => {
                 Continue to Admin Setup
               </Button>
             ) : (
-              <Box display="flex" gap={2} flexWrap="wrap">
-                {detection.migrations.configured && detection.migrations.pendingCount > 0 && (
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={runMigrations}
-                    disabled={loading}
-                    startIcon={loading ? <CircularProgress size={16} /> : <Database size={16} />}
-                  >
-                    Run Migrations ({detection.migrations.pendingCount})
-                  </Button>
-                )}
+              <Box display='flex' gap={2} flexWrap='wrap'>
+                {detection.migrations.configured &&
+                  detection.migrations.pendingCount > 0 && (
+                    <Button
+                      variant='contained'
+                      color='warning'
+                      onClick={runMigrations}
+                      disabled={loading}
+                      startIcon={
+                        loading ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <Database size={16} />
+                        )
+                      }
+                    >
+                      Run Migrations ({detection.migrations.pendingCount})
+                    </Button>
+                  )}
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   onClick={detectEnvironment}
                   startIcon={<RefreshCw size={16} />}
                   disabled={loading}
@@ -322,7 +353,7 @@ export const SetupWizard: React.FC = () => {
                   Refresh Detection
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   onClick={() => setSetupMode('manual')}
                   disabled={loading}
                 >
@@ -380,10 +411,7 @@ export const SetupWizard: React.FC = () => {
         );
       case 4:
         return (
-          <SetupComplete
-            onComplete={handleComplete}
-            setupData={setupData}
-          />
+          <SetupComplete onComplete={handleComplete} setupData={setupData} />
         );
       default:
         return null;
@@ -403,28 +431,28 @@ export const SetupWizard: React.FC = () => {
     >
       <Card sx={{ maxWidth: 800, width: '100%' }}>
         <CardContent sx={{ p: 4 }}>
-          <Box textAlign="center" mb={4}>
-            <Typography variant="h4" gutterBottom>
+          <Box textAlign='center' mb={4}>
+            <Typography variant='h4' gutterBottom>
               Welcome to KonBase
             </Typography>
-            <Typography color="text.secondary">
+            <Typography color='text.secondary'>
               Let's set up your inventory and convention management system
             </Typography>
           </Box>
 
           {/* Setup Mode Tabs */}
-          <Tabs 
-            value={setupMode} 
+          <Tabs
+            value={setupMode}
             onChange={(e, newValue) => setSetupMode(newValue)}
             sx={{ mb: 3 }}
             centered
           >
-            <Tab label="Auto Setup" value="auto" />
-            <Tab label="Manual Setup" value="manual" />
+            <Tab label='Auto Setup' value='auto' />
+            <Tab label='Manual Setup' value='manual' />
           </Tabs>
 
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((step, index) => {
+            {steps.map(step => {
               const IconComponent = step.icon;
               return (
                 <Step key={step.label}>
@@ -444,7 +472,7 @@ export const SetupWizard: React.FC = () => {
           </Stepper>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity='error' sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}

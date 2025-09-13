@@ -44,10 +44,16 @@ export default function InventoryPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [, setSelectedItem] = useState<string | null>(null);
 
-  const { data: items = [], isLoading, refetch } = useQuery({
-    queryKey: ['inventory-items', searchQuery, categoryFilter, locationFilter, conditionFilter],
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: [
+      'inventory-items',
+      searchQuery,
+      categoryFilter,
+      locationFilter,
+      conditionFilter,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('query', searchQuery);
@@ -57,7 +63,8 @@ export default function InventoryPage() {
 
       const response = await fetch(`/api/inventory/items?${params}`, {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch items');
@@ -72,7 +79,8 @@ export default function InventoryPage() {
     queryFn: async () => {
       const response = await fetch('/api/inventory/categories', {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch categories');
@@ -87,7 +95,8 @@ export default function InventoryPage() {
     queryFn: async () => {
       const response = await fetch('/api/inventory/locations', {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch locations');
@@ -97,7 +106,10 @@ export default function InventoryPage() {
     enabled: !!session,
   });
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, itemId: string) => {
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    itemId: string
+  ) => {
     setAnchorEl(event.currentTarget);
     setSelectedItem(itemId);
   };
@@ -109,11 +121,17 @@ export default function InventoryPage() {
 
   const getConditionColor = (condition: string) => {
     switch (condition) {
-      case 'excellent': return 'success';
-      case 'good': return 'info';
-      case 'fair': return 'warning';
-      case 'poor': case 'broken': return 'error';
-      default: return 'default';
+      case 'excellent':
+        return 'success';
+      case 'good':
+        return 'info';
+      case 'fair':
+        return 'warning';
+      case 'poor':
+      case 'broken':
+        return 'error';
+      default:
+        return 'default';
     }
   };
 
@@ -123,14 +141,14 @@ export default function InventoryPage() {
       label: 'Item Name',
       sortable: true,
       format: (value, row) => (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display='flex' alignItems='center' gap={1}>
           <Package size={16} />
           <Box>
-            <Typography variant="body2" fontWeight="medium">
-              {value}
+            <Typography variant='body2' fontWeight='medium'>
+              {String(value)}
             </Typography>
             {row?.serial_number && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 SN: {row.serial_number}
               </Typography>
             )}
@@ -141,27 +159,27 @@ export default function InventoryPage() {
     {
       id: 'category',
       label: 'Category',
-      format: (value) => value?.name || 'Uncategorized',
+      format: value => (value as { name?: string })?.name || 'Uncategorized',
     },
     {
       id: 'location',
       label: 'Location',
-      format: (value) => (
-        <Box display="flex" alignItems="center" gap={1}>
+      format: value => (
+        <Box display='flex' alignItems='center' gap={1}>
           <MapPin size={14} />
-          {value?.name || 'No location'}
+          {(value as { name?: string })?.name || 'No location'}
         </Box>
       ),
     },
     {
       id: 'condition',
       label: 'Condition',
-      format: (value) => (
+      format: value => (
         <Chip
-          label={value}
-          size="small"
-          color={getConditionColor(value) as any}
-          variant="outlined"
+          label={String(value)}
+          size='small'
+          color={getConditionColor(String(value))}
+          variant='outlined'
         />
       ),
     },
@@ -169,7 +187,7 @@ export default function InventoryPage() {
       id: 'purchase_price',
       label: 'Value',
       align: 'right',
-      format: (value) => value ? `$${value.toLocaleString()}` : '—',
+      format: value => (value ? `$${value.toLocaleString()}` : '—'),
     },
     {
       id: 'actions',
@@ -177,8 +195,8 @@ export default function InventoryPage() {
       align: 'center',
       format: (value, row) => (
         <IconButton
-          size="small"
-          onClick={(e) => handleMenuClick(e, row?.id || '')}
+          size='small'
+          onClick={e => handleMenuClick(e, row?.id || '')}
         >
           <MoreVertical size={16} />
         </IconButton>
@@ -186,15 +204,19 @@ export default function InventoryPage() {
     },
   ];
 
-  const categoryOptions = categories.map((cat: any) => ({
-    value: cat.id,
-    label: cat.name,
-  }));
+  const categoryOptions = categories.map(
+    (cat: { id: string; name: string }) => ({
+      value: cat.id,
+      label: cat.name,
+    })
+  );
 
-  const locationOptions = locations.map((loc: any) => ({
-    value: loc.id,
-    label: loc.name,
-  }));
+  const locationOptions = locations.map(
+    (loc: { id: string; name: string }) => ({
+      value: loc.id,
+      label: loc.name,
+    })
+  );
 
   const conditionOptions = [
     { value: 'excellent', label: 'Excellent' },
@@ -205,19 +227,24 @@ export default function InventoryPage() {
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth='xl' sx={{ py: 4 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
+        mb={4}
+      >
         <Box>
-          <Typography variant="h4" component="h1">
+          <Typography variant='h4' component='h1'>
             Inventory Management
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color='text.secondary'>
             Manage your items, categories, and locations
           </Typography>
         </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Plus size={20} />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
@@ -229,79 +256,85 @@ export default function InventoryPage() {
       {/* Filters */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2} alignItems='center'>
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
-                placeholder="Search items..."
+                placeholder='Search items...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Search size={20} />
                     </InputAdornment>
                   ),
                 }}
-                variant="outlined"
-                size="small"
+                variant='outlined'
+                size='small'
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size='small'>
                 <InputLabel>Category</InputLabel>
                 <Select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value as string)}
-                  label="Category"
+                  onChange={e => setCategoryFilter(e.target.value as string)}
+                  label='Category'
                 >
-                  <MenuItem value="">All Categories</MenuItem>
-                  {categoryOptions.map((option: any) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value=''>All Categories</MenuItem>
+                  {categoryOptions.map(
+                    (option: { value: string; label: string }) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    )
+                  )}
                 </Select>
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size='small'>
                 <InputLabel>Location</InputLabel>
                 <Select
                   value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value as string)}
-                  label="Location"
+                  onChange={e => setLocationFilter(e.target.value as string)}
+                  label='Location'
                 >
-                  <MenuItem value="">All Locations</MenuItem>
-                  {locationOptions.map((option: any) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value=''>All Locations</MenuItem>
+                  {locationOptions.map(
+                    (option: { value: string; label: string }) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    )
+                  )}
                 </Select>
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size='small'>
                 <InputLabel>Condition</InputLabel>
                 <Select
                   value={conditionFilter}
-                  onChange={(e) => setConditionFilter(e.target.value as string)}
-                  label="Condition"
+                  onChange={e => setConditionFilter(e.target.value as string)}
+                  label='Condition'
                 >
-                  <MenuItem value="">All Conditions</MenuItem>
-                  {conditionOptions.map((option: any) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value=''>All Conditions</MenuItem>
+                  {conditionOptions.map(
+                    (option: { value: string; label: string }) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    )
+                  )}
                 </Select>
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
               <Button
                 fullWidth
-                variant="outlined"
+                variant='outlined'
                 startIcon={<Filter size={16} />}
                 onClick={() => {
                   setSearchQuery('');
@@ -322,11 +355,11 @@ export default function InventoryPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Package size={24} color="#1976d2" />
+              <Box display='flex' alignItems='center' gap={2}>
+                <Package size={24} color='#1976d2' />
                 <Box>
-                  <Typography variant="h4">{items.length}</Typography>
-                  <Typography color="text.secondary">Total Items</Typography>
+                  <Typography variant='h4'>{items.length}</Typography>
+                  <Typography color='text.secondary'>Total Items</Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -335,11 +368,11 @@ export default function InventoryPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Tag size={24} color="#388e3c" />
+              <Box display='flex' alignItems='center' gap={2}>
+                <Tag size={24} color='#388e3c' />
                 <Box>
-                  <Typography variant="h4">{categories.length}</Typography>
-                  <Typography color="text.secondary">Categories</Typography>
+                  <Typography variant='h4'>{categories.length}</Typography>
+                  <Typography color='text.secondary'>Categories</Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -348,11 +381,11 @@ export default function InventoryPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <MapPin size={24} color="#f57c00" />
+              <Box display='flex' alignItems='center' gap={2}>
+                <MapPin size={24} color='#f57c00' />
                 <Box>
-                  <Typography variant="h4">{locations.length}</Typography>
-                  <Typography color="text.secondary">Locations</Typography>
+                  <Typography variant='h4'>{locations.length}</Typography>
+                  <Typography color='text.secondary'>Locations</Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -361,13 +394,17 @@ export default function InventoryPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Package size={24} color="#d32f2f" />
+              <Box display='flex' alignItems='center' gap={2}>
+                <Package size={24} color='#d32f2f' />
                 <Box>
-                  <Typography variant="h4">
-                    {items.filter(item => ['poor', 'broken'].includes(item.condition)).length}
+                  <Typography variant='h4'>
+                    {
+                      items.filter(item =>
+                        ['poor', 'broken'].includes(item.condition)
+                      ).length
+                    }
                   </Typography>
-                  <Typography color="text.secondary">Need Attention</Typography>
+                  <Typography color='text.secondary'>Need Attention</Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -383,17 +420,17 @@ export default function InventoryPage() {
           loading={isLoading}
           selectable
           selectedRows={selectedRows}
-          onSelectRow={(id) => {
-            setSelectedRows(prev => 
-              prev.includes(id) 
+          onSelectRow={id => {
+            setSelectedRows(prev =>
+              prev.includes(id)
                 ? prev.filter(rowId => rowId !== id)
                 : [...prev, id]
             );
           }}
-          onSelectAll={(selected) => {
+          onSelectAll={selected => {
             setSelectedRows(selected ? items.map(item => item.id) : []);
           }}
-          emptyMessage="No items found. Add your first item to get started."
+          emptyMessage='No items found. Add your first item to get started.'
         />
       </Card>
 
@@ -403,24 +440,30 @@ export default function InventoryPage() {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => {
-          // Navigate to item details
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Navigate to item details
+            handleMenuClose();
+          }}
+        >
           <Eye size={16} style={{ marginRight: 8 }} />
           View Details
         </MenuItem>
-        <MenuItem onClick={() => {
-          // Navigate to edit item
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Navigate to edit item
+            handleMenuClose();
+          }}
+        >
           <Edit size={16} style={{ marginRight: 8 }} />
           Edit Item
         </MenuItem>
-        <MenuItem onClick={() => {
-          // Delete item
-          handleMenuClose();
-        }}>
+        <MenuItem
+          onClick={() => {
+            // Delete item
+            handleMenuClose();
+          }}
+        >
           <Trash2 size={16} style={{ marginRight: 8 }} />
           Delete Item
         </MenuItem>
@@ -428,13 +471,13 @@ export default function InventoryPage() {
 
       {/* Floating Action Button for mobile */}
       <Fab
-        color="primary"
-        aria-label="add item"
+        color='primary'
+        aria-label='add item'
         sx={{
           position: 'fixed',
           bottom: 16,
           right: 16,
-          display: { xs: 'flex', sm: 'none' }
+          display: { xs: 'flex', sm: 'none' },
         }}
         onClick={() => setCreateDialogOpen(true)}
       >
@@ -445,8 +488,8 @@ export default function InventoryPage() {
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        title="Add New Item"
-        maxWidth="md"
+        title='Add New Item'
+        maxWidth='md'
       >
         <Typography>Item creation form would go here...</Typography>
       </Dialog>

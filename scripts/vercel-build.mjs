@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 console.log('🚀 Starting Vercel build process...');
 
@@ -24,7 +18,9 @@ const hasRedis = process.env.REDIS_URL;
 
 console.log('Database configuration:');
 console.log(`- EdgeDB: ${hasEdgeDB ? '✅ Configured' : '❌ Not configured'}`);
-console.log(`- GelDB/PostgreSQL: ${hasGelDB ? '✅ Configured' : '❌ Not configured'}`);
+console.log(
+  `- GelDB/PostgreSQL: ${hasGelDB ? '✅ Configured' : '❌ Not configured'}`
+);
 console.log(`- Redis: ${hasRedis ? '✅ Configured' : '❌ Not configured'}`);
 
 if (!hasEdgeDB && !hasGelDB && !hasRedis) {
@@ -32,22 +28,24 @@ if (!hasEdgeDB && !hasGelDB && !hasRedis) {
   console.log('Build will continue without database setup.');
 } else {
   console.log('📊 Database configuration found. Running migrations...');
-  
+
   try {
     // Run migrations using the migration script
     console.log('Running database migrations...');
-    execSync('node ./scripts/run-gel-migrations.mjs', { 
+    execSync('node ./scripts/run-gel-migrations.mjs', {
       stdio: 'inherit',
-      cwd: process.cwd()
+      cwd: process.cwd(),
     });
     console.log('✅ Database migrations completed successfully');
   } catch (error) {
     console.error('❌ Database migrations failed:', error.message);
-    
+
     // In Vercel, we don't want to fail the build if migrations fail
     // The app should still deploy and migrations can be run manually
     if (isVercel) {
-      console.log('⚠️  Continuing build despite migration failure (Vercel environment)');
+      console.log(
+        '⚠️  Continuing build despite migration failure (Vercel environment)'
+      );
       console.log('💡 Run migrations manually after deployment if needed');
     } else {
       console.error('❌ Build failed due to migration errors');
@@ -59,9 +57,9 @@ if (!hasEdgeDB && !hasGelDB && !hasRedis) {
 // Run Next.js build
 console.log('🏗️  Building Next.js application...');
 try {
-  execSync('next build', { 
+  execSync('next build', {
     stdio: 'inherit',
-    cwd: process.cwd()
+    cwd: process.cwd(),
   });
   console.log('✅ Next.js build completed successfully');
 } catch (error) {

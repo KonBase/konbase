@@ -6,7 +6,7 @@ import { associationSchema } from '@/lib/validations/schemas';
 import { z } from 'zod';
 
 // GET /api/associations - List user's associations
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     }
 
     const dataAccess = getDataAccess();
-    const associations = await dataAccess.getAssociationMembersByProfileId(session.user.id);
+    const associations = await dataAccess.getAssociationMembersByProfileId(
+      session.user.id
+    );
 
     // Transform data to match expected format
     const formattedAssociations = associations.map(member => ({
@@ -26,11 +28,12 @@ export async function GET(request: NextRequest) {
       association_description: null, // Will be populated from association data
       association_email: null,
       association_website: null,
-      association_logo_url: null
+      association_logo_url: null,
     }));
 
     return NextResponse.json({ data: formattedAssociations, success: true });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching associations:', error);
     return NextResponse.json(
       { error: 'Failed to fetch associations', success: false },
@@ -59,21 +62,24 @@ export async function POST(request: NextRequest) {
       email: validatedData.email || undefined,
       website: validatedData.website || undefined,
       phone: validatedData.phone || undefined,
-      address: validatedData.address || undefined
+      address: validatedData.address || undefined,
     });
 
     // Add creator as admin
     await dataAccess.createAssociationMember({
       association_id: association.id,
       profile_id: session.user.id,
-      role: 'admin'
+      role: 'admin',
     });
 
-    return NextResponse.json({ 
-      data: association, 
-      success: true,
-      message: 'Association created successfully' 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: association,
+        success: true,
+        message: 'Association created successfully',
+      },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -82,6 +88,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line no-console
     console.error('Error creating association:', error);
     return NextResponse.json(
       { error: 'Failed to create association', success: false },

@@ -12,23 +12,10 @@ import {
   Divider,
   Button,
   Chip,
-  Avatar,
-  Paper,
   Fade,
 } from '@mui/material';
-import {
-  Bell,
-  CheckCircle,
-  AlertTriangle,
-  Info,
-  X,
-  Package,
-  Calendar,
-  Users,
-  Settings,
-  MessageCircle,
-} from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Bell, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 
 interface Notification {
@@ -36,7 +23,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   title: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   read: boolean;
   created_at: string;
   action_url?: string;
@@ -44,17 +31,17 @@ interface Notification {
 
 export const NotificationCenter: React.FC = () => {
   const { data: session } = useSession();
-  const queryClient = useQueryClient();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const { data: notificationData, refetch } = useQuery({
+  const { data: notificationData } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const response = await fetch('/api/notifications', {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch notifications');
@@ -76,25 +63,30 @@ export const NotificationCenter: React.FC = () => {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'}/notifications`);
-    
+    const ws = new WebSocket(
+      `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'}/notifications`
+    );
+
     ws.onopen = () => {
+      // eslint-disable-next-line no-console
       console.log('Notification WebSocket connected');
       // Send user ID to subscribe to notifications
-      ws.send(JSON.stringify({ 
-        type: 'subscribe', 
-        userId: session.user.id,
-        associationId: session.user.associations?.[0]?.association?.id 
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'subscribe',
+          userId: session.user.id,
+          associationId: session.user.associations?.[0]?.association?.id,
+        })
+      );
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       const data = JSON.parse(event.data);
       if (data.type === 'notification') {
         // Add new notification to the list
         setNotifications(prev => [data.notification, ...prev]);
         setUnreadCount(prev => prev + 1);
-        
+
         // Show browser notification if permission granted
         if (Notification.permission === 'granted') {
           new Notification(data.notification.title, {
@@ -106,6 +98,7 @@ export const NotificationCenter: React.FC = () => {
     };
 
     ws.onclose = () => {
+      // eslint-disable-next-line no-console
       console.log('Notification WebSocket disconnected');
       // Reconnect after 5 seconds
       setTimeout(() => {
@@ -118,7 +111,7 @@ export const NotificationCenter: React.FC = () => {
     return () => {
       ws.close();
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, session?.user?.associations]);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -133,12 +126,13 @@ export const NotificationCenter: React.FC = () => {
       await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
       });
-      
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+
+      setNotifications(prev =>
+        prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to mark notification as read:', error);
     }
   };
@@ -148,10 +142,11 @@ export const NotificationCenter: React.FC = () => {
       await fetch('/api/notifications/read-all', {
         method: 'PATCH',
       });
-      
+
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to mark all notifications as read:', error);
     }
   };
@@ -160,37 +155,47 @@ export const NotificationCenter: React.FC = () => {
     if (!notification.read) {
       handleMarkAsRead(notification.id);
     }
-    
+
     if (notification.action_url) {
       window.location.href = notification.action_url;
     }
-    
+
     handleClose();
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return <CheckCircle size={20} color="#4caf50" />;
-      case 'warning': return <AlertTriangle size={20} color="#ff9800" />;
-      case 'error': return <AlertTriangle size={20} color="#f44336" />;
-      default: return <Info size={20} color="#2196f3" />;
+      case 'success':
+        return <CheckCircle size={20} color='#4caf50' />;
+      case 'warning':
+        return <AlertTriangle size={20} color='#ff9800' />;
+      case 'error':
+        return <AlertTriangle size={20} color='#f44336' />;
+      default:
+        return <Info size={20} color='#2196f3' />;
     }
   };
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'success': return 'success';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      default: return 'info';
+      case 'success':
+        return 'success';
+      case 'warning':
+        return 'warning';
+      case 'error':
+        return 'error';
+      default:
+        return 'info';
     }
   };
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -200,11 +205,11 @@ export const NotificationCenter: React.FC = () => {
   return (
     <>
       <IconButton
-        color="inherit"
+        color='inherit'
         onClick={handleClick}
         sx={{ position: 'relative' }}
       >
-        <Badge badgeContent={unreadCount} color="error">
+        <Badge badgeContent={unreadCount} color='error'>
           <Bell size={24} />
         </Badge>
       </IconButton>
@@ -222,14 +227,19 @@ export const NotificationCenter: React.FC = () => {
           horizontal: 'right',
         }}
         PaperProps={{
-          sx: { width: 400, maxHeight: 500 }
+          sx: { width: 400, maxHeight: 500 },
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">Notifications</Typography>
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+            mb={2}
+          >
+            <Typography variant='h6'>Notifications</Typography>
             {unreadCount > 0 && (
-              <Button size="small" onClick={handleMarkAllAsRead}>
+              <Button size='small' onClick={handleMarkAllAsRead}>
                 Mark all read
               </Button>
             )}
@@ -238,21 +248,23 @@ export const NotificationCenter: React.FC = () => {
           <Divider sx={{ mb: 2 }} />
 
           {notifications.length === 0 ? (
-            <Box textAlign="center" py={4}>
-              <Bell size={48} color="#ccc" />
-              <Typography color="text.secondary" sx={{ mt: 1 }}>
+            <Box textAlign='center' py={4}>
+              <Bell size={48} color='#ccc' />
+              <Typography color='text.secondary' sx={{ mt: 1 }}>
                 No notifications
               </Typography>
             </Box>
           ) : (
             <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-              {notifications.map((notification, index) => (
+              {notifications.map(notification => (
                 <Fade in={true} timeout={300} key={notification.id}>
                   <ListItem
-                    component="button"
+                    component='button'
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
-                      backgroundColor: notification.read ? 'transparent' : 'action.hover',
+                      backgroundColor: notification.read
+                        ? 'transparent'
+                        : 'action.hover',
                       borderRadius: 1,
                       mb: 1,
                       cursor: 'pointer',
@@ -266,8 +278,11 @@ export const NotificationCenter: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body2" fontWeight={notification.read ? 'normal' : 'bold'}>
+                        <Box display='flex' alignItems='center' gap={1}>
+                          <Typography
+                            variant='body2'
+                            fontWeight={notification.read ? 'normal' : 'bold'}
+                          >
                             {notification.title}
                           </Typography>
                           {!notification.read && (
@@ -284,18 +299,35 @@ export const NotificationCenter: React.FC = () => {
                       }
                       secondary={
                         <Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant='body2' color='text.secondary'>
                             {notification.message}
                           </Typography>
-                          <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                            <Typography variant="caption" color="text.secondary">
+                          <Box
+                            display='flex'
+                            alignItems='center'
+                            gap={1}
+                            mt={0.5}
+                          >
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
                               {formatTimeAgo(notification.created_at)}
                             </Typography>
                             <Chip
                               label={notification.type}
-                              size="small"
-                              color={getNotificationColor(notification.type) as any}
-                              variant="outlined"
+                              size='small'
+                              color={
+                                getNotificationColor(notification.type) as
+                                  | 'default'
+                                  | 'primary'
+                                  | 'secondary'
+                                  | 'error'
+                                  | 'info'
+                                  | 'success'
+                                  | 'warning'
+                              }
+                              variant='outlined'
                             />
                           </Box>
                         </Box>
@@ -308,12 +340,8 @@ export const NotificationCenter: React.FC = () => {
           )}
 
           {notifications.length > 0 && (
-            <Box textAlign="center" mt={2}>
-              <Button
-                size="small"
-                href="/notifications"
-                onClick={handleClose}
-              >
+            <Box textAlign='center' mt={2}>
+              <Button size='small' href='/notifications' onClick={handleClose}>
                 View All Notifications
               </Button>
             </Box>

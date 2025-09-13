@@ -35,6 +35,7 @@ export default function SetupPage() {
         setNeedsSetup(true);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Setup check error:', error);
       setNeedsSetup(true);
     } finally {

@@ -2,26 +2,28 @@ import React from 'react';
 import {
   TextField as MuiTextField,
   TextFieldProps as MuiTextFieldProps,
-  FormControl,
-  FormLabel,
-  FormHelperText,
 } from '@mui/material';
-import { useController, Control, FieldPath, FieldValues } from 'react-hook-form';
+import {
+  useController,
+  Control,
+  FieldPath,
+  FieldValues,
+} from 'react-hook-form';
 
 interface TextFieldProps<
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > extends Omit<MuiTextFieldProps, 'name' | 'value' | 'onChange'> {
   name: TName;
   control: Control<TFieldValues>;
   label: string;
   required?: boolean;
-  rules?: any;
+  rules?: Record<string, unknown>;
 }
 
 export function TextField<
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   name,
   control,
@@ -32,7 +34,7 @@ export function TextField<
 }: TextFieldProps<TFieldValues, TName>) {
   const {
     field,
-    fieldState: { error }
+    fieldState: { error },
   } = useController({
     name,
     control,
@@ -51,8 +53,8 @@ export function TextField<
       helperText={error?.message || props.helperText}
       required={required}
       fullWidth
-      variant="outlined"
-      margin="normal"
+      variant='outlined'
+      margin='normal'
     />
   );
 }

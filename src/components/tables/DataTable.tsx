@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { TableColumn } from '@/types';
 
-interface DataTableProps<T = any> {
+interface DataTableProps<T = Record<string, unknown>> {
   data: T[];
   columns: TableColumn<T>[];
   loading?: boolean;
@@ -42,8 +42,10 @@ export function DataTable<T extends { id: string }>({
   onSort,
   emptyMessage = 'No data available',
 }: DataTableProps<T>) {
-  const isAllSelected = selectable && data.length > 0 && selectedRows.length === data.length;
-  const isIndeterminate = selectable && selectedRows.length > 0 && selectedRows.length < data.length;
+  const isAllSelected =
+    selectable && data.length > 0 && selectedRows.length === data.length;
+  const isIndeterminate =
+    selectable && selectedRows.length > 0 && selectedRows.length < data.length;
 
   if (loading) {
     return (
@@ -51,10 +53,10 @@ export function DataTable<T extends { id: string }>({
         <MuiTable>
           <TableHead>
             <TableRow>
-              {selectable && <TableCell padding="checkbox" />}
-              {columns.map((column) => (
+              {selectable && <TableCell padding='checkbox' />}
+              {columns.map(column => (
                 <TableCell key={String(column.id)}>
-                  <Skeleton width="80%" />
+                  <Skeleton width='80%' />
                 </TableCell>
               ))}
             </TableRow>
@@ -62,8 +64,8 @@ export function DataTable<T extends { id: string }>({
           <TableBody>
             {Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={index}>
-                {selectable && <TableCell padding="checkbox" />}
-                {columns.map((column) => (
+                {selectable && <TableCell padding='checkbox' />}
+                {columns.map(column => (
                   <TableCell key={String(column.id)}>
                     <Skeleton />
                   </TableCell>
@@ -82,16 +84,16 @@ export function DataTable<T extends { id: string }>({
         <TableHead>
           <TableRow>
             {selectable && (
-              <TableCell padding="checkbox">
+              <TableCell padding='checkbox'>
                 <Checkbox
                   indeterminate={isIndeterminate}
                   checked={isAllSelected}
-                  onChange={(e) => onSelectAll?.(e.target.checked)}
+                  onChange={e => onSelectAll?.(e.target.checked)}
                   inputProps={{ 'aria-label': 'select all' }}
                 />
               </TableCell>
             )}
-            {columns.map((column) => (
+            {columns.map(column => (
               <TableCell
                 key={String(column.id)}
                 align={column.align || 'left'}
@@ -115,22 +117,22 @@ export function DataTable<T extends { id: string }>({
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
-              <TableCell 
-                colSpan={columns.length + (selectable ? 1 : 0)} 
-                align="center"
+              <TableCell
+                colSpan={columns.length + (selectable ? 1 : 0)}
+                align='center'
               >
                 <Box py={4}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     {emptyMessage}
                   </Typography>
                 </Box>
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row) => (
+            data.map(row => (
               <TableRow key={row.id} hover>
                 {selectable && (
-                  <TableCell padding="checkbox">
+                  <TableCell padding='checkbox'>
                     <Checkbox
                       checked={selectedRows.includes(row.id)}
                       onChange={() => onSelectRow?.(row.id)}
@@ -138,10 +140,12 @@ export function DataTable<T extends { id: string }>({
                     />
                   </TableCell>
                 )}
-                {columns.map((column) => {
+                {columns.map(column => {
                   const value = row[column.id as keyof typeof row];
-                  const displayValue = column.format ? column.format(value, row) : String(value || '');
-                  
+                  const displayValue = column.format
+                    ? column.format(value, row)
+                    : String(value || '');
+
                   return (
                     <TableCell
                       key={String(column.id)}

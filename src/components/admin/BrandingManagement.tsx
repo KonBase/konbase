@@ -7,35 +7,15 @@ import {
   TextField,
   Button,
   Alert,
-  Divider,
-  Grid,
   Paper,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   CircularProgress,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
 } from '@mui/material';
-import {
-  Upload,
-  Save,
-  RotateCcw,
-  Palette,
-  Image,
-  Settings,
-  Eye,
-  Download,
-  Trash2,
-  Edit,
-} from 'lucide-react';
+import { Upload, Save, RotateCcw, Palette, Eye, Download } from 'lucide-react';
 import { getUnifiedStorage } from '@/lib/storage/unified';
 
 interface BrandingConfig {
@@ -54,7 +34,9 @@ interface BrandingManagementProps {
   onSave?: (config: BrandingConfig) => void;
 }
 
-export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }) => {
+export const BrandingManagement: React.FC<BrandingManagementProps> = ({
+  onSave,
+}) => {
   const [config, setConfig] = useState<BrandingConfig>({
     appName: 'KonBase',
     logo: '/logo.svg',
@@ -64,7 +46,7 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
     secondaryColor: '#dc004e',
     accentColor: '#fce771',
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -92,7 +74,7 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
         secondaryColor: '#dc004e',
         accentColor: '#fce771',
       });
-    } catch (error) {
+    } catch {
       setError('Failed to load branding configuration');
     } finally {
       setLoading(false);
@@ -109,21 +91,24 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
       // For now, we'll just show success
       setSuccess('Branding configuration saved successfully');
       onSave?.(config);
-    } catch (error) {
+    } catch {
       setError('Failed to save branding configuration');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleFileUpload = async (file: File, type: 'logo' | 'favicon' | 'icon') => {
+  const handleFileUpload = async (
+    file: File,
+    type: 'logo' | 'favicon' | 'icon'
+  ) => {
     setUploading(type);
     setError(null);
 
     try {
       const fileExtension = file.name.split('.').pop();
       const fileName = `branding/${type}-${Date.now()}.${fileExtension}`;
-      
+
       const fileInfo = await storage.uploadFile({
         pathname: fileName,
         file,
@@ -140,7 +125,7 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
       }));
 
       setSuccess(`${type} uploaded successfully`);
-    } catch (error) {
+    } catch {
       setError(`Failed to upload ${type}`);
     } finally {
       setUploading(null);
@@ -166,7 +151,12 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -174,67 +164,88 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <Palette className="w-6 h-6 text-blue-500" />
-        <Typography variant="h5" component="h1">
+      <Box display='flex' alignItems='center' gap={2} mb={3}>
+        <Palette className='w-6 h-6 text-blue-500' />
+        <Typography variant='h5' component='h1'>
           Branding Management
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+        <Alert
+          severity='success'
+          sx={{ mb: 3 }}
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
 
-      <Box display="flex" flexDirection="column" gap={3}>
-        <Box display="flex" gap={3} flexWrap="wrap">
+      <Box display='flex' flexDirection='column' gap={3}>
+        <Box display='flex' gap={3} flexWrap='wrap'>
           {/* Basic Configuration */}
-          <Box flex="1" minWidth="300px">
+          <Box flex='1' minWidth='300px'>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Basic Configuration
                 </Typography>
-                
+
                 <TextField
                   fullWidth
-                  label="Application Name"
+                  label='Application Name'
                   value={config.appName}
-                  onChange={(e) => setConfig(prev => ({ ...prev, appName: e.target.value }))}
+                  onChange={e =>
+                    setConfig(prev => ({ ...prev, appName: e.target.value }))
+                  }
                   sx={{ mb: 2 }}
                 />
 
                 <TextField
                   fullWidth
-                  label="Primary Color"
-                  type="color"
+                  label='Primary Color'
+                  type='color'
                   value={config.primaryColor}
-                  onChange={(e) => setConfig(prev => ({ ...prev, primaryColor: e.target.value }))}
+                  onChange={e =>
+                    setConfig(prev => ({
+                      ...prev,
+                      primaryColor: e.target.value,
+                    }))
+                  }
                   sx={{ mb: 2 }}
                 />
 
                 <TextField
                   fullWidth
-                  label="Secondary Color"
-                  type="color"
+                  label='Secondary Color'
+                  type='color'
                   value={config.secondaryColor}
-                  onChange={(e) => setConfig(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                  onChange={e =>
+                    setConfig(prev => ({
+                      ...prev,
+                      secondaryColor: e.target.value,
+                    }))
+                  }
                   sx={{ mb: 2 }}
                 />
 
                 <TextField
                   fullWidth
-                  label="Accent Color"
-                  type="color"
+                  label='Accent Color'
+                  type='color'
                   value={config.accentColor}
-                  onChange={(e) => setConfig(prev => ({ ...prev, accentColor: e.target.value }))}
+                  onChange={e =>
+                    setConfig(prev => ({
+                      ...prev,
+                      accentColor: e.target.value,
+                    }))
+                  }
                   sx={{ mb: 2 }}
                 />
               </CardContent>
@@ -242,31 +253,40 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
           </Box>
 
           {/* Asset Management */}
-          <Box flex="1" minWidth="300px">
+          <Box flex='1' minWidth='300px'>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Asset Management
                 </Typography>
 
                 {/* Logo Upload */}
                 <Box mb={2}>
-                  <Typography variant="subtitle2" gutterBottom>
+                  <Typography variant='subtitle2' gutterBottom>
                     Logo
                   </Typography>
-                  <Box display="flex" alignItems="center" gap={2}>
+                  <Box display='flex' alignItems='center' gap={2}>
                     <input
-                      accept="image/*"
+                      accept='image/*'
                       style={{ display: 'none' }}
-                      id="logo-upload"
-                      type="file"
-                      onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'logo')}
+                      id='logo-upload'
+                      type='file'
+                      onChange={e =>
+                        e.target.files?.[0] &&
+                        handleFileUpload(e.target.files[0], 'logo')
+                      }
                     />
-                    <label htmlFor="logo-upload">
+                    <label htmlFor='logo-upload'>
                       <Button
-                        variant="outlined"
-                        component="span"
-                        startIcon={uploading === 'logo' ? <CircularProgress size={16} /> : <Upload size={16} />}
+                        variant='outlined'
+                        component='span'
+                        startIcon={
+                          uploading === 'logo' ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Upload size={16} />
+                          )
+                        }
                         disabled={uploading === 'logo'}
                       >
                         Upload Logo
@@ -274,10 +294,12 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
                     </label>
                     {config.logo && (
                       <Chip
-                        label="Uploaded"
-                        color="success"
-                        size="small"
-                        onDelete={() => setConfig(prev => ({ ...prev, logo: '/logo.svg' }))}
+                        label='Uploaded'
+                        color='success'
+                        size='small'
+                        onDelete={() =>
+                          setConfig(prev => ({ ...prev, logo: '/logo.svg' }))
+                        }
                       />
                     )}
                   </Box>
@@ -285,22 +307,31 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
 
                 {/* Favicon Upload */}
                 <Box mb={2}>
-                  <Typography variant="subtitle2" gutterBottom>
+                  <Typography variant='subtitle2' gutterBottom>
                     Favicon
                   </Typography>
-                  <Box display="flex" alignItems="center" gap={2}>
+                  <Box display='flex' alignItems='center' gap={2}>
                     <input
-                      accept="image/*"
+                      accept='image/*'
                       style={{ display: 'none' }}
-                      id="favicon-upload"
-                      type="file"
-                      onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'favicon')}
+                      id='favicon-upload'
+                      type='file'
+                      onChange={e =>
+                        e.target.files?.[0] &&
+                        handleFileUpload(e.target.files[0], 'favicon')
+                      }
                     />
-                    <label htmlFor="favicon-upload">
+                    <label htmlFor='favicon-upload'>
                       <Button
-                        variant="outlined"
-                        component="span"
-                        startIcon={uploading === 'favicon' ? <CircularProgress size={16} /> : <Upload size={16} />}
+                        variant='outlined'
+                        component='span'
+                        startIcon={
+                          uploading === 'favicon' ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Upload size={16} />
+                          )
+                        }
                         disabled={uploading === 'favicon'}
                       >
                         Upload Favicon
@@ -308,10 +339,15 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
                     </label>
                     {config.favicon && (
                       <Chip
-                        label="Uploaded"
-                        color="success"
-                        size="small"
-                        onDelete={() => setConfig(prev => ({ ...prev, favicon: '/favicon.ico' }))}
+                        label='Uploaded'
+                        color='success'
+                        size='small'
+                        onDelete={() =>
+                          setConfig(prev => ({
+                            ...prev,
+                            favicon: '/favicon.ico',
+                          }))
+                        }
                       />
                     )}
                   </Box>
@@ -319,22 +355,31 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
 
                 {/* Icon Upload */}
                 <Box mb={2}>
-                  <Typography variant="subtitle2" gutterBottom>
+                  <Typography variant='subtitle2' gutterBottom>
                     App Icon
                   </Typography>
-                  <Box display="flex" alignItems="center" gap={2}>
+                  <Box display='flex' alignItems='center' gap={2}>
                     <input
-                      accept="image/*"
+                      accept='image/*'
                       style={{ display: 'none' }}
-                      id="icon-upload"
-                      type="file"
-                      onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'icon')}
+                      id='icon-upload'
+                      type='file'
+                      onChange={e =>
+                        e.target.files?.[0] &&
+                        handleFileUpload(e.target.files[0], 'icon')
+                      }
                     />
-                    <label htmlFor="icon-upload">
+                    <label htmlFor='icon-upload'>
                       <Button
-                        variant="outlined"
-                        component="span"
-                        startIcon={uploading === 'icon' ? <CircularProgress size={16} /> : <Upload size={16} />}
+                        variant='outlined'
+                        component='span'
+                        startIcon={
+                          uploading === 'icon' ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Upload size={16} />
+                          )
+                        }
                         disabled={uploading === 'icon'}
                       >
                         Upload Icon
@@ -342,10 +387,12 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
                     </label>
                     {config.icon && (
                       <Chip
-                        label="Uploaded"
-                        color="success"
-                        size="small"
-                        onDelete={() => setConfig(prev => ({ ...prev, icon: '/icon.png' }))}
+                        label='Uploaded'
+                        color='success'
+                        size='small'
+                        onDelete={() =>
+                          setConfig(prev => ({ ...prev, icon: '/icon.png' }))
+                        }
                       />
                     )}
                   </Box>
@@ -358,18 +405,20 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
         {/* Custom CSS */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Custom Styling
             </Typography>
-            
+
             <TextField
               fullWidth
               multiline
               rows={6}
-              label="Custom CSS"
+              label='Custom CSS'
               value={config.customCSS || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, customCSS: e.target.value }))}
-              placeholder="/* Add your custom CSS here */"
+              onChange={e =>
+                setConfig(prev => ({ ...prev, customCSS: e.target.value }))
+              }
+              placeholder='/* Add your custom CSS here */'
               sx={{ mb: 2 }}
             />
 
@@ -377,10 +426,12 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
               fullWidth
               multiline
               rows={4}
-              label="Custom HTML (for head section)"
+              label='Custom HTML (for head section)'
               value={config.customHTML || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, customHTML: e.target.value }))}
-              placeholder="<!-- Add custom HTML for head section -->"
+              onChange={e =>
+                setConfig(prev => ({ ...prev, customHTML: e.target.value }))
+              }
+              placeholder='<!-- Add custom HTML for head section -->'
             />
           </CardContent>
         </Card>
@@ -388,23 +439,25 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
         {/* Preview */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Preview
             </Typography>
-            
-            <Box display="flex" gap={2} mb={2}>
+
+            <Box display='flex' gap={2} mb={2}>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<Eye size={16} />}
                 onClick={handlePreview}
               >
                 Preview Changes
               </Button>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<Download size={16} />}
                 onClick={() => {
-                  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                  const blob = new Blob([JSON.stringify(config, null, 2)], {
+                    type: 'application/json',
+                  });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
@@ -418,10 +471,13 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
             </Box>
 
             <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-              <Typography variant="subtitle2" gutterBottom>
+              <Typography variant='subtitle2' gutterBottom>
                 Current Configuration:
               </Typography>
-              <Box component="pre" sx={{ fontSize: '0.875rem', overflow: 'auto' }}>
+              <Box
+                component='pre'
+                sx={{ fontSize: '0.875rem', overflow: 'auto' }}
+              >
                 {JSON.stringify(config, null, 2)}
               </Box>
             </Paper>
@@ -430,18 +486,20 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
       </Box>
 
       {/* Action Buttons */}
-      <Box display="flex" gap={2} mt={3}>
+      <Box display='flex' gap={2} mt={3}>
         <Button
-          variant="contained"
-          startIcon={saving ? <CircularProgress size={16} /> : <Save size={16} />}
+          variant='contained'
+          startIcon={
+            saving ? <CircularProgress size={16} /> : <Save size={16} />
+          }
           onClick={handleSave}
           disabled={saving}
         >
           {saving ? 'Saving...' : 'Save Configuration'}
         </Button>
-        
+
         <Button
-          variant="outlined"
+          variant='outlined'
           startIcon={<RotateCcw size={16} />}
           onClick={handleReset}
         >
@@ -450,15 +508,20 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
       </Box>
 
       {/* Preview Dialog */}
-      <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Branding Preview</DialogTitle>
         <DialogContent>
           <Box sx={{ p: 2, border: '1px solid #ccc', borderRadius: 1 }}>
-            <Typography variant="h4" sx={{ color: config.primaryColor, mb: 2 }}>
+            <Typography variant='h4' sx={{ color: config.primaryColor, mb: 2 }}>
               {config.appName}
             </Typography>
-            
-            <Box display="flex" gap={2} mb={2}>
+
+            <Box display='flex' gap={2} mb={2}>
               <Box
                 sx={{
                   width: 40,
@@ -485,8 +548,9 @@ export const BrandingManagement: React.FC<BrandingManagementProps> = ({ onSave }
               />
             </Box>
 
-            <Typography variant="body2" color="text.secondary">
-              This is a preview of how your branding will look in the application.
+            <Typography variant='body2' color='text.secondary'>
+              This is a preview of how your branding will look in the
+              application.
             </Typography>
           </Box>
         </DialogContent>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Paper,
   Box,
@@ -10,14 +10,16 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
-  Divider,
   InputAdornment,
 } from '@mui/material';
 import { Send, Users } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { chatMessageSchema, ChatMessageFormData } from '@/lib/validations/schemas';
+import {
+  chatMessageSchema,
+  ChatMessageFormData,
+} from '@/lib/validations/schemas';
 import { ChatMessage, Profile } from '@/types';
 
 interface ChatComponentProps {
@@ -44,7 +46,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['chat-messages', associationId],
     queryFn: async () => {
-      const response = await fetch(`/api/chat/messages?associationId=${associationId}`);
+      const response = await fetch(
+        `/api/chat/messages?associationId=${associationId}`
+      );
       if (!response.ok) throw new Error('Failed to fetch messages');
       const result = await response.json();
       return result.data as ChatMessage[];
@@ -66,7 +70,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat-messages', associationId] });
+      queryClient.invalidateQueries({
+        queryKey: ['chat-messages', associationId],
+      });
       reset();
     },
   });
@@ -86,15 +92,18 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     const now = new Date();
     const messageDate = new Date(date);
     const isToday = now.toDateString() === messageDate.toDateString();
-    
+
     if (isToday) {
-      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return messageDate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     } else {
-      return messageDate.toLocaleDateString([], { 
-        month: 'short', 
+      return messageDate.toLocaleDateString([], {
+        month: 'short',
         day: 'numeric',
-        hour: '2-digit', 
-        minute: '2-digit' 
+        hour: '2-digit',
+        minute: '2-digit',
       });
     }
   };
@@ -103,21 +112,21 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     <Paper sx={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display='flex' alignItems='center' gap={1}>
           <Users size={20} />
-          <Typography variant="h6">Association Chat</Typography>
+          <Typography variant='h6'>Association Chat</Typography>
         </Box>
       </Box>
 
       {/* Messages List */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
         {isLoading ? (
-          <Box display="flex" justifyContent="center" p={2}>
+          <Box display='flex' justifyContent='center' p={2}>
             <Typography>Loading messages...</Typography>
           </Box>
         ) : messages.length === 0 ? (
-          <Box display="flex" justifyContent="center" p={2}>
-            <Typography color="text.secondary">
+          <Box display='flex' justifyContent='center' p={2}>
+            <Typography color='text.secondary'>
               No messages yet. Start the conversation!
             </Typography>
           </Box>
@@ -125,15 +134,16 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           <List sx={{ p: 0 }}>
             {messages.map((message, index) => {
               const isCurrentUser = message.sender_id === currentUser.id;
-              const showDate = index === 0 || 
-                new Date(messages[index - 1].created_at).toDateString() !== 
-                new Date(message.created_at).toDateString();
+              const showDate =
+                index === 0 ||
+                new Date(messages[index - 1].created_at).toDateString() !==
+                  new Date(message.created_at).toDateString();
 
               return (
                 <React.Fragment key={message.id}>
                   {showDate && (
                     <Box sx={{ textAlign: 'center', py: 1 }}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='caption' color='text.secondary'>
                         {new Date(message.created_at).toLocaleDateString([], {
                           weekday: 'long',
                           year: 'numeric',
@@ -143,7 +153,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
                       </Typography>
                     </Box>
                   )}
-                  
+
                   <ListItem
                     sx={{
                       flexDirection: isCurrentUser ? 'row-reverse' : 'row',
@@ -153,39 +163,45 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
                     <ListItemAvatar sx={{ minWidth: isCurrentUser ? 0 : 40 }}>
                       <Avatar
                         src={message.sender?.avatar_url}
-                        sx={{ 
-                          width: 32, 
+                        sx={{
+                          width: 32,
                           height: 32,
                           ml: isCurrentUser ? 1 : 0,
                           mr: isCurrentUser ? 0 : 1,
                         }}
                       >
-                        {message.sender?.first_name?.[0]}{message.sender?.last_name?.[0]}
+                        {message.sender?.first_name?.[0]}
+                        {message.sender?.last_name?.[0]}
                       </Avatar>
                     </ListItemAvatar>
-                    
+
                     <ListItemText
                       sx={{
                         textAlign: isCurrentUser ? 'right' : 'left',
                         '& .MuiListItemText-primary': {
-                          backgroundColor: isCurrentUser ? 'primary.main' : 'grey.100',
-                          color: isCurrentUser ? 'primary.contrastText' : 'text.primary',
+                          backgroundColor: isCurrentUser
+                            ? 'primary.main'
+                            : 'grey.100',
+                          color: isCurrentUser
+                            ? 'primary.contrastText'
+                            : 'text.primary',
                           borderRadius: 2,
                           p: 1,
                           display: 'inline-block',
                           maxWidth: '70%',
                           wordBreak: 'break-word',
-                        }
+                        },
                       }}
                       primary={message.message}
                       secondary={
                         <Box sx={{ mt: 0.5 }}>
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary"
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
                             sx={{ textAlign: isCurrentUser ? 'right' : 'left' }}
                           >
-                            {!isCurrentUser && `${message.sender?.first_name} • `}
+                            {!isCurrentUser &&
+                              `${message.sender?.first_name} • `}
                             {formatMessageTime(message.created_at)}
                           </Typography>
                         </Box>
@@ -206,19 +222,19 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           <TextField
             {...register('message')}
             fullWidth
-            placeholder="Type a message..."
-            variant="outlined"
-            size="small"
+            placeholder='Type a message...'
+            variant='outlined'
+            size='small'
             error={!!errors.message}
             helperText={errors.message?.message}
             disabled={sendMessageMutation.isPending}
             InputProps={{
               endAdornment: (
-                <InputAdornment position="end">
+                <InputAdornment position='end'>
                   <IconButton
-                    type="submit"
+                    type='submit'
                     disabled={sendMessageMutation.isPending}
-                    size="small"
+                    size='small'
                   >
                     <Send size={20} />
                   </IconButton>

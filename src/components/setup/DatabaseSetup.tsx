@@ -31,7 +31,7 @@ import { EdgeConfigSetup } from './EdgeConfigSetup';
 import { BlobStorageSetup } from './BlobStorageSetup';
 
 interface DatabaseSetupProps {
-  onNext: (data: any) => void;
+  onNext: (data: Record<string, unknown>) => void;
   onError: (error: string) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
@@ -44,7 +44,9 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
   setLoading,
 }) => {
   const [connectionString, setConnectionString] = useState('');
-  const [testResult, setTestResult] = useState<'idle' | 'success' | 'error'>('idle');
+  const [testResult, setTestResult] = useState<'idle' | 'success' | 'error'>(
+    'idle'
+  );
   const [testMessage, setTestMessage] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [edgeConfigReady, setEdgeConfigReady] = useState(false);
@@ -71,7 +73,7 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
         setTestResult('error');
         setTestMessage(result.error || 'Connection failed');
       }
-    } catch (error) {
+    } catch {
       setTestResult('error');
       setTestMessage('Failed to test connection');
     } finally {
@@ -81,17 +83,19 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 
   const handleNext = () => {
     if (selectedTab === 0 && testResult === 'success') {
-      onNext({ 
+      onNext({
         databaseType: 'postgresql',
-        connectionString 
+        connectionString,
       });
     } else if (selectedTab === 1 && edgeConfigReady) {
-      onNext({ 
+      onNext({
         databaseType: 'edge-config',
-        connectionString: 'edge-config'
+        connectionString: 'edge-config',
       });
     } else {
-      onError('Please configure and test your selected database option before proceeding');
+      onError(
+        'Please configure and test your selected database option before proceeding'
+      );
     }
   };
 
@@ -105,32 +109,33 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant='h6' gutterBottom>
         Database Configuration
       </Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Choose your database solution. KonBase supports PostgreSQL databases or Vercel Edge Config for ultra-fast data access.
+      <Typography color='text.secondary' sx={{ mb: 3 }}>
+        Choose your database solution. KonBase supports PostgreSQL databases or
+        Vercel Edge Config for ultra-fast data access.
       </Typography>
 
-      <Tabs 
-        value={selectedTab} 
+      <Tabs
+        value={selectedTab}
         onChange={(_, newValue) => setSelectedTab(newValue)}
         sx={{ mb: 3 }}
       >
-        <Tab 
-          label="PostgreSQL Database" 
+        <Tab
+          label='PostgreSQL Database'
           icon={<Database size={20} />}
-          iconPosition="start"
+          iconPosition='start'
         />
-        <Tab 
-          label="Vercel Edge Config" 
+        <Tab
+          label='Vercel Edge Config'
           icon={<Zap size={20} />}
-          iconPosition="start"
+          iconPosition='start'
         />
-        <Tab 
-          label="File Storage" 
+        <Tab
+          label='File Storage'
           icon={<Cloud size={20} />}
-          iconPosition="start"
+          iconPosition='start'
         />
       </Tabs>
 
@@ -140,7 +145,7 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
         <>
           <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant='subtitle1' gutterBottom>
                 PostgreSQL Database Requirements
               </Typography>
               <List dense>
@@ -148,25 +153,25 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
                   <ListItemIcon>
                     <Database size={20} />
                   </ListItemIcon>
-                  <ListItemText primary="PostgreSQL 12 or higher" />
+                  <ListItemText primary='PostgreSQL 12 or higher' />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
                     <Server size={20} />
                   </ListItemIcon>
-                  <ListItemText primary="Minimum 1GB RAM" />
+                  <ListItemText primary='Minimum 1GB RAM' />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
                     <Shield size={20} />
                   </ListItemIcon>
-                  <ListItemText primary="SSL support recommended" />
+                  <ListItemText primary='SSL support recommended' />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
                     <Clock size={20} />
                   </ListItemIcon>
-                  <ListItemText primary="Regular backups configured" />
+                  <ListItemText primary='Regular backups configured' />
                 </ListItem>
               </List>
             </CardContent>
@@ -174,20 +179,26 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 
           <TextField
             fullWidth
-            label="Database Connection String"
-            placeholder="postgresql://username:password@localhost:5432/konbase"
+            label='Database Connection String'
+            placeholder='postgresql://username:password@localhost:5432/konbase'
             value={connectionString}
-            onChange={(e) => setConnectionString(e.target.value)}
+            onChange={e => setConnectionString(e.target.value)}
             sx={{ mb: 2 }}
-            helperText="Format: postgresql://username:password@host:port/database"
+            helperText='Format: postgresql://username:password@host:port/database'
           />
 
-          <Box display="flex" gap={2} mb={3}>
+          <Box display='flex' gap={2} mb={3}>
             <Button
-              variant="outlined"
+              variant='outlined'
               onClick={handleTestConnection}
               disabled={!connectionString || loading}
-              startIcon={loading ? <CircularProgress size={16} /> : <Database size={16} />}
+              startIcon={
+                loading ? (
+                  <CircularProgress size={16} />
+                ) : (
+                  <Database size={16} />
+                )
+              }
             >
               Test Connection
             </Button>
@@ -195,18 +206,18 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
             {testResult === 'success' && (
               <Chip
                 icon={<CheckCircle size={16} />}
-                label="Connection Successful"
-                color="success"
-                variant="outlined"
+                label='Connection Successful'
+                color='success'
+                variant='outlined'
               />
             )}
 
             {testResult === 'error' && (
               <Chip
                 icon={<AlertCircle size={16} />}
-                label="Connection Failed"
-                color="error"
-                variant="outlined"
+                label='Connection Failed'
+                color='error'
+                variant='outlined'
               />
             )}
           </Box>
@@ -230,9 +241,9 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
         <BlobStorageSetup onStatusChange={handleBlobStorageStatusChange} />
       )}
 
-      <Box display="flex" justifyContent="flex-end">
+      <Box display='flex' justifyContent='flex-end'>
         <Button
-          variant="contained"
+          variant='contained'
           onClick={handleNext}
           disabled={
             (selectedTab === 0 && testResult !== 'success') ||

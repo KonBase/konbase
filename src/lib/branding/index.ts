@@ -81,7 +81,7 @@ export function generateBrandingCSS(config: BrandingConfig): string {
 // Generate HTML head elements for branding
 export function generateBrandingHTML(config: BrandingConfig): string {
   const assets = getBrandingAssets();
-  
+
   return `
     <link rel="icon" href="${assets.favicon}" />
     <link rel="apple-touch-icon" href="${assets.appleTouchIcon}" />

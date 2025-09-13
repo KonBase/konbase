@@ -1,42 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getGelClient, getConnectionInfo, getConnectionType } from '@/lib/db/gel';
+import { NextResponse } from 'next/server';
+import { getConnectionInfo, getConnectionType } from '@/lib/db/gel';
+import { createDataAccessLayer } from '@/lib/db/data-access';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
+  const dataAccess = createDataAccessLayer();
   try {
     const connectionInfo = getConnectionInfo();
     const connectionType = getConnectionType();
-    
+
     // Test the connection
-    const client = getGelClient();
     const startTime = Date.now();
-    
+
     // Simple query to test connection
-    await client.querySingle('SELECT 1 as test');
-    
+    await dataAccess.executeQuerySingle('SELECT 1 as test');
+
     const latency = Date.now() - startTime;
-    
+
     return NextResponse.json({
       success: true,
       connection: {
         type: connectionType,
         info: connectionInfo,
         latency: `${latency}ms`,
-        status: 'connected'
+        status: 'connected',
       },
-      message: `Database connected successfully via ${connectionType}`
+      message: `Database connected successfully via ${connectionType}`,
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Database connection check failed:', error);
-    
-    return NextResponse.json({
-      success: false,
-      connection: {
-        type: getConnectionType(),
-        info: getConnectionInfo(),
-        status: 'disconnected'
+
+    return NextResponse.json(
+      {
+        success: false,
+        connection: {
+          type: getConnectionType(),
+          info: getConnectionInfo(),
+          status: 'disconnected',
+        },
+        error: error instanceof Error ? error.message : 'Unknown error',
+        message: 'Failed to connect to database',
       },
-      error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Failed to connect to database'
-    }, { status: 500 });
+      { status: 500 }
+    );
   }
 }

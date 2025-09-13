@@ -11,7 +11,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Chip,
   IconButton,
   Menu,
@@ -28,16 +27,7 @@ import {
   Pagination,
   InputAdornment,
 } from '@mui/material';
-import {
-  Plus,
-  MoreVertical,
-  Copy,
-  Trash2,
-  Mail,
-  Calendar,
-  Users,
-  Search,
-} from 'lucide-react';
+import { Plus, MoreVertical, Copy, Trash2, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 
@@ -45,12 +35,19 @@ export const InvitationManager: React.FC = () => {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [selectedInvitation, setSelectedInvitation] = useState<any>(null);
+  const [selectedInvitation, setSelectedInvitation] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { data: invitations, isLoading, refetch } = useQuery({
+  const {
+    data: invitations,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['invitations', searchQuery, page],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -60,7 +57,8 @@ export const InvitationManager: React.FC = () => {
 
       const response = await fetch(`/api/invitations?${params}`, {
         headers: {
-          'x-association-id': session?.user?.associations?.[0]?.association?.id || '',
+          'x-association-id':
+            session?.user?.associations?.[0]?.association?.id || '',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch invitations');
@@ -70,7 +68,10 @@ export const InvitationManager: React.FC = () => {
     enabled: !!session,
   });
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, invitation: any) => {
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    invitation: Record<string, unknown>
+  ) => {
     setMenuAnchor(event.currentTarget);
     setSelectedInvitation(invitation);
   };
@@ -95,28 +96,36 @@ export const InvitationManager: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'warning';
-      case 'accepted': return 'success';
-      case 'expired': return 'error';
-      case 'revoked': return 'default';
-      default: return 'default';
+      case 'pending':
+        return 'warning';
+      case 'accepted':
+        return 'success';
+      case 'expired':
+        return 'error';
+      case 'revoked':
+        return 'default';
+      default:
+        return 'default';
     }
   };
 
   const getExpiryStatus = (expiresAt: string) => {
     const now = new Date();
     const expiry = new Date(expiresAt);
-    const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const daysLeft = Math.ceil(
+      (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysLeft < 0) return { status: 'expired', text: 'Expired' };
     if (daysLeft <= 1) return { status: 'warning', text: 'Expires today' };
-    if (daysLeft <= 3) return { status: 'warning', text: `${daysLeft} days left` };
+    if (daysLeft <= 3)
+      return { status: 'warning', text: `${daysLeft} days left` };
     return { status: 'success', text: `${daysLeft} days left` };
   };
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" py={4}>
+      <Box display='flex' justifyContent='center' py={4}>
         <Typography>Loading invitations...</Typography>
       </Box>
     );
@@ -124,12 +133,15 @@ export const InvitationManager: React.FC = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">
-          Invitation Management
-        </Typography>
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
+        mb={3}
+      >
+        <Typography variant='h6'>Invitation Management</Typography>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Plus size={20} />}
           onClick={() => setCreateDialogOpen(true)}
         >
@@ -142,12 +154,12 @@ export const InvitationManager: React.FC = () => {
         <CardContent>
           <TextField
             fullWidth
-            placeholder="Search invitations..."
+            placeholder='Search invitations...'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
+                <InputAdornment position='start'>
                   <Search size={20} />
                 </InputAdornment>
               ),
@@ -167,50 +179,72 @@ export const InvitationManager: React.FC = () => {
                 <TableCell>Status</TableCell>
                 <TableCell>Expires</TableCell>
                 <TableCell>Created</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell align='right'>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {invitations?.data?.map((invitation: any) => {
-                const expiryStatus = getExpiryStatus(invitation.expires_at);
+              {invitations?.data?.map((invitation: Record<string, unknown>) => {
+                const expiryStatus = getExpiryStatus(
+                  String(invitation.expires_at)
+                );
                 return (
-                  <TableRow key={invitation.id} hover>
+                  <TableRow key={String(invitation.id)} hover>
                     <TableCell>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Mail size={16} color="#666" />
-                        {invitation.email}
+                      <Box display='flex' alignItems='center' gap={2}>
+                        <Mail size={16} color='#666' />
+                        {String(invitation.email)}
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={invitation.role}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
+                        label={String(invitation.role)}
+                        size='small'
+                        color='primary'
+                        variant='outlined'
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={invitation.status}
-                        color={getStatusColor(invitation.status) as any}
-                        size="small"
+                        label={String(invitation.status)}
+                        color={
+                          getStatusColor(String(invitation.status)) as
+                            | 'default'
+                            | 'primary'
+                            | 'secondary'
+                            | 'error'
+                            | 'info'
+                            | 'success'
+                            | 'warning'
+                        }
+                        size='small'
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={expiryStatus.text}
-                        color={expiryStatus.status as any}
-                        size="small"
-                        variant="outlined"
+                        color={
+                          expiryStatus.status as
+                            | 'default'
+                            | 'primary'
+                            | 'secondary'
+                            | 'error'
+                            | 'info'
+                            | 'success'
+                            | 'warning'
+                        }
+                        size='small'
+                        variant='outlined'
                       />
                     </TableCell>
                     <TableCell>
-                      {new Date(invitation.created_at).toLocaleDateString()}
+                      {new Date(
+                        String(invitation.created_at)
+                      ).toLocaleDateString()}
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align='right'>
                       <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuClick(e, invitation)}
+                        size='small'
+                        onClick={e => handleMenuClick(e, invitation)}
                       >
                         <MoreVertical size={16} />
                       </IconButton>
@@ -223,12 +257,12 @@ export const InvitationManager: React.FC = () => {
         </TableContainer>
 
         {invitations?.pagination && (
-          <Box display="flex" justifyContent="center" p={2}>
+          <Box display='flex' justifyContent='center' p={2}>
             <Pagination
               count={invitations.pagination.totalPages}
               page={page}
               onChange={(e, value) => setPage(value)}
-              color="primary"
+              color='primary'
             />
           </Box>
         )}
@@ -251,7 +285,12 @@ export const InvitationManager: React.FC = () => {
       </Menu>
 
       {/* Create Invitation Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>Create Invitation</DialogTitle>
         <DialogContent>
           <CreateInvitationForm
@@ -265,19 +304,24 @@ export const InvitationManager: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Revoke Invitation</DialogTitle>
         <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This action cannot be undone. The invitation will be immediately revoked.
+          <Alert severity='warning' sx={{ mb: 2 }}>
+            This action cannot be undone. The invitation will be immediately
+            revoked.
           </Alert>
           <Typography>
-            Are you sure you want to revoke the invitation for "{selectedInvitation?.email}"?
+            Are you sure you want to revoke the invitation for "
+            {String(selectedInvitation?.email || '')}"?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" color="error">
+          <Button variant='contained' color='error'>
             Revoke
           </Button>
         </DialogActions>
@@ -319,7 +363,7 @@ const CreateInvitationForm: React.FC<{
         const result = await response.json();
         setError(result.error || 'Failed to create invitation');
       }
-    } catch (error) {
+    } catch {
       setError('Failed to create invitation');
     } finally {
       setLoading(false);
@@ -327,13 +371,15 @@ const CreateInvitationForm: React.FC<{
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ pt: 2 }}>
+    <Box component='form' onSubmit={handleSubmit} sx={{ pt: 2 }}>
       <TextField
         fullWidth
-        label="Email Address"
-        type="email"
+        label='Email Address'
+        type='email'
         value={formData.email}
-        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+        onChange={e =>
+          setFormData(prev => ({ ...prev, email: e.target.value }))
+        }
         required
         sx={{ mb: 2 }}
       />
@@ -342,12 +388,14 @@ const CreateInvitationForm: React.FC<{
         <InputLabel>Role</InputLabel>
         <Select
           value={formData.role}
-          onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-          label="Role"
+          onChange={e =>
+            setFormData(prev => ({ ...prev, role: e.target.value }))
+          }
+          label='Role'
         >
-          <MenuItem value="member">Member</MenuItem>
-          <MenuItem value="manager">Manager</MenuItem>
-          <MenuItem value="admin">Admin</MenuItem>
+          <MenuItem value='member'>Member</MenuItem>
+          <MenuItem value='manager'>Manager</MenuItem>
+          <MenuItem value='admin'>Admin</MenuItem>
         </Select>
       </FormControl>
 
@@ -355,43 +403,43 @@ const CreateInvitationForm: React.FC<{
         <InputLabel>Expires In</InputLabel>
         <Select
           value={formData.expiresIn}
-          onChange={(e) => setFormData(prev => ({ ...prev, expiresIn: e.target.value }))}
-          label="Expires In"
+          onChange={e =>
+            setFormData(prev => ({ ...prev, expiresIn: e.target.value }))
+          }
+          label='Expires In'
         >
-          <MenuItem value="1">1 day</MenuItem>
-          <MenuItem value="3">3 days</MenuItem>
-          <MenuItem value="7">7 days</MenuItem>
-          <MenuItem value="14">14 days</MenuItem>
-          <MenuItem value="30">30 days</MenuItem>
+          <MenuItem value='1'>1 day</MenuItem>
+          <MenuItem value='3'>3 days</MenuItem>
+          <MenuItem value='7'>7 days</MenuItem>
+          <MenuItem value='14'>14 days</MenuItem>
+          <MenuItem value='30'>30 days</MenuItem>
         </Select>
       </FormControl>
 
       <TextField
         fullWidth
-        label="Personal Message (Optional)"
+        label='Personal Message (Optional)'
         multiline
         rows={3}
         value={formData.message}
-        onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-        placeholder="Add a personal message to the invitation..."
+        onChange={e =>
+          setFormData(prev => ({ ...prev, message: e.target.value }))
+        }
+        placeholder='Add a personal message to the invitation...'
         sx={{ mb: 2 }}
       />
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+      <Box display='flex' justifyContent='flex-end' gap={2}>
         <Button onClick={onCancel} disabled={loading}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={loading}
-        >
+        <Button type='submit' variant='contained' disabled={loading}>
           {loading ? 'Creating...' : 'Create Invitation'}
         </Button>
       </Box>

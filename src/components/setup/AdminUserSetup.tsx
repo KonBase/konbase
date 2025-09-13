@@ -8,29 +8,19 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Switch,
   FormControlLabel,
   Divider,
 } from '@mui/material';
-import {
-  User,
-  Mail,
-  Key,
-  Shield,
-  Smartphone,
-} from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface AdminUserSetupProps {
-  onNext: (data: any) => void;
+  onNext: (data: Record<string, unknown>) => void;
   onBack: () => void;
   onError: (error: string) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  setupData: any;
+  setupData: Record<string, unknown>;
 }
 
 export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
@@ -51,10 +41,10 @@ export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
     role: 'super_admin',
   });
 
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
@@ -114,59 +104,63 @@ export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
       } else {
         onError(result.error || 'Failed to create admin user');
       }
-    } catch (error) {
+    } catch {
       onError('Failed to create admin user');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev: any) => ({ ...prev, [field]: '' }));
+      setErrors((prev: Record<string, string>) => ({ ...prev, [field]: '' }));
     }
   };
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant='h6' gutterBottom>
         Create Super Admin User
       </Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Create the first super administrator account with full system privileges.
+      <Typography color='text.secondary' sx={{ mb: 3 }}>
+        Create the first super administrator account with full system
+        privileges.
       </Typography>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant='subtitle1' gutterBottom>
             Super Admin Privileges
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            • Full system access and configuration<br />
-            • User and association management<br />
-            • System settings and environment variables<br />
-            • Audit logs and system monitoring<br />
-            • Database administration
+          <Typography variant='body2' color='text.secondary'>
+            • Full system access and configuration
+            <br />
+            • User and association management
+            <br />
+            • System settings and environment variables
+            <br />
+            • Audit logs and system monitoring
+            <br />• Database administration
           </Typography>
         </CardContent>
       </Card>
 
-      <Box display="flex" gap={2} mb={2}>
+      <Box display='flex' gap={2} mb={2}>
         <TextField
           fullWidth
-          label="First Name"
+          label='First Name'
           value={formData.firstName}
-          onChange={(e) => handleInputChange('firstName', e.target.value)}
+          onChange={e => handleInputChange('firstName', e.target.value)}
           error={!!errors.firstName}
           helperText={errors.firstName}
           required
         />
         <TextField
           fullWidth
-          label="Last Name"
+          label='Last Name'
           value={formData.lastName}
-          onChange={(e) => handleInputChange('lastName', e.target.value)}
+          onChange={e => handleInputChange('lastName', e.target.value)}
           error={!!errors.lastName}
           helperText={errors.lastName}
           required
@@ -175,33 +169,33 @@ export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
 
       <TextField
         fullWidth
-        label="Email Address"
-        type="email"
+        label='Email Address'
+        type='email'
         value={formData.email}
-        onChange={(e) => handleInputChange('email', e.target.value)}
+        onChange={e => handleInputChange('email', e.target.value)}
         error={!!errors.email}
         helperText={errors.email}
         sx={{ mb: 2 }}
         required
       />
 
-      <Box display="flex" gap={2} mb={2}>
+      <Box display='flex' gap={2} mb={2}>
         <TextField
           fullWidth
-          label="Password"
-          type="password"
+          label='Password'
+          type='password'
           value={formData.password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
+          onChange={e => handleInputChange('password', e.target.value)}
           error={!!errors.password}
           helperText={errors.password || 'Minimum 8 characters'}
           required
         />
         <TextField
           fullWidth
-          label="Confirm Password"
-          type="password"
+          label='Confirm Password'
+          type='password'
           value={formData.confirmPassword}
-          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+          onChange={e => handleInputChange('confirmPassword', e.target.value)}
           error={!!errors.confirmPassword}
           helperText={errors.confirmPassword}
           required
@@ -214,29 +208,31 @@ export const AdminUserSetup: React.FC<AdminUserSetupProps> = ({
         control={
           <Switch
             checked={formData.enable2FA}
-            onChange={(e) => handleInputChange('enable2FA', e.target.checked)}
+            onChange={e => handleInputChange('enable2FA', e.target.checked)}
           />
         }
-        label="Enable Two-Factor Authentication (Recommended)"
+        label='Enable Two-Factor Authentication (Recommended)'
         sx={{ mb: 2 }}
       />
 
       {formData.enable2FA && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Two-factor authentication will be configured after the initial setup is complete.
-          You'll be able to set it up from your user profile.
+        <Alert severity='info' sx={{ mb: 2 }}>
+          Two-factor authentication will be configured after the initial setup
+          is complete. You'll be able to set it up from your user profile.
         </Alert>
       )}
 
-      <Box display="flex" justifyContent="space-between">
+      <Box display='flex' justifyContent='space-between'>
         <Button onClick={onBack} disabled={loading}>
           Back
         </Button>
         <Button
-          variant="contained"
+          variant='contained'
           onClick={handleSubmit}
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={16} /> : <User size={16} />}
+          startIcon={
+            loading ? <CircularProgress size={16} /> : <User size={16} />
+          }
         >
           Create Admin User
         </Button>

@@ -10,7 +10,6 @@ import {
   ListItemIcon,
   ListItemText,
   Chip,
-  Divider,
   Alert,
 } from '@mui/material';
 import {
@@ -29,7 +28,7 @@ import {
 
 interface SetupCompleteProps {
   onComplete: () => void;
-  setupData: any;
+  setupData: Record<string, unknown>;
 }
 
 export const SetupComplete: React.FC<SetupCompleteProps> = ({
@@ -37,33 +36,74 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
   setupData,
 }) => {
   const features = [
-    { icon: User, label: 'User Management', description: 'Manage users and roles' },
-    { icon: Building, label: 'Association Management', description: 'Create and manage organizations' },
-    { icon: Database, label: 'Inventory System', description: 'Track equipment and items' },
-    { icon: Settings, label: 'Convention Management', description: 'Plan and manage events' },
-    { icon: Shield, label: 'Security Features', description: 'Role-based access control' },
-    { icon: Mail, label: 'Email Notifications', description: 'Automated email alerts' },
-    { icon: Bell, label: 'Real-time Notifications', description: 'Live system notifications' },
-    { icon: MessageCircle, label: 'Chat System', description: 'Team communication' },
-    { icon: Upload, label: 'File Management', description: 'Document and file storage' },
-    { icon: BarChart3, label: 'Analytics & Reports', description: 'Data insights and reporting' },
+    {
+      icon: User,
+      label: 'User Management',
+      description: 'Manage users and roles',
+    },
+    {
+      icon: Building,
+      label: 'Association Management',
+      description: 'Create and manage organizations',
+    },
+    {
+      icon: Database,
+      label: 'Inventory System',
+      description: 'Track equipment and items',
+    },
+    {
+      icon: Settings,
+      label: 'Convention Management',
+      description: 'Plan and manage events',
+    },
+    {
+      icon: Shield,
+      label: 'Security Features',
+      description: 'Role-based access control',
+    },
+    {
+      icon: Mail,
+      label: 'Email Notifications',
+      description: 'Automated email alerts',
+    },
+    {
+      icon: Bell,
+      label: 'Real-time Notifications',
+      description: 'Live system notifications',
+    },
+    {
+      icon: MessageCircle,
+      label: 'Chat System',
+      description: 'Team communication',
+    },
+    {
+      icon: Upload,
+      label: 'File Management',
+      description: 'Document and file storage',
+    },
+    {
+      icon: BarChart3,
+      label: 'Analytics & Reports',
+      description: 'Data insights and reporting',
+    },
   ];
 
   return (
     <Box>
-      <Box textAlign="center" mb={4}>
-        <CheckCircle size={64} color="#4caf50" style={{ marginBottom: 16 }} />
-        <Typography variant="h4" gutterBottom color="success.main">
+      <Box textAlign='center' mb={4}>
+        <CheckCircle size={64} color='#4caf50' style={{ marginBottom: 16 }} />
+        <Typography variant='h4' gutterBottom color='success.main'>
           Setup Complete!
         </Typography>
-        <Typography color="text.secondary">
-          Your KonBase system is ready to use. You can now start managing your inventory and conventions.
+        <Typography color='text.secondary'>
+          Your KonBase system is ready to use. You can now start managing your
+          inventory and conventions.
         </Typography>
       </Box>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant='h6' gutterBottom>
             Setup Summary
           </Typography>
           <List dense>
@@ -72,8 +112,8 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
                 <Database size={20} />
               </ListItemIcon>
               <ListItemText
-                primary="Database"
-                secondary="PostgreSQL connection configured"
+                primary='Database'
+                secondary='PostgreSQL connection configured'
               />
             </ListItem>
             <ListItem>
@@ -81,8 +121,8 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
                 <User size={20} />
               </ListItemIcon>
               <ListItemText
-                primary="Super Admin User"
-                secondary={`${setupData.adminUser?.firstName} ${setupData.adminUser?.lastName} (${setupData.adminUser?.email})`}
+                primary='Super Admin User'
+                secondary={`${(setupData.adminUser as { firstName?: string })?.firstName || ''} ${(setupData.adminUser as { lastName?: string })?.lastName || ''} (${(setupData.adminUser as { email?: string })?.email || ''})`}
               />
             </ListItem>
             <ListItem>
@@ -90,8 +130,10 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
                 <Building size={20} />
               </ListItemIcon>
               <ListItemText
-                primary="First Association"
-                secondary={setupData.association?.name}
+                primary='First Association'
+                secondary={
+                  (setupData.association as { name?: string })?.name || ''
+                }
               />
             </ListItem>
             <ListItem>
@@ -99,8 +141,8 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
                 <Settings size={20} />
               </ListItemIcon>
               <ListItemText
-                primary="System Configuration"
-                secondary="Basic settings configured"
+                primary='System Configuration'
+                secondary='Basic settings configured'
               />
             </ListItem>
           </List>
@@ -109,10 +151,10 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant='h6' gutterBottom>
             Available Features
           </Typography>
-          <Box display="flex" flexWrap="wrap" gap={1}>
+          <Box display='flex' flexWrap='wrap' gap={1}>
             {features.map((feature, index) => {
               const IconComponent = feature.icon;
               return (
@@ -120,7 +162,7 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
                   key={index}
                   icon={<IconComponent size={16} />}
                   label={feature.label}
-                  variant="outlined"
+                  variant='outlined'
                   sx={{ mb: 1 }}
                 />
               );
@@ -129,8 +171,8 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
         </CardContent>
       </Card>
 
-      <Alert severity="success" sx={{ mb: 3 }}>
-        <Typography variant="body2">
+      <Alert severity='success' sx={{ mb: 3 }}>
+        <Typography variant='body2'>
           <strong>Next Steps:</strong>
           <br />
           1. Log in with your admin credentials
@@ -143,18 +185,18 @@ export const SetupComplete: React.FC<SetupCompleteProps> = ({
         </Typography>
       </Alert>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>Important:</strong> Remember to configure your SMTP settings in the admin panel
-          to enable email notifications. You can also set up OAuth providers (Google, Discord)
-          for easier user authentication.
+      <Alert severity='info' sx={{ mb: 3 }}>
+        <Typography variant='body2'>
+          <strong>Important:</strong> Remember to configure your SMTP settings
+          in the admin panel to enable email notifications. You can also set up
+          OAuth providers (Google, Discord) for easier user authentication.
         </Typography>
       </Alert>
 
-      <Box textAlign="center">
+      <Box textAlign='center'>
         <Button
-          variant="contained"
-          size="large"
+          variant='contained'
+          size='large'
           onClick={onComplete}
           startIcon={<CheckCircle size={20} />}
         >

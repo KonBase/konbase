@@ -39,16 +39,18 @@ interface DashboardStats {
   upcomingConventions: number;
   itemsNeedingAttention: number;
   associationMembers: number;
-  recentActivity: any[];
-  upcomingTasks: any[];
+  recentActivity: string[];
+  upcomingTasks: string[];
 }
 
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout from '@/components/layout/AppLayout';
 
 export default function HomePage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [setupStatus, setSetupStatus] = useState<'checking' | 'needed' | 'complete'>('checking');
+  const [setupStatus, setSetupStatus] = useState<
+    'checking' | 'needed' | 'complete'
+  >('checking');
 
   useEffect(() => {
     checkSetupStatus();
@@ -68,6 +70,7 @@ export default function HomePage() {
         setSetupStatus('needed');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Setup check error:', error);
       setSetupStatus('needed');
     }
@@ -76,12 +79,12 @@ export default function HomePage() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-  const response = await fetch('/api/dashboard/stats');
+      const response = await fetch('/api/dashboard/stats');
       if (!response.ok) throw new Error('Failed to fetch dashboard stats');
       const result = await response.json();
       return result.data as DashboardStats;
     },
-  enabled: !!session,
+    enabled: !!session,
   });
 
   if (setupStatus === 'checking') {
@@ -121,29 +124,30 @@ export default function HomePage() {
       >
         <Card sx={{ maxWidth: 500, width: '100%' }}>
           <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Shield size={64} color="#1976d2" style={{ marginBottom: 16 }} />
-            <Typography variant="h4" gutterBottom>
+            <Shield size={64} color='#1976d2' style={{ marginBottom: 16 }} />
+            <Typography variant='h4' gutterBottom>
               Welcome to KonBase
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 4 }}>
-              All-in-one platform for conventions to manage inventory, track equipment, and streamline logistics
+            <Typography color='text.secondary' sx={{ mb: 4 }}>
+              All-in-one platform for conventions to manage inventory, track
+              equipment, and streamline logistics
             </Typography>
-            
-            <Box display="flex" flexDirection="column" gap={2}>
+
+            <Box display='flex' flexDirection='column' gap={2}>
               <Button
-                variant="contained"
-                size="large"
+                variant='contained'
+                size='large'
                 startIcon={<LogIn size={20} />}
-                href="/auth/signin"
+                href='/auth/signin'
                 fullWidth
               >
                 Sign In
               </Button>
               <Button
-                variant="outlined"
-                size="large"
+                variant='outlined'
+                size='large'
                 startIcon={<UserPlus size={20} />}
-                href="/auth/signup"
+                href='/auth/signup'
                 fullWidth
               >
                 Create Account
@@ -152,7 +156,7 @@ export default function HomePage() {
 
             <Divider sx={{ my: 3 }} />
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Need an invitation code? Contact your organization administrator.
             </Typography>
           </CardContent>
@@ -163,7 +167,7 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
         <Box>
           <LinearProgress />
           <Typography sx={{ mt: 2 }}>Loading dashboard...</Typography>
@@ -205,155 +209,172 @@ export default function HomePage() {
 
   return (
     <AppLayout>
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Welcome Header */}
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome to KonBase
-        </Typography>
-        <Typography color="text.secondary">
-          All-in-one platform for conventions to manage inventory, track equipment, and streamline logistics
-        </Typography>
-      </Box>
-
-      {/* Quick Stats Grid */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' },
-          gap: 3,
-          mb: 4,
-        }}
-      >
-        {quickStats.map((stat) => {
-          const IconComponent = stat.icon;
-          return (
-            <Box key={stat.title}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box>
-                      <Typography color="text.secondary" gutterBottom>
-                        {stat.title}
-                      </Typography>
-                      <Typography variant="h4" component="div">
-                        {stat.value}
-                      </Typography>
-                    </Box>
-                    <Avatar sx={{ bgcolor: stat.color, width: 56, height: 56 }}>
-                      <IconComponent size={24} />
-                    </Avatar>
-                  </Box>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" href={stat.link}>
-                    View Details
-                  </Button>
-                </CardActions>
-              </Card>
-    </Box>
-          );
-        })}
-  </Box>
-
-      {/* Features Overview */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
-        <Box>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                KonBase Features
-              </Typography>
-              <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <Package size={20} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Inventory Management"
-                    secondary="Track items, categories, locations, and equipment sets"
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem>
-                  <ListItemIcon>
-                    <Calendar size={20} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Convention Management"
-                    secondary="Plan events, manage equipment allocation, and track resources"
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem>
-                  <ListItemIcon>
-                    <Users size={20} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Association Management"
-                    secondary="Manage organizations, members, roles, and permissions"
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem>
-                  <ListItemIcon>
-                    <TrendingUp size={20} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Reports & Analytics"
-                    secondary="Generate insights and track performance metrics"
-                  />
-                </ListItem>
-              </List>
-            </CardContent>
-            <CardActions>
-              <Button size="small" href="/associations">
-                Get Started
-              </Button>
-            </CardActions>
-          </Card>
-  </Box>
-
-  <Box>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Package size={16} />}
-                  href="/inventory/items/new"
-                  fullWidth
-                >
-                  Add New Item
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Calendar size={16} />}
-                  href="/conventions/new"
-                  fullWidth
-                >
-                  Create Convention
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Users size={16} />}
-                  href="/associations"
-                  fullWidth
-                >
-                  Manage Associations
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        {/* Welcome Header */}
+        <Box mb={4}>
+          <Typography variant='h4' component='h1' gutterBottom>
+            Welcome to KonBase
+          </Typography>
+          <Typography color='text.secondary'>
+            All-in-one platform for conventions to manage inventory, track
+            equipment, and streamline logistics
+          </Typography>
         </Box>
-      </Box>
-    </Container>
+
+        {/* Quick Stats Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: '1fr 1fr',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 3,
+            mb: 4,
+          }}
+        >
+          {quickStats.map(stat => {
+            const IconComponent = stat.icon;
+            return (
+              <Box key={stat.title}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Box
+                      display='flex'
+                      alignItems='center'
+                      justifyContent='space-between'
+                    >
+                      <Box>
+                        <Typography color='text.secondary' gutterBottom>
+                          {stat.title}
+                        </Typography>
+                        <Typography variant='h4' component='div'>
+                          {stat.value}
+                        </Typography>
+                      </Box>
+                      <Avatar
+                        sx={{ bgcolor: stat.color, width: 56, height: 56 }}
+                      >
+                        <IconComponent size={24} />
+                      </Avatar>
+                    </Box>
+                  </CardContent>
+                  <CardActions>
+                    <Button size='small' href={stat.link}>
+                      View Details
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {/* Features Overview */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+            gap: 3,
+          }}
+        >
+          <Box>
+            <Card sx={{ height: '100%' }}>
+              <CardContent>
+                <Typography variant='h6' gutterBottom>
+                  KonBase Features
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemIcon>
+                      <Package size={20} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary='Inventory Management'
+                      secondary='Track items, categories, locations, and equipment sets'
+                    />
+                  </ListItem>
+                  <Divider />
+                  <ListItem>
+                    <ListItemIcon>
+                      <Calendar size={20} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary='Convention Management'
+                      secondary='Plan events, manage equipment allocation, and track resources'
+                    />
+                  </ListItem>
+                  <Divider />
+                  <ListItem>
+                    <ListItemIcon>
+                      <Users size={20} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary='Association Management'
+                      secondary='Manage organizations, members, roles, and permissions'
+                    />
+                  </ListItem>
+                  <Divider />
+                  <ListItem>
+                    <ListItemIcon>
+                      <TrendingUp size={20} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary='Reports & Analytics'
+                      secondary='Generate insights and track performance metrics'
+                    />
+                  </ListItem>
+                </List>
+              </CardContent>
+              <CardActions>
+                <Button size='small' href='/associations'>
+                  Get Started
+                </Button>
+              </CardActions>
+            </Card>
+          </Box>
+
+          <Box>
+            <Card>
+              <CardContent>
+                <Typography variant='h6' gutterBottom>
+                  Quick Actions
+                </Typography>
+                <Box display='flex' flexDirection='column' gap={1}>
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<Package size={16} />}
+                    href='/inventory/items/new'
+                    fullWidth
+                  >
+                    Add New Item
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<Calendar size={16} />}
+                    href='/conventions/new'
+                    fullWidth
+                  >
+                    Create Convention
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<Users size={16} />}
+                    href='/associations'
+                    fullWidth
+                  >
+                    Manage Associations
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      </Container>
     </AppLayout>
   );
 }

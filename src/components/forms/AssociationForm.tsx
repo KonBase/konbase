@@ -4,7 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Paper, Typography } from '@mui/material';
 import { TextField } from '@/components/ui/TextField';
 import { Button } from '@/components/ui/button';
-import { associationSchema, AssociationFormData } from '@/lib/validations/schemas';
+import {
+  associationSchema,
+  AssociationFormData,
+} from '@/lib/validations/schemas';
 
 interface AssociationFormProps {
   initialData?: Partial<AssociationFormData>;
@@ -19,80 +22,68 @@ export const AssociationForm: React.FC<AssociationFormProps> = ({
   loading = false,
   title = 'Association Details',
 }) => {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<AssociationFormData>({
+  const { control, handleSubmit } = useForm<AssociationFormData>({
     resolver: zodResolver(associationSchema),
     defaultValues: initialData,
   });
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant='h6' gutterBottom>
         {title}
       </Typography>
-      
-      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+
+      <Box component='form' onSubmit={handleSubmit(onSubmit)}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            name="name"
+            name='name'
             control={control}
-            label="Association Name"
+            label='Association Name'
             required
           />
-          
+
           <TextField
-            name="description"
+            name='description'
             control={control}
-            label="Description"
+            label='Description'
             multiline
             rows={3}
           />
-          
+
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
               <TextField
-                name="website"
+                name='website'
                 control={control}
-                label="Website"
-                placeholder="https://example.com"
+                label='Website'
+                placeholder='https://example.com'
               />
             </Box>
-            
+
             <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
               <TextField
-                name="email"
+                name='email'
                 control={control}
-                label="Contact Email"
-                type="email"
+                label='Contact Email'
+                type='email'
               />
             </Box>
           </Box>
-          
+
           <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <TextField
-              name="phone"
-              control={control}
-              label="Phone Number"
-            />
+            <TextField name='phone' control={control} label='Phone Number' />
           </Box>
-          
+
           <TextField
-            name="address"
+            name='address'
             control={control}
-            label="Address"
+            label='Address'
             multiline
             rows={2}
           />
-          
-          <Box display="flex" gap={2} justifyContent="flex-end">
-            <Button
-              type="submit"
-              variant="contained"
-              loading={loading}
-            >
+
+          <Box display='flex' gap={2} justifyContent='flex-end'>
+            <Button type='submit' variant='contained' loading={loading}>
               {initialData ? 'Update Association' : 'Create Association'}
             </Button>
           </Box>

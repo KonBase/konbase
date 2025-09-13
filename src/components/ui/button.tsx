@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  Button as MuiButton, 
+import {
+  Button as MuiButton,
   ButtonProps as MuiButtonProps,
-  CircularProgress 
+  CircularProgress,
 } from '@mui/material';
 
 interface ButtonProps extends Omit<MuiButtonProps, 'size'> {

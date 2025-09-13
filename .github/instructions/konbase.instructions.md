@@ -1,6 +1,7 @@
 ---
 applyTo: '**'
 ---
+
 # KonBase Modernization Project - Copilot Instructions
 
 ## Project Overview
@@ -13,6 +14,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 ## Technology Stack
 
 ### Target Modern Stack (What we're building)
+
 - **Frontend:** Next.js v15 (App Router), TypeScript, Tailwind CSS v4
 - **UI Framework:** Material UI v7.3.2 (@mui/material@^7.3.2)
 - **Database:** Gel Database (GelDB) with PostgreSQL compatibility
@@ -23,6 +25,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 - **Styling:** Tailwind CSS v4 with custom design system
 
 ### Legacy Stack (What we're migrating FROM)
+
 - React 18 + Vite + Supabase (PostgreSQL, Auth, Storage)
 - Radix UI components (being replaced with Material UI)
 - shadcn/ui components (being replaced)
@@ -30,6 +33,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 ## Project Architecture
 
 ### Core Modules
+
 1. **Association Management** - Organizations, members, roles, invitations
 2. **Inventory Management** - Items, categories, locations, equipment sets, documents
 3. **Convention Management** - Events, equipment tracking, consumables, requirements
@@ -38,6 +42,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 6. **Reports & Analytics** - Data visualization and export functionality
 
 ### Directory Structure
+
 ```
 /
 ├── src/
@@ -63,6 +68,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 ## Development Guidelines
 
 ### Code Standards
+
 - **TypeScript:** Strict mode enabled, prefer type safety over `any`
 - **Components:** Use React function components with hooks
 - **Forms:** React Hook Form + Zod validation
@@ -71,6 +77,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 - **Error Handling:** Comprehensive error boundaries and validation
 
 ### UI/UX Standards
+
 - **Components:** Material UI v7.3.2 components ONLY (no Radix UI)
 - **Theming:** Custom MUI theme with KonBase color palette
 - **Responsive:** Mobile-first approach with Tailwind breakpoints
@@ -78,6 +85,7 @@ KonBase is a comprehensive inventory and convention management system designed f
 - **Design Tokens:** Use Tailwind CSS custom variables for consistency
 
 ### KonBase Design System Colors
+
 ```
 konbase: {
   blue: '#0c2e62',      // Primary brand color
@@ -94,6 +102,7 @@ konbase: {
 ## Build and Development Commands
 
 ### Environment Setup
+
 ```
 # Install dependencies
 npm install
@@ -108,6 +117,7 @@ npm run db:seed
 ```
 
 ### Development Workflow
+
 ```
 # Start development server
 npm run dev              # Starts Next.js dev server on port 3000
@@ -125,6 +135,7 @@ npm run type-check       # TypeScript validation
 ```
 
 ### Docker Development
+
 ```
 # Full stack with Docker Compose
 docker-compose up -d     # Start all services
@@ -135,6 +146,7 @@ docker-compose down      # Stop all services
 ## Migration-Specific Guidelines
 
 ### Component Migration Rules
+
 1. **Replace Radix UI → Material UI:**
    - `@radix-ui/react-dialog` → `@mui/material/Dialog`
    - `@radix-ui/react-select` → `@mui/material/Select`
@@ -152,6 +164,7 @@ docker-compose down      # Stop all services
    - Maintain 2FA functionality
 
 ### File Organization During Migration
+
 - Keep legacy code in `/legacy/` directory during transition
 - Create parallel implementations in new structure
 - Use feature flags for gradual rollout
@@ -160,6 +173,7 @@ docker-compose down      # Stop all services
 ## Database Schema
 
 ### Core Tables
+
 - `associations` - Organization data
 - `profiles` - User profiles extending auth users
 - `association_members` - User-association relationships
@@ -168,6 +182,7 @@ docker-compose down      # Stop all services
 - `audit_logs` - Comprehensive activity tracking
 
 ### Security Model
+
 - Role-based access: `super_admin`, `system_admin`, `admin`, `manager`, `member`, `guest`
 - Row Level Security (RLS) policies for data isolation
 - Association-scoped data access
@@ -176,17 +191,20 @@ docker-compose down      # Stop all services
 ## Testing Strategy
 
 ### Unit Testing
+
 - Jest + Testing Library for component tests
 - Mock GelDB queries and Auth.js sessions
 - Test form validation and user interactions
 - Maintain >80% code coverage
 
 ### Integration Testing
+
 - Test API routes with database integration
 - Verify authentication flows
 - Test role-based access controls
 
 ### E2E Testing
+
 - Playwright for full user journey testing
 - Test critical workflows (login, inventory management, convention setup)
 - Cross-browser compatibility testing
@@ -194,18 +212,21 @@ docker-compose down      # Stop all services
 ## Special Considerations
 
 ### Performance Requirements
+
 - Page load times < 2 seconds
 - Responsive design for mobile devices
 - Efficient data fetching with TanStack Query
 - Image optimization for inventory photos
 
 ### Security Requirements
+
 - Implement all RLS policies from legacy system
 - Secure file upload validation
 - Rate limiting on API endpoints
 - CSRF protection on forms
 
 ### Self-Hosting Optimization
+
 - Docker containers for easy deployment
 - Environment-based configuration
 - Health checks and monitoring
@@ -214,6 +235,7 @@ docker-compose down      # Stop all services
 ## Common Patterns
 
 ### Form Pattern
+
 ```
 // Use React Hook Form + Zod + Material UI
 const schema = z.object({
@@ -224,7 +246,7 @@ function MyForm() {
   const form = useForm({
     resolver: zodResolver(schema),
   });
-  
+
   return (
     <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
       <TextField
@@ -238,6 +260,7 @@ function MyForm() {
 ```
 
 ### Data Fetching Pattern
+
 ```
 // Use TanStack Query with GelDB
 function useItems() {
@@ -251,18 +274,21 @@ function useItems() {
 ## Troubleshooting
 
 ### Common Issues
+
 - **Build failures:** Check TypeScript errors and dependency versions
 - **Database connection:** Verify GEL_DATABASE_URL in environment
 - **Authentication issues:** Check NEXTAUTH_SECRET and provider config
 - **Styling problems:** Ensure Tailwind classes are properly compiled
 
 ### Development Tips
+
 - Use `npm run type-check` before committing
 - Keep Material UI theme consistent with KonBase design
 - Test responsive design on multiple screen sizes
 - Verify accessibility with screen readers
 
 Always prefer the modern stack implementations over legacy patterns. When in doubt, follow Material UI best practices and Next.js 15 App Router conventions.
+
 ```
 
 ***
@@ -289,3 +315,4 @@ This Copilot instructions file provides comprehensive guidance for working on th
 [18](https://devblogs.microsoft.com/java/customize-github-copilot-in-jetbrains-with-custom-instructions/)
 [19](https://docs.github.com/copilot/quickstart)
 [20](https://githubnext.com/projects/copilot-workspace)
+```

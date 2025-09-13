@@ -7,16 +7,18 @@ export const signInSchema = z.object({
   totpCode: z.string().optional(),
 });
 
-export const signUpSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+export const signUpSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 // Association schemas
 export const associationSchema = z.object({
@@ -30,7 +32,14 @@ export const associationSchema = z.object({
 
 export const associationMemberSchema = z.object({
   profileId: z.string().uuid(),
-  role: z.enum(['super_admin', 'system_admin', 'admin', 'manager', 'member', 'guest']),
+  role: z.enum([
+    'super_admin',
+    'system_admin',
+    'admin',
+    'manager',
+    'member',
+    'guest',
+  ]),
 });
 
 // Profile schemas
@@ -75,28 +84,34 @@ export const itemSchema = z.object({
 export const equipmentSetSchema = z.object({
   name: z.string().min(1, 'Equipment set name is required').max(255),
   description: z.string().optional(),
-  items: z.array(z.object({
-    itemId: z.string().uuid(),
-    quantity: z.number().positive().min(1),
-  })),
+  items: z.array(
+    z.object({
+      itemId: z.string().uuid(),
+      quantity: z.number().positive().min(1),
+    })
+  ),
 });
 
 // Convention schemas
-export const conventionSchema = z.object({
-  name: z.string().min(1, 'Convention name is required').max(255),
-  description: z.string().optional(),
-  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: 'Invalid start date',
-  }),
-  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: 'Invalid end date',
-  }),
-  location: z.string().optional(),
-  status: z.enum(['planning', 'active', 'completed', 'cancelled']).default('planning'),
-}).refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
-  message: 'End date must be after start date',
-  path: ['endDate'],
-});
+export const conventionSchema = z
+  .object({
+    name: z.string().min(1, 'Convention name is required').max(255),
+    description: z.string().optional(),
+    startDate: z.string().refine(date => !isNaN(Date.parse(date)), {
+      message: 'Invalid start date',
+    }),
+    endDate: z.string().refine(date => !isNaN(Date.parse(date)), {
+      message: 'Invalid end date',
+    }),
+    location: z.string().optional(),
+    status: z
+      .enum(['planning', 'active', 'completed', 'cancelled'])
+      .default('planning'),
+  })
+  .refine(data => new Date(data.startDate) <= new Date(data.endDate), {
+    message: 'End date must be after start date',
+    path: ['endDate'],
+  });
 
 export const conventionMemberSchema = z.object({
   profileId: z.string().uuid(),
@@ -153,9 +168,11 @@ export const conventionFilterSchema = searchSchema.extend({
 
 // File upload validation
 export const fileUploadSchema = z.object({
-  file: z.any().refine((file) => file instanceof File, 'Invalid file'),
+  file: z.any().refine(file => file instanceof File, 'Invalid file'),
   maxSize: z.number().default(10 * 1024 * 1024), // 10MB default
-  allowedTypes: z.array(z.string()).default(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']),
+  allowedTypes: z
+    .array(z.string())
+    .default(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']),
 });
 
 // Type exports for form components

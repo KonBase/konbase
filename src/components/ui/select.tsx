@@ -7,7 +7,12 @@ import {
   FormHelperText,
   SelectProps as MuiSelectProps,
 } from '@mui/material';
-import { useController, Control, FieldPath, FieldValues } from 'react-hook-form';
+import {
+  useController,
+  Control,
+  FieldPath,
+  FieldValues,
+} from 'react-hook-form';
 
 interface SelectOption {
   value: string | number;
@@ -17,19 +22,19 @@ interface SelectOption {
 
 interface SelectProps<
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > extends Omit<MuiSelectProps, 'name' | 'value' | 'onChange'> {
   name: TName;
   control: Control<TFieldValues>;
   label: string;
   options: SelectOption[];
   required?: boolean;
-  rules?: any;
+  rules?: Record<string, unknown>;
 }
 
 export function Select<
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   name,
   control,
@@ -41,7 +46,7 @@ export function Select<
 }: SelectProps<TFieldValues, TName>) {
   const {
     field,
-    fieldState: { error }
+    fieldState: { error },
   } = useController({
     name,
     control,
@@ -52,22 +57,17 @@ export function Select<
   });
 
   return (
-    <FormControl fullWidth margin="normal" error={!!error}>
+    <FormControl fullWidth margin='normal' error={!!error}>
       <InputLabel required={required}>{label}</InputLabel>
-      <MuiSelect
-        {...field}
-        {...props}
-        label={label}
-        displayEmpty={!required}
-      >
+      <MuiSelect {...field} {...props} label={label} displayEmpty={!required}>
         {!required && (
-          <MenuItem value="">
+          <MenuItem value=''>
             <em>None</em>
           </MenuItem>
         )}
-        {options.map((option) => (
-          <MenuItem 
-            key={option.value} 
+        {options.map(option => (
+          <MenuItem
+            key={option.value}
             value={option.value}
             disabled={option.disabled}
           >

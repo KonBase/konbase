@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
   Box,
   Card,
   CardContent,
-  Grid,
   Button,
   Chip,
   LinearProgress,
@@ -25,9 +24,7 @@ import {
   BarChart3,
   Settings,
   Activity,
-  AlertTriangle,
   CheckCircle,
-  Clock,
   Palette,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -51,7 +48,7 @@ function TabPanel(props: TabPanelProps) {
 
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`admin-tabpanel-${index}`}
       aria-labelledby={`admin-tab-${index}`}
@@ -101,8 +98,8 @@ export default function AdminPage() {
 
   if (checkingAdmin) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" alignItems="center" gap={2}>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        <Box display='flex' alignItems='center' gap={2}>
           <LinearProgress sx={{ flex: 1 }} />
           <Typography>Checking admin permissions...</Typography>
         </Box>
@@ -112,13 +109,14 @@ export default function AdminPage() {
 
   if (!isSuperAdmin) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        <Alert severity='error' sx={{ mb: 3 }}>
+          <Typography variant='h6' gutterBottom>
             Access Denied
           </Typography>
           <Typography>
-            You do not have super admin privileges. Only super administrators can access this panel.
+            You do not have super admin privileges. Only super administrators
+            can access this panel.
           </Typography>
         </Alert>
       </Container>
@@ -127,19 +125,20 @@ export default function AdminPage() {
 
   if (!adminElevated) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth='lg' sx={{ py: 4 }}>
         <Card sx={{ maxWidth: 600, mx: 'auto' }}>
           <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Shield size={64} color="#1976d2" style={{ marginBottom: 16 }} />
-            <Typography variant="h4" gutterBottom>
+            <Shield size={64} color='#1976d2' style={{ marginBottom: 16 }} />
+            <Typography variant='h4' gutterBottom>
               Admin Panel Access
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              You have super admin privileges. Please verify your identity to access the admin panel.
+            <Typography color='text.secondary' sx={{ mb: 3 }}>
+              You have super admin privileges. Please verify your identity to
+              access the admin panel.
             </Typography>
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               startIcon={<Shield size={20} />}
               onClick={() => setElevationDialogOpen(true)}
             >
@@ -193,43 +192,59 @@ export default function AdminPage() {
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth='xl' sx={{ py: 4 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
+        mb={4}
+      >
         <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
+          <Typography variant='h4' component='h1' gutterBottom>
             Admin Panel
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color='text.secondary'>
             System administration and management
           </Typography>
         </Box>
         <Chip
           icon={<Shield size={16} />}
-          label="Super Admin"
-          color="primary"
-          variant="outlined"
+          label='Super Admin'
+          color='primary'
+          variant='outlined'
         />
       </Box>
 
       {/* Quick Stats */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 4 }}>
-        {quickStats.map((stat) => {
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: 3,
+          mb: 4,
+        }}
+      >
+        {quickStats.map(stat => {
           const IconComponent = stat.icon;
           return (
             <Card key={stat.title}>
               <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box
+                  display='flex'
+                  alignItems='center'
+                  justifyContent='space-between'
+                >
                   <Box>
-                    <Typography color="text.secondary" gutterBottom>
+                    <Typography color='text.secondary' gutterBottom>
                       {stat.title}
                     </Typography>
-                    <Typography variant="h4" component="div">
+                    <Typography variant='h4' component='div'>
                       {stat.value.toLocaleString()}
                     </Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={1}>
-                      <CheckCircle size={14} color="#4caf50" />
-                      <Typography variant="body2" color="success.main">
+                    <Box display='flex' alignItems='center' gap={1} mt={1}>
+                      <CheckCircle size={14} color='#4caf50' />
+                      <Typography variant='body2' color='success.main'>
                         {stat.change} from last month
                       </Typography>
                     </Box>
@@ -244,7 +259,7 @@ export default function AdminPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <IconComponent size={24} color="white" />
+                    <IconComponent size={24} color='white' />
                   </Box>
                 </Box>
               </CardContent>
@@ -258,16 +273,16 @@ export default function AdminPage() {
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
+          variant='scrollable'
+          scrollButtons='auto'
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label="System Overview" icon={<BarChart3 size={20} />} />
-          <Tab label="Associations" icon={<Building size={20} />} />
-          <Tab label="Users" icon={<Users size={20} />} />
-          <Tab label="Global Settings" icon={<Settings size={20} />} />
-          <Tab label="Branding" icon={<Palette size={20} />} />
-          <Tab label="Audit Logs" icon={<Activity size={20} />} />
+          <Tab label='System Overview' icon={<BarChart3 size={20} />} />
+          <Tab label='Associations' icon={<Building size={20} />} />
+          <Tab label='Users' icon={<Users size={20} />} />
+          <Tab label='Global Settings' icon={<Settings size={20} />} />
+          <Tab label='Branding' icon={<Palette size={20} />} />
+          <Tab label='Audit Logs' icon={<Activity size={20} />} />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>

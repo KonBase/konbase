@@ -19,15 +19,19 @@ export async function GET(request: NextRequest) {
 
     const associationId = request.headers.get('x-association-id');
     if (!associationId) {
-      return NextResponse.json({ error: 'Association ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Association ID required' },
+        { status: 400 }
+      );
     }
 
     const dataAccess = getDataAccess();
-    let conventions = await dataAccess.getConventionsByAssociation(associationId);
+    let conventions =
+      await dataAccess.getConventionsByAssociation(associationId);
 
     // Apply filters
     if (query) {
-      conventions = conventions.filter(conv => 
+      conventions = conventions.filter(conv =>
         conv.name.toLowerCase().includes(query.toLowerCase())
       );
     }
@@ -40,11 +44,12 @@ export async function GET(request: NextRequest) {
     const conventionsWithCounts = conventions.map(conv => ({
       ...conv,
       member_count: 0, // TODO: Calculate actual member count
-      equipment_count: 0 // TODO: Calculate actual equipment count
+      equipment_count: 0, // TODO: Calculate actual equipment count
     }));
 
     return NextResponse.json({ data: conventionsWithCounts, success: true });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching conventions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch conventions', success: false },
@@ -66,7 +71,10 @@ export async function POST(request: NextRequest) {
 
     const associationId = request.headers.get('x-association-id');
     if (!associationId) {
-      return NextResponse.json({ error: 'Association ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Association ID required' },
+        { status: 400 }
+      );
     }
 
     const dataAccess = getDataAccess();
@@ -79,21 +87,24 @@ export async function POST(request: NextRequest) {
       start_date: validatedData.startDate,
       end_date: validatedData.endDate,
       location: validatedData.location || undefined,
-      status: validatedData.status || 'planning'
+      status: validatedData.status || 'planning',
     });
 
     // Add creator as admin
     await dataAccess.createConventionMember({
       convention_id: convention.id,
       profile_id: session.user.id,
-      role: 'admin'
+      role: 'admin',
     });
 
-    return NextResponse.json({ 
-      data: convention, 
-      success: true,
-      message: 'Convention created successfully' 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: convention,
+        success: true,
+        message: 'Convention created successfully',
+      },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -102,6 +113,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line no-console
     console.error('Error creating convention:', error);
     return NextResponse.json(
       { error: 'Failed to create convention', success: false },
