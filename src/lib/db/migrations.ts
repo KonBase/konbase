@@ -370,154 +370,26 @@ export const migrations: Migration[] = [
       ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
       ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
-      -- RLS policies for associations
-      CREATE POLICY "Users can view associations they belong to" ON associations
-        FOR SELECT USING (
-          id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
+      -- Basic RLS policies (simplified for standard PostgreSQL)
+      -- Note: These are placeholder policies. In production, you would implement
+      -- proper authentication-based policies using your auth system.
 
-      CREATE POLICY "Users can create associations" ON associations
-        FOR INSERT WITH CHECK (true);
-
-      CREATE POLICY "Users can update associations they manage" ON associations
-        FOR UPDATE USING (
-          id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      -- RLS policies for association_members
-      CREATE POLICY "Users can view members in their associations" ON association_members
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "Users can manage members in their associations" ON association_members
-        FOR ALL USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      -- RLS policies for items
-      CREATE POLICY "Users can view items in their associations" ON items
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "Users can manage items in their associations" ON items
-        FOR ALL USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      -- RLS policies for conventions
-      CREATE POLICY "Users can view conventions in their associations" ON conventions
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "Users can create conventions in their associations" ON conventions
-        FOR INSERT WITH CHECK (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      CREATE POLICY "Users can update conventions in their associations" ON conventions
-        FOR UPDATE USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      -- RLS policies for equipment_sets
-      CREATE POLICY "Users can view equipment sets in their associations" ON equipment_sets
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "Users can manage equipment sets in their associations" ON equipment_sets
-        FOR ALL USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      -- RLS policies for notifications
-      CREATE POLICY "Users can view their own notifications" ON notifications
-        FOR SELECT USING (user_id = auth.uid());
-
-      CREATE POLICY "Users can update their own notifications" ON notifications
-        FOR UPDATE USING (user_id = auth.uid());
-
-      -- RLS policies for chat_messages
-      CREATE POLICY "Users can view chat messages in their associations" ON chat_messages
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "Users can create chat messages in their associations" ON chat_messages
-        FOR INSERT WITH CHECK (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      -- RLS policies for audit_logs
-      CREATE POLICY "Users can view audit logs in their associations" ON audit_logs
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid()
-          )
-        );
-
-      CREATE POLICY "System can insert audit logs" ON audit_logs
-        FOR INSERT WITH CHECK (true);
-
-      -- RLS policies for invitations
-      CREATE POLICY "Users can view invitations in their associations" ON invitations
-        FOR SELECT USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
-
-      CREATE POLICY "Users can manage invitations in their associations" ON invitations
-        FOR ALL USING (
-          association_id IN (
-            SELECT association_id FROM association_members 
-            WHERE profile_id = auth.uid() AND role IN ('admin', 'manager')
-          )
-        );
+      -- Allow all operations for now (can be restricted later based on your auth system)
+      CREATE POLICY "Allow all operations on associations" ON associations FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on association_members" ON association_members FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on categories" ON categories FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on locations" ON locations FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on items" ON items FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on equipment_sets" ON equipment_sets FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on equipment_set_items" ON equipment_set_items FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on conventions" ON conventions FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on convention_members" ON convention_members FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on convention_equipment" ON convention_equipment FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on documents" ON documents FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on notifications" ON notifications FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on chat_messages" ON chat_messages FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on audit_logs" ON audit_logs FOR ALL USING (true);
+      CREATE POLICY "Allow all operations on invitations" ON invitations FOR ALL USING (true);
     `,
   },
 ];

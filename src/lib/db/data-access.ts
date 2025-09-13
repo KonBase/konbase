@@ -73,7 +73,9 @@ export class DataAccessLayer {
     if (dbType === 'redis') {
       this.db = getRedisClient();
     } else {
-      this.db = getGelDataAccess();
+      // For PostgreSQL, we don't need to store anything in this.db
+      // since we use the direct PostgreSQL client functions
+      this.db = null;
     }
   }
 
