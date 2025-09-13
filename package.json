@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node ./scripts/run-gel-migrations.mjs || echo 'Migrations skipped'",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

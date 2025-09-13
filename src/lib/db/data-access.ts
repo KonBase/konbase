@@ -1,5 +1,6 @@
 import { getDataAccess as getGelDataAccess } from './gel';
 import { getRedisClient } from './redis';
+import { executeQuery, executeQuerySingle } from './postgres';
 
 // Data Access Layer that abstracts database operations
 // Works with PostgreSQL (SQL) and Redis (key-value)
@@ -79,7 +80,6 @@ export class DataAccessLayer {
   private getPostgresDb() {
     // For PostgreSQL, we need to use the actual database client
     if (this.dbType === 'postgresql') {
-      const { executeQuery, executeQuerySingle } = require('./postgres');
       return {
         query: (sql: string, params: unknown[] = []) =>
           executeQuery(sql, params),
