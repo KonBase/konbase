@@ -3,16 +3,19 @@ import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Spinner } from '@/components/ui/spinner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User, AlertTriangle, Clock, Calendar, CheckCircle, Archive } from 'lucide-react';
+import { User, AlertTriangle, Clock, Calendar, CheckCircle, Archive, Shield, ShieldCheck } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getMFAFactors } from '@/utils/mfa-utils';
 
 const ProfilePage = () => {
   const { profile, loading: profileLoading } = useUserProfile();
   const [conventions, setConventions] = useState([]);
   const [loadingConventions, setLoadingConventions] = useState(true);
   const [associationName, setAssociationName] = useState<string | null>(null);
+  const [mfaStatus, setMfaStatus] = useState<{ enabled: boolean; factorCount: number }>({ enabled: false, factorCount: 0 });
+  const [loadingMfa, setLoadingMfa] = useState(true);
 
   useEffect(() => {
     const fetchConventions = async () => {
@@ -22,7 +25,7 @@ const ProfilePage = () => {
       try {
         const { data, error } = await supabase
           .from('convention_access')
-          .select('id, role, conventions(name, start_date, end_date, logo)')
+          .select('id, role, conventions(name, start_date, end_date)')
           .eq('user_id', profile.id);
 
         if (error) throw error;
@@ -56,8 +59,30 @@ const ProfilePage = () => {
       }
     };
 
+    // Fetch MFA status
+    const fetchMFAStatus = async () => {
+      if (!profile?.id) return;
+      
+      setLoadingMfa(true);
+      try {
+        const factorsData = await getMFAFactors();
+        const verifiedFactors = factorsData.verified;
+        
+        setMfaStatus({
+          enabled: verifiedFactors.length > 0,
+          factorCount: verifiedFactors.length
+        });
+      } catch (error) {
+        console.error('Error fetching MFA status:', error);
+        setMfaStatus({ enabled: false, factorCount: 0 });
+      } finally {
+        setLoadingMfa(false);
+      }
+    };
+
     fetchConventions();
     fetchAssociation();
+    fetchMFAStatus();
   }, [profile?.id]);
 
   if (profileLoading) {
@@ -195,9 +220,30 @@ const ProfilePage = () => {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Two-Factor Authentication</p>
-                <p className="mt-1">
-                  {profile?.two_factor_enabled ? 'Enabled' : 'Disabled'}
-                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  {loadingMfa ? (
+                    <div className="flex items-center gap-2">
+                      <Spinner size="sm" />
+                      <span className="text-sm">Loading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {mfaStatus.enabled ? (
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                            Enabled ({mfaStatus.factorCount} factor{mfaStatus.factorCount === 1 ? '' : 's'})
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Disabled</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   You can configure 2FA in the Settings page.
                 </p>
@@ -245,7 +291,6 @@ const ProfilePage = () => {
                         <tr key={convention.id} className="">
                           <td className="px-4 py-2">
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={convention.conventions.logo || ''} alt={convention.conventions.name} />
                               <AvatarFallback>{convention.conventions.name[0]}</AvatarFallback>
                             </Avatar>
                           </td>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { logDebug, handleError } from '@/utils/debug';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -21,22 +22,29 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      logDebug('Sending password reset email', { email }, 'info');
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       
-      if (error) throw error;
+      if (error) {
+        logDebug('Error sending password reset email', error, 'error');
+        throw error;
+      }
+      
+      logDebug('Password reset email sent successfully', null, 'info');
       
       setIsSubmitted(true);
       toast({
         title: 'Password reset link sent',
-        description: 'Check your email for a password reset link.',
+        description: 'Check your email for a password reset link. The link will expire in 1 hour.',
       });
     } catch (error: any) {
-      console.error(error);
+      handleError(error, 'ForgotPassword.handleSubmit');
       toast({
         title: 'Password reset failed',
-        description: error.message || 'Could not send password reset email.',
+        description: error.message || 'Could not send password reset email. Please try again.',
         variant: 'destructive',
       });
     } finally {

@@ -5,18 +5,12 @@ import DashboardOverviewSection from '@/components/dashboard/DashboardOverviewSe
 import AssociationManagementSection from '@/components/dashboard/AssociationManagementSection';
 import ConventionManagementSection from '@/components/dashboard/ConventionManagementSection';
 import { DashboardModulesSection } from '@/components/dashboard/DashboardModulesSection';
+import { QuickActionModalHandler } from '@/components/dashboard/QuickActionModalHandler';
 import { Association } from '@/types/association';
 import { User } from '@/types/user';
+import { AuditLog } from '@/types/audit';
 import { useToast } from '@/components/ui/use-toast';
 import { ModuleProvider } from '@/components/modules/ModuleContext';
-
-interface AuditLog {
-  id: string;
-  action: string;
-  created_at: string;
-  entity: string;
-  entity_id: string;
-}
 
 interface DashboardContentProps {
   currentAssociation: Association;
@@ -69,39 +63,41 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   }, [isDebugMode, loadTime, toast]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 space-y-8">
-        <DashboardHeader 
-          currentAssociation={currentAssociation} 
-          user={user} 
-          isHome={isHome} 
-        />
-
-        <ErrorBoundary>
-          <DashboardOverviewSection 
-            currentAssociation={currentAssociation}
-            isLoadingActivity={isLoadingActivity}
-            recentActivity={safeRecentActivity}
-            activityError={activityError}
-            handleRetry={handleRetry}
+    <QuickActionModalHandler>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-6 space-y-8">
+          <DashboardHeader 
+            currentAssociation={currentAssociation} 
+            user={user} 
+            isHome={isHome} 
           />
-        </ErrorBoundary>
-        
-        <ErrorBoundary>
-          <AssociationManagementSection onShowLocationManager={onShowLocationManager} />
-        </ErrorBoundary>
-        
-        <ErrorBoundary>
-          <ConventionManagementSection />
-        </ErrorBoundary>
-        
-        <ErrorBoundary>
-          <ModuleProvider>
-            <DashboardModulesSection />
-          </ModuleProvider>
-        </ErrorBoundary>
+
+          <ErrorBoundary>
+            <DashboardOverviewSection 
+              currentAssociation={currentAssociation}
+              isLoadingActivity={isLoadingActivity}
+              recentActivity={safeRecentActivity}
+              activityError={activityError}
+              handleRetry={handleRetry}
+            />
+          </ErrorBoundary>
+          
+          <ErrorBoundary>
+            <AssociationManagementSection onShowLocationManager={onShowLocationManager} />
+          </ErrorBoundary>
+          
+          <ErrorBoundary>
+            <ConventionManagementSection />
+          </ErrorBoundary>
+          
+          <ErrorBoundary>
+            <ModuleProvider>
+              <DashboardModulesSection />
+            </ModuleProvider>
+          </ErrorBoundary>
+        </div>
       </div>
-    </div>
+    </QuickActionModalHandler>
   );
 };
 

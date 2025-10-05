@@ -57,46 +57,21 @@ export const fetchUserAssociations = async (profileId: string): Promise<Associat
       return association ? [association] : [];
     }
     
-    let membershipData;
-    
-    // Try the RPC function first - this bypasses row-level policies
-    try {
-      const { data, error } = await supabase
-        .rpc('get_user_association_memberships', { user_id_param: profileId });
-      
-      if (!error && data) {
-        membershipData = data; // Assign data directly
-      } else if (error) {
-        console.warn('RPC method get_user_association_memberships failed, falling back to direct query:', error.message);
-        // Fallback logic below
-      } else {
-         console.warn('RPC method get_user_association_memberships returned no data, falling back.');
-      }
-    } catch (rpcError) {
-      console.error('Exception calling RPC get_user_association_memberships:', rpcError);
-      // Fallback logic below
-    }
+    // Direct query on association_members table (respects RLS)
+    const { data: membershipData, error: directError } = await supabase
+      .from('association_members')
+      .select(`
+        *,
+        associations (
+          id,
+          name
+        )
+      `)
+      .eq('user_id', profileId);
 
-    // Fallback: Direct query on memberships table (respects RLS)
-    if (!membershipData) {
-      console.log('Falling back to direct query for memberships for user:', profileId);
-      const { data: directData, error: directError } = await supabase
-        .from('memberships')
-        .select(`
-          *,
-          associations (
-            id,
-            name,
-            slug
-          )
-        `)
-        .eq('profile_id', profileId);
-
-      if (directError) {
-        console.error('Direct membership query failed:', directError.message);
-        return []; // Return empty if both methods fail
-      }
-      membershipData = directData;
+    if (directError) {
+      console.error('Direct membership query failed:', directError.message);
+      return []; // Return empty if query fails
     }
     
     // If we have no memberships, return empty array

@@ -10,8 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 import { logDebug, handleError } from '@/utils/debug';
 import { getLastVisitedPath, saveCurrentPath } from '@/utils/session-utils';
+import MFAVerification from './MFAVerification';
+import MFARecovery from './MFARecovery';
 
 const LoginForm = () => {
   const location = useLocation();
@@ -29,6 +32,11 @@ const LoginForm = () => {
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const redirectAttempts = useState(0);
   const isGitHubPages = window.location.hostname.includes('github.io');
+  
+  // 2FA state
+  const [needs2FA, setNeeds2FA] = useState(false);
+  const [showRecoveryKey, setShowRecoveryKey] = useState(false);
+  const [pendingUser, setPendingUser] = useState<any>(null);
 
   // Enhanced redirection effect
   useEffect(() => {
@@ -71,7 +79,38 @@ const LoginForm = () => {
     try {
       logDebug('Login attempt', { email }, 'info');
       
-      await login(email, password);
+      const { data, error } = await login(email, password);
+      
+      if (error) {
+        throw error;
+      }
+
+      // Check if MFA is required
+      if (data?.session?.aal === 'aal1') {
+        // Check if user has verified MFA factors enrolled
+        const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+        
+        if (factorsError) {
+          console.warn('Error checking MFA factors:', factorsError);
+          // Continue with login if we can't check factors
+        } else {
+          const verifiedFactors = [
+            ...(factors.totp || []).filter(f => f.status === 'verified'),
+            ...(factors.phone || []).filter(f => f.status === 'verified')
+          ];
+          
+          if (verifiedFactors.length > 0) {
+            logDebug('User has verified MFA factors, requiring verification', { 
+              totpCount: factors.totp?.filter(f => f.status === 'verified').length || 0,
+              phoneCount: factors.phone?.filter(f => f.status === 'verified').length || 0
+            }, 'info');
+            setNeeds2FA(true);
+            setPendingUser(data.user);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
       
       toast({
         title: 'Login successful',
@@ -131,7 +170,66 @@ const LoginForm = () => {
       setIsDiscordLoading(false);
     }
   };
+
+  // 2FA verification handlers
+  const handle2FAVerified = () => {
+    logDebug('2FA verification successful, completing login', null, 'info');
+    setNeeds2FA(false);
+    setPendingUser(null);
+    
+    toast({
+      title: 'Login successful',
+      description: 'Welcome back! Redirecting...',
+    });
+
+    // Reset redirect attempts counter
+    redirectAttempts[1](0);
+
+    if (location.state?.from) {
+      setRedirectTo(location.state.from);
+    } else {
+      const lastPath = getLastVisitedPath();
+      saveCurrentPath('/dashboard');
+      setRedirectTo(lastPath || '/dashboard');
+    }
+  };
+
+  const handle2FACancel = () => {
+    setNeeds2FA(false);
+    setPendingUser(null);
+    setShowRecoveryKey(false);
+  };
+
+  const handleShowRecoveryKey = () => {
+    setShowRecoveryKey(true);
+  };
+
+  const handleBackTo2FA = () => {
+    setShowRecoveryKey(false);
+  };
   
+  // Show MFA verification if needed
+  if (needs2FA && !showRecoveryKey) {
+    return (
+      <MFAVerification
+        onVerified={handle2FAVerified}
+        onCancel={handle2FACancel}
+        onUseRecoveryKey={handleShowRecoveryKey}
+      />
+    );
+  }
+
+  // Show recovery key verification if needed
+  if (needs2FA && showRecoveryKey) {
+    return (
+      <MFARecovery
+        onVerified={handle2FAVerified}
+        onBack={handleBackTo2FA}
+        onCancel={handle2FACancel}
+      />
+    );
+  }
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>

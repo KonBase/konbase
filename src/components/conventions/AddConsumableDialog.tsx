@@ -265,8 +265,8 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value || undefined}
+                    onValueChange={(value) => field.onChange(value === 'none' ? null : value)} 
+                    value={field.value || 'none'}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -274,7 +274,7 @@ export const AddConsumableDialog: React.FC<AddConsumableDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No location</SelectItem>
+                      <SelectItem value="none">No location</SelectItem>
                       {locations.map((location) => (
                         <SelectItem key={location.id} value={location.id}>
                           {location.name}

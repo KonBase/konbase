@@ -291,17 +291,17 @@ const ItemLocations = () => {
               <div className="space-y-2">
                 <Label htmlFor="parent">Parent Location (Optional)</Label>
                 <Select 
-                  value={newLocation.parent_id || ''} 
+                  value={newLocation.parent_id || 'none'} 
                   onValueChange={(value) => setNewLocation({
                     ...newLocation, 
-                    parent_id: value === '' ? null : value
+                    parent_id: value === 'none' ? null : value
                   })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a parent location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {locations.map(location => (
                       <SelectItem key={location.id} value={location.id}>
                         {location.name}
@@ -375,17 +375,17 @@ const ItemLocations = () => {
                 <div className="space-y-2">
                   <Label htmlFor="edit-parent">Parent Location</Label>
                   <Select 
-                    value={editingLocation.parent_id || ''} 
+                    value={editingLocation.parent_id || 'none'} 
                     onValueChange={(value) => setEditingLocation({
                       ...editingLocation, 
-                      parent_id: value === '' ? null : value
+                      parent_id: value === 'none' ? null : value
                     })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a parent location" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {locations
                         .filter(loc => loc.id !== editingLocation.id)
                         .map(location => (

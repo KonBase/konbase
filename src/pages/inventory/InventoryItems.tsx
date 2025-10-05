@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { useAssociation } from '@/contexts/AssociationContext';
+import { Link } from 'react-router-dom';
+import SearchBarWithScanner from '@/components/search/SearchBarWithScanner';
+import BulkCodeGenerator from '@/components/inventory/BulkCodeGenerator';
 import {
   Card,
   CardContent,
@@ -489,28 +492,30 @@ const InventoryItems = () => {
          )}
       </div>
 
+      {/* Main Tabs */}
+      <Tabs defaultValue="items" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="items">Items</TabsTrigger>
+          <TabsTrigger value="codes">QR/Barcode Generation</TabsTrigger>
+        </TabsList>
+
+        {/* Items Tab */}
+        <TabsContent value="items" className="space-y-6">
+
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
         {/* Search Input */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search name, desc, serial..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+        <div className="w-full md:w-72">
+          <SearchBarWithScanner
+            onSearch={setSearchQuery}
+            onScanResult={(result) => {
+              // Handle scanned code - could be item code, barcode, or serial number
+              setSearchQuery(result);
+            }}
+            placeholder="Search name, desc, serial, or scan code..."
+            className="w-full"
+            showScanner={true}
           />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-0.5 top-0.5 h-8 w-8 p-0"
-              onClick={() => setSearchQuery('')}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
         </div>
 
         {/* Filter Selects */}
@@ -643,7 +648,7 @@ const InventoryItems = () => {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          <span>{item.barcode}</span>
+                          <span className="font-mono text-sm">{item.barcode || 'No code'}</span>
                           <span className="text-xs text-muted-foreground md:hidden"> {/* Show category/location on small screens here */}
                             {getCategoryName(item.category_id)} / {getLocationName(item.location_id)}
                           </span>
@@ -651,7 +656,12 @@ const InventoryItems = () => {
                       </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          <span>{item.name}</span>
+                          <Link 
+                            to={`/inventory/items/${item.id}`}
+                            className="text-primary hover:underline font-medium"
+                          >
+                            {item.name}
+                          </Link>
                           <span className="text-xs text-muted-foreground md:hidden"> {/* Show category/location on small screens here */}
                             {getCategoryName(item.category_id)} / {getLocationName(item.location_id)}
                           </span>
@@ -702,6 +712,13 @@ const InventoryItems = () => {
           </Table>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* QR/Barcode Generation Tab */}
+        <TabsContent value="codes" className="space-y-6">
+          <BulkCodeGenerator />
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit Dialogs */}
       {/* Using ScrollArea within DialogContent for long forms */}

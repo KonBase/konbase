@@ -16,7 +16,10 @@ const createSupabaseClient = (url, key) => {
     const client = createClient(url, key, {
       auth: {
         persistSession: true,
-        storageKey: 'konbase-supabase-auth'
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'konbase-supabase-auth',
+        flowType: 'pkce'
       },
       global: {
         // Add global error handler for fetch requests

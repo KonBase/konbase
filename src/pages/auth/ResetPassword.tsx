@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
+import { logDebug, handleError } from '@/utils/debug';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -17,37 +18,48 @@ const ResetPassword = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Check if we're in a reset password flow by validating hash in URL
+    // Check if we're in a reset password flow
     const checkResetSession = async () => {
       setIsLoading(true);
       
       try {
-        // Get hash parameter from URL if present
-        const hash = location.hash.substring(1);
+        logDebug('Checking password reset session', { 
+          hash: location.hash, 
+          searchParams: Object.fromEntries(searchParams.entries()) 
+        }, 'info');
         
-        if (!hash) {
-          // Try to check if we have a valid session
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // Get access_token and refresh_token from URL parameters (Supabase auth callback)
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
+        
+        if (type === 'recovery' && accessToken && refreshToken) {
+          // Set the session from URL parameters
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
           
-          if (sessionError || !session) {
+          if (error) {
+            logDebug('Error setting session from URL params', error, 'error');
             setHashError(true);
             toast({
               title: "Invalid or expired reset link",
               description: "Please try requesting a new password reset link.",
               variant: "destructive"
             });
+          } else {
+            logDebug('Successfully set session from password reset link', null, 'info');
           }
         } else {
-          // If there's a hash in the URL, try to use it
-          const { error } = await supabase.auth.verifyOtp({
-            type: 'recovery',
-            token_hash: hash,
-          });
+          // Check if we have a valid session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
           
-          if (error) {
-            console.error('Password reset token verification failed:', error);
+          if (sessionError || !session) {
+            logDebug('No valid session found for password reset', { sessionError }, 'warn');
             setHashError(true);
             toast({
               title: "Invalid or expired reset link",
@@ -57,7 +69,7 @@ const ResetPassword = () => {
           }
         }
       } catch (error) {
-        console.error('Error during password reset verification:', error);
+        handleError(error, 'ResetPassword.checkResetSession');
         setHashError(true);
       } finally {
         setIsLoading(false);
@@ -65,7 +77,7 @@ const ResetPassword = () => {
     };
     
     checkResetSession();
-  }, [location, toast]);
+  }, [location, searchParams, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,29 +90,50 @@ const ResetPassword = () => {
       });
       return;
     }
+
+    if (password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsUpdating(true);
     
     try {
+      logDebug('Attempting to update password', null, 'info');
+      
       const { error } = await supabase.auth.updateUser({
         password: password
       });
       
-      if (error) throw error;
+      if (error) {
+        logDebug('Error updating password', error, 'error');
+        throw error;
+      }
+      
+      logDebug('Password updated successfully', null, 'info');
       
       toast({
-        title: "Password updated",
-        description: "Your password has been successfully updated."
+        title: "Password updated successfully",
+        description: "Your password has been updated. You will be redirected to login."
       });
+      
+      // Sign out the user after password update for security
+      await supabase.auth.signOut();
       
       // Redirect to login after a short delay
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      handleError(error, 'ResetPassword.handleSubmit');
+      const errorMessage = error instanceof Error ? error.message : "Could not update your password. Please try again.";
       toast({
         title: "Error updating password",
-        description: error.message || "Could not update your password. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

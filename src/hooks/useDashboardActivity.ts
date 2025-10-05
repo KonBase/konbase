@@ -37,23 +37,123 @@ export const useDashboardActivity = (currentAssociation: any) => {
         // Log the query start (only in debug mode)
         setRequestTimestamp(Date.now());
         
-        // Fetch recent activity data (last 30 days)
-        let query = supabase
+        // Fetch recent activity data from all relevant entities for this association
+        // We'll get activities from associations, conventions, items, and modules
+        
+        // First, get association-level activities
+        const { data: associationActivities, error: associationError } = await supabase
           .from('audit_logs')
-          .select('*')
+          .select(`
+            *,
+            profiles!audit_logs_user_id_fkey(name, email)
+          `)
           .eq('entity', 'association')
           .eq('entity_id', currentAssociation.id)
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(5);
+
+        if (associationError) throw associationError;
+
+        // Get convention IDs for this association first
+        const { data: conventionIds, error: conventionIdsError } = await supabase
+          .from('conventions')
+          .select('id')
+          .eq('association_id', currentAssociation.id);
+
+        if (conventionIdsError) throw conventionIdsError;
+
+        // Get convention activities for this association
+        let conventionActivities: any[] = [];
+        if (conventionIds && conventionIds.length > 0) {
+          const { data: conventionData, error: conventionError } = await supabase
+            .from('audit_logs')
+            .select(`
+              *,
+              profiles!audit_logs_user_id_fkey(name, email)
+            `)
+            .eq('entity', 'convention')
+            .in('entity_id', conventionIds.map(c => c.id))
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (conventionError) throw conventionError;
+          conventionActivities = conventionData || [];
+        }
+
+        // Get item IDs for this association first
+        const { data: itemIds, error: itemIdsError } = await supabase
+          .from('items')
+          .select('id')
+          .eq('association_id', currentAssociation.id);
+
+        if (itemIdsError) throw itemIdsError;
+
+        // Get item activities for this association
+        let itemActivities: any[] = [];
+        if (itemIds && itemIds.length > 0) {
+          const { data: itemData, error: itemError } = await supabase
+            .from('audit_logs')
+            .select(`
+              *,
+              profiles!audit_logs_user_id_fkey(name, email)
+            `)
+            .eq('entity', 'item')
+            .in('entity_id', itemIds.map(i => i.id))
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (itemError) throw itemError;
+          itemActivities = itemData || [];
+        }
+
+        // Get module activities for this association (if modules table exists)
+        // Skip modules for now since the table doesn't exist in this database
+        let moduleActivities: any[] = [];
         
-        const { data: activityData, error: activityError } = await query;
+        // TODO: Uncomment this section when modules table is added to the database
+        /*
+        try {
+          // First check if modules table exists by trying to get module IDs
+          const { data: moduleIds, error: moduleIdsError } = await supabase
+            .from('modules')
+            .select('id')
+            .eq('association_id', currentAssociation.id);
+
+          // Only proceed if we got data without error
+          if (!moduleIdsError && moduleIds && moduleIds.length > 0) {
+            const { data: moduleData, error: moduleError } = await supabase
+              .from('audit_logs')
+              .select(`
+                *,
+                profiles!audit_logs_user_id_fkey(name, email)
+              `)
+              .eq('entity', 'module')
+              .in('entity_id', moduleIds.map(m => m.id))
+              .order('created_at', { ascending: false })
+              .limit(5);
+
+            if (!moduleError) {
+              moduleActivities = moduleData || [];
+            }
+          }
+        } catch (error) {
+          // Modules table might not exist, ignore the error silently
+          // This is expected behavior when modules table doesn't exist
+        }
+        */
+
+        // Combine all activities and sort by created_at
+        const allActivities = [
+          ...(associationActivities || []),
+          ...conventionActivities,
+          ...itemActivities,
+          ...moduleActivities
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+         .slice(0, 20); // Limit to 20 most recent activities
+
+        const activityData = allActivities;
         
         setResponseTimestamp(Date.now());
-        
-        if (activityError) {
-          setLastError(activityError);
-          throw activityError;
-        }
         
         // Update our cached reference
         if (activityData) {

@@ -8,17 +8,20 @@ import { cn } from "@/lib/utils"
 const InputOTP = React.forwardRef<
   React.ElementRef<typeof OTPInput>,
   React.ComponentPropsWithoutRef<typeof OTPInput>
->(({ className, containerClassName, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    containerClassName={cn(
-      "flex items-center gap-2 has-[:disabled]:opacity-50",
-      containerClassName
-    )}
-    className={cn("disabled:cursor-not-allowed", className)}
-    {...props}
-  />
-))
+>(({ className, containerClassName, ...props }, ref) => {
+
+  return (
+    <OTPInput
+      ref={ref}
+      containerClassName={cn(
+        "flex items-center gap-2 has-[:disabled]:opacity-50",
+        containerClassName
+      )}
+      className={cn("disabled:cursor-not-allowed", className)}
+      {...props}
+    />
+  );
+})
 InputOTP.displayName = "InputOTP"
 
 const InputOTPGroup = React.forwardRef<
@@ -38,6 +41,15 @@ const InputOTPSlot = React.forwardRef<
   const slot = inputOTPContext?.slots?.[index] || { char: '', hasFakeCaret: false, isActive: false }
   const { char, hasFakeCaret, isActive } = slot
 
+  // Filter out all non-DOM props that might be passed by the input-otp package
+  const {
+    placeholderChar,
+    hasFakeCaret: _hasFakeCaret,
+    isActive: _isActive,
+    ...domProps
+  } = props as any
+
+
   return (
     <div
       ref={ref}
@@ -46,9 +58,9 @@ const InputOTPSlot = React.forwardRef<
         isActive && "z-10 ring-2 ring-ring ring-offset-background",
         className
       )}
-      {...props}
+      {...domProps}
     >
-      {char}
+      {char || (placeholderChar && '_')}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />

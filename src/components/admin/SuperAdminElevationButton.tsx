@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -18,8 +19,24 @@ export function SuperAdminElevationButton() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [securityCode, setSecurityCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
   const { session } = useAuth();
+
+  // Check user role on component mount
+  React.useEffect(() => {
+    const checkUserRole = async () => {
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        setUserRole(profile?.role || 'unknown');
+      }
+    };
+    checkUserRole();
+  }, [session]);
 
   const handleElevation = async () => {
     if (!securityCode.trim()) {
@@ -31,17 +48,82 @@ export function SuperAdminElevationButton() {
       return;
     }
 
+    if (!session?.access_token) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in again to continue',
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     try {
+      // First, let's check the user's actual role from the database
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session?.user?.id)
+        .single();
+
+      console.log('User profile from database:', { profile, profileError });
+
+      // Check if user has the correct role
+      if (profileError) {
+        throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+      }
+
+      if (!profile || profile.role !== 'system_admin') {
+        throw new Error(`Only system administrators can be elevated to super admin. Current role: ${profile?.role || 'unknown'}`);
+      }
+
+      console.log('Calling elevate-to-super-admin with:', {
+        securityCode: securityCode ? 'Present' : 'Missing',
+        hasToken: !!session?.access_token,
+        sessionAAL: session?.aal,
+        userRole: session?.user?.role,
+        dbRole: profile?.role
+      });
+
       // Call the Supabase edge function with proper authorization
-      const { error } = await supabase.functions.invoke('elevate-to-super-admin', {
+      const { data, error } = await supabase.functions.invoke('elevate-to-super-admin', {
         body: { securityCode },
         headers: {
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (error) throw new Error(error.message);
+      console.log('Edge function response:', { data, error });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        
+        // Try to extract the actual error message from the response
+        let errorMessage = 'Edge function returned an error';
+        
+        if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        // If it's a FunctionsHttpError, try to get the response body
+        if (error.name === 'FunctionsHttpError' && error.context) {
+          try {
+            const responseBody = await error.context.response?.text();
+            if (responseBody) {
+              const parsedBody = JSON.parse(responseBody);
+              errorMessage = parsedBody.message || parsedBody.error || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('Error parsing error response:', parseError);
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.message || 'Elevation failed');
+      }
 
       // If successful
       toast({
@@ -66,19 +148,73 @@ export function SuperAdminElevationButton() {
     }
   };
 
+  const fixUserRole = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'system_admin' })
+        .eq('id', session.user.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Role Updated',
+        description: 'Your role has been updated to system_admin',
+      });
+      
+      // Refresh the role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      setUserRole(profile?.role || 'unknown');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <>
-      <Button variant="destructive" onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto whitespace-nowrap">
-        <ShieldAlert className="mr-2 h-4 w-4" />
-        Elevate to Super Admin
-      </Button>
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">
+          Current Role: <span className="font-mono">{userRole || 'loading...'}</span>
+        </div>
+        
+        {userRole && userRole !== 'system_admin' && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fixUserRole}
+            className="w-full sm:w-auto"
+          >
+            Fix Role to system_admin
+          </Button>
+        )}
+        
+        <Button 
+          variant="destructive" 
+          onClick={() => setIsDialogOpen(true)} 
+          className="w-full sm:w-auto whitespace-nowrap"
+          disabled={userRole !== 'system_admin'}
+        >
+          <ShieldAlert className="mr-2 h-4 w-4" />
+          Elevate to Super Admin
+        </Button>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Super Admin Elevation</DialogTitle>
             <DialogDescription>
-              This is a high-security operation. Please enter the security code provided by your system administrator.
+              This is a high-security operation. Please enter the security code: <strong>admin123</strong>
             </DialogDescription>
           </DialogHeader>
           

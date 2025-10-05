@@ -22,31 +22,45 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase credentials not configured');
       throw new Error('Supabase credentials not configured');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
-    const { securityCode } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', body);
+    
+    const { securityCode } = body;
     
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('Authorization header is required');
       throw new Error('Authorization header is required');
     }
     
     // Extract the token from the Authorization header
     const token = authHeader.replace('Bearer ', '');
+    console.log('Token received:', token ? 'Present' : 'Missing');
     
     // Verify the user with the token
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError || !userData.user) {
-      throw new Error('Invalid authorization');
+      console.error('Invalid authorization:', userError);
+      throw new Error(`Invalid authorization: ${userError?.message || 'No user data'}`);
     }
     
+    console.log('User verified:', userData.user.id);
+    
     // Validate the security code
-    if (!ELEVATION_SECRET || securityCode !== ELEVATION_SECRET) {
+    if (!ELEVATION_SECRET) {
+      console.error('ELEVATION_SECRET not configured');
+      throw new Error('Elevation secret not configured');
+    }
+    
+    if (!securityCode || securityCode !== ELEVATION_SECRET) {
       console.log(`Invalid security code attempt: ${securityCode}`);
       throw new Error('Invalid security code');
     }
@@ -59,8 +73,11 @@ serve(async (req) => {
       .single();
       
     if (profileError) {
-      throw new Error('Failed to fetch user profile');
+      console.error('Failed to fetch user profile:', profileError);
+      throw new Error(`Failed to fetch user profile: ${profileError.message}`);
     }
+    
+    console.log('Current user role:', profile.role);
     
     // Check if user is already a super_admin
     if (profile.role === 'super_admin') {
@@ -75,7 +92,7 @@ serve(async (req) => {
     
     // Check if user is system_admin - only system admins can be elevated
     if (profile.role !== 'system_admin') {
-      throw new Error('Only system administrators can be elevated to super admin');
+      throw new Error(`Only system administrators can be elevated to super admin. Current role: ${profile.role}`);
     }
     
     // Update user role to super_admin
@@ -85,11 +102,14 @@ serve(async (req) => {
       .eq('id', userData.user.id);
       
     if (updateError) {
+      console.error('Error updating user role:', updateError);
       throw new Error(`Error updating user role: ${updateError.message}`);
     }
     
+    console.log('User role updated to super_admin');
+    
     // Log the elevation in audit_logs
-    await supabase.from('audit_logs').insert({
+    const { error: auditError } = await supabase.from('audit_logs').insert({
       action: 'elevate_to_super_admin',
       entity: 'profiles',
       entity_id: userData.user.id,
@@ -100,6 +120,13 @@ serve(async (req) => {
         elevated_at: new Date().toISOString()
       }
     });
+    
+    if (auditError) {
+      console.error('Error logging elevation:', auditError);
+      // Don't throw here, as the elevation was successful
+    }
+    
+    console.log('Elevation completed successfully');
     
     // Return success response
     return new Response(
@@ -115,7 +142,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: error.message || 'An error occurred during the elevation process',
-        success: false
+        success: false,
+        error: error.message
       }),
       { 
         status: 400,

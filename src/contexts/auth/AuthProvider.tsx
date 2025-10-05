@@ -5,6 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import { toast } from '@/components/ui/use-toast';
 import { USER_ROLES, UserRoleType } from '@/types/user';
 import { handleOAuthRedirect } from '@/utils/oauth-redirect-handler';
+import { setupSessionMonitoring, restoreSessionFromBackup } from '@/utils/session-management';
 import { saveSessionData, clearSessionData } from '@/utils/session-utils';
 
 // Create the context with a default undefined value
@@ -26,33 +27,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const setupAuth = async () => {
       setState(prev => ({ ...prev, isLoading: true }));
+      
       try {
         // Handle OAuth redirects if applicable
         const redirectResult = await handleOAuthRedirect();
         if (redirectResult.success && redirectResult.session) {
           await updateUserState(redirectResult.session);
+          setupSessionMonitoring();
           return;
         }
         
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Get initial session - this should work with persisted sessions
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          // Try to restore from backup if session retrieval failed
+          const restored = await restoreSessionFromBackup();
+          if (restored) {
+            const { data: { session: restoredSession } } = await supabase.auth.getSession();
+            if (restoredSession?.user) {
+              await updateUserState(restoredSession);
+              setupSessionMonitoring();
+              return;
+            }
+          }
+        }
         
         if (session?.user) {
           await updateUserState(session);
+          setupSessionMonitoring();
         } else {
-          setState(prev => ({
-            ...prev, 
-            isLoading: false, 
-            loading: false, 
-            isAuthenticated: false
-          }));
+          // Try to restore session from backup if no session found
+          const restored = await restoreSessionFromBackup();
+          if (restored) {
+            // Get the restored session
+            const { data: { session: restoredSession } } = await supabase.auth.getSession();
+            if (restoredSession?.user) {
+              await updateUserState(restoredSession);
+              setupSessionMonitoring();
+            } else {
+              setState(prev => ({
+                ...prev, 
+                isLoading: false, 
+                loading: false, 
+                isAuthenticated: false
+              }));
+            }
+          } else {
+            setState(prev => ({
+              ...prev, 
+              isLoading: false, 
+              loading: false, 
+              isAuthenticated: false
+            }));
+          }
         }
         
         // Listen for auth changes
         const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-          async (session) => {
+          async (_, session) => {
             if (session?.user) {
               await updateUserState(session);
+              // Set up session monitoring after successful login
+              setupSessionMonitoring();
             } else {
               setState({
                 session: null,
@@ -96,7 +134,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', supabaseUser.id)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
 
       // Ensure the role is a valid UserRoleType or default to 'guest'
       const userRole = profile?.role as UserRoleType || 'guest';
@@ -203,6 +244,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
+      // Check if user is super_admin and demote them before logout
+      if (state.user?.role === 'super_admin' && state.session?.access_token) {
+        try {
+          console.log('Demoting super admin before logout');
+          await supabase.functions.invoke('demote-from-super-admin', {
+            headers: {
+              Authorization: `Bearer ${state.session.access_token}`,
+            },
+          });
+          console.log('Successfully demoted from super admin before logout');
+        } catch (demotionError) {
+          console.error('Error demoting from super admin during logout:', demotionError);
+          // Don't throw here, as we still want to proceed with logout
+        }
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -295,6 +352,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Function to send password reset email
+  const resetPassword = async (email: string): Promise<{success: boolean, message: string}> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      return { success: true, message: 'Password reset email sent successfully' };
+    } catch (error: any) {
+      console.error("Error sending password reset email:", error);
+      return { success: false, message: error.message || 'Failed to send password reset email' };
+    }
+  };
+
   // Function to handle OAuth sign-in (Google, Discord, etc.)
   const signInWithOAuth = async (provider: 'google' | 'discord') => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -338,6 +411,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     logout,
     elevateToSuperAdmin,
+    resetPassword,
   };
 
   return (

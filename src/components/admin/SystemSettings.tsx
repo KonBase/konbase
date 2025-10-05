@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,10 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { Save, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/auth';
+import { Save, Loader2, Settings, Clock, Users, Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { getSessionSettings, updateSessionSettings, SessionSettings } from '@/utils/session-management';
 
 interface SystemSetting {
   key: string;
@@ -27,7 +29,7 @@ interface SystemSetting {
 }
 
 export function SystemSettings() {
-  const { profile } = useUserProfile();
+  const { user } = useAuth();
   const [settings, setSettings] = useState<Record<string, any>>({
     allowRegistration: true,
     requireEmailVerification: true,
@@ -40,10 +42,83 @@ export function SystemSettings() {
     backupFrequency: 7,
   });
   
+  // Session settings state
+  const [sessionSettings, setSessionSettings] = useState<SessionSettings>({
+    session_duration_hours: 168,
+    max_concurrent_sessions: 5,
+    require_mfa_for_new_sessions: true,
+    auto_logout_inactive_minutes: 30,
+  });
+  
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionSaving, setSessionSaving] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [sessionSuccess, setSessionSuccess] = useState(false);
   
-  const isSuperAdmin = profile?.role === 'super_admin';
+  const isSuperAdmin = user?.role === 'super_admin';
+  
+  // Load session settings on component mount
+  useEffect(() => {
+    if (isSuperAdmin) {
+      loadSessionSettings();
+    } else {
+      setSessionLoading(false);
+    }
+  }, [isSuperAdmin]);
+  
+  const loadSessionSettings = async () => {
+    try {
+      setSessionLoading(true);
+      setSessionError(null);
+      const settingsData = await getSessionSettings();
+      setSessionSettings(settingsData);
+    } catch (error: unknown) {
+      console.error('Error loading session settings:', error);
+      setSessionError(error instanceof Error ? error.message : 'Failed to load session settings');
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+  
+  const handleSessionSave = async () => {
+    try {
+      setSessionSaving(true);
+      setSessionError(null);
+      setSessionSuccess(false);
+      
+      await updateSessionSettings(sessionSettings);
+      
+      setSessionSuccess(true);
+      toast({
+        title: "Session Settings Updated",
+        description: "Session settings have been successfully updated.",
+      });
+      
+      // Reset success state after 3 seconds
+      setTimeout(() => setSessionSuccess(false), 3000);
+    } catch (error: unknown) {
+      console.error('Error saving session settings:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings';
+      setSessionError(errorMessage);
+      
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: errorMessage,
+      });
+    } finally {
+      setSessionSaving(false);
+    }
+  };
+  
+  const handleSessionSettingChange = (key: keyof SessionSettings, value: number | boolean) => {
+    setSessionSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
   
   const handleSwitchChange = (key: string) => {
     setSettings(prev => ({
@@ -86,7 +161,7 @@ export function SystemSettings() {
         action: 'update_settings',
         entity: 'system_settings',
         entity_id: 'global',
-        user_id: profile?.id || '',
+        user_id: user?.id || '',
         changes: settings
       });
       
@@ -110,6 +185,7 @@ export function SystemSettings() {
       <TabsList>
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="security">Security</TabsTrigger>
+        <TabsTrigger value="sessions">Sessions</TabsTrigger>
         <TabsTrigger value="email">Email</TabsTrigger>
         <TabsTrigger value="backup">Backup</TabsTrigger>
       </TabsList>
@@ -243,6 +319,158 @@ export function SystemSettings() {
                 <>
                   <Save className="mr-2 h-4 w-4" />
                   Save Changes
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="sessions">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Session Settings
+            </CardTitle>
+            <CardDescription>
+              Configure global session management settings for all users
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {sessionError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{sessionError}</AlertDescription>
+              </Alert>
+            )}
+
+            {sessionSuccess && (
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>Session settings have been updated successfully.</AlertDescription>
+              </Alert>
+            )}
+
+            {sessionLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Loading session settings...</span>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="session-duration" className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Session Duration (Hours)
+                    </Label>
+                    <Input
+                      id="session-duration"
+                      type="number"
+                      min="1"
+                      max="8760"
+                      value={sessionSettings.session_duration_hours}
+                      onChange={(e) => handleSessionSettingChange('session_duration_hours', parseInt(e.target.value) || 168)}
+                      disabled={sessionSaving || !isSuperAdmin}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      How long user sessions remain active (1-8760 hours, default: 168 hours = 7 days)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="max-sessions" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Maximum Concurrent Sessions
+                    </Label>
+                    <Input
+                      id="max-sessions"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={sessionSettings.max_concurrent_sessions}
+                      onChange={(e) => handleSessionSettingChange('max_concurrent_sessions', parseInt(e.target.value) || 5)}
+                      disabled={sessionSaving || !isSuperAdmin}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Maximum number of active sessions per user (1-20, default: 5)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="auto-logout" className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Auto Logout Inactive (Minutes)
+                    </Label>
+                    <Input
+                      id="auto-logout"
+                      type="number"
+                      min="5"
+                      max="1440"
+                      value={sessionSettings.auto_logout_inactive_minutes}
+                      onChange={(e) => handleSessionSettingChange('auto_logout_inactive_minutes', parseInt(e.target.value) || 30)}
+                      disabled={sessionSaving || !isSuperAdmin}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Automatically log out users after inactivity (5-1440 minutes, default: 30 minutes)
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="require-mfa" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Require MFA for New Sessions
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Force users to complete MFA verification when signing in from new devices
+                      </p>
+                    </div>
+                    <Switch
+                      id="require-mfa"
+                      checked={sessionSettings.require_mfa_for_new_sessions}
+                      onCheckedChange={(checked) => handleSessionSettingChange('require_mfa_for_new_sessions', checked)}
+                      disabled={sessionSaving || !isSuperAdmin}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-muted p-4 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Session Management Notes</h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Changes take effect for new sessions only</li>
+                        <li>• Existing sessions will continue until they expire naturally</li>
+                        <li>• MFA requirement applies to all new login attempts</li>
+                        <li>• Auto-logout helps prevent unauthorized access on shared devices</li>
+                        <li>• Session limits help prevent account abuse</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={handleSessionSave} 
+              className="w-full" 
+              disabled={sessionSaving || !isSuperAdmin}
+            >
+              {sessionSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Saving Settings...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Session Settings
                 </>
               )}
             </Button>

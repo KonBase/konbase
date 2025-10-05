@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { AssociationContextType, AssociationState } from './AssociationTypes';
 import { Association } from '@/types/association';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/contexts/auth';
 import { toast } from '@/components/ui/use-toast';
 import { createAssociation, fetchUserAssociations, updateAssociation, joinAssociationWithCode as joinWithCode } from './AssociationUtils';
 
@@ -16,18 +16,18 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isLoading: true,
   });
 
-  // Get user profile from hook
-  const { profile } = useUserProfile();
+  // Get user from auth context instead of useUserProfile
+  const { user } = useAuth();
 
   // Update state helper function
   const updateState = (newState: Partial<AssociationState>) => {
     setState(prevState => ({ ...prevState, ...newState }));
   };
 
-  // Load user associations when profile changes
+  // Load user associations when user changes
   useEffect(() => {
     const loadAssociations = async () => {
-      if (!profile) {
+      if (!user) {
         updateState({ isLoading: false });
         return;
       }
@@ -35,7 +35,7 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       updateState({ isLoading: true });
       
       try {
-        const userAssociations = await fetchUserAssociations(profile.id);
+        const userAssociations = await fetchUserAssociations(user.id);
         updateState({ userAssociations });
         
         // Set current association if we don't have one and found associations
@@ -55,7 +55,7 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     loadAssociations();
-  }, [profile]);
+  }, [user]);
 
   // Set current association
   const setCurrentAssociation = (association: Association | null) => {
@@ -108,9 +108,9 @@ export const AssociationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const handleCreateAssociation = async (data: Partial<Association>): Promise<Association | null> => {
     updateState({ isLoading: true });
     try {
-      if (!profile) throw new Error("You must be logged in to create an association");
+      if (!user) throw new Error("You must be logged in to create an association");
       
-      const newAssociation = await createAssociation(data, profile.id);
+      const newAssociation = await createAssociation(data, user.id);
       
       updateState({
         userAssociations: [...state.userAssociations, newAssociation],

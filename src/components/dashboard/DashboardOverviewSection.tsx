@@ -4,14 +4,7 @@ import RecentActivityCard from './RecentActivityCard';
 import QuickActionsCard from './QuickActionsCard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Association } from '@/types/association';
-
-interface AuditLog {
-  id: string;
-  action: string;
-  created_at: string;
-  entity: string;
-  entity_id: string;
-}
+import { AuditLog } from '@/types/audit';
 
 interface DashboardOverviewSectionProps {
   currentAssociation: Association | null;

@@ -1,6 +1,8 @@
 // Re-export all type definitions for easy imports
 export * from './user';
 export * from './association';
+export * from './audit';
+export * from './quickActions';
 
 // Add any other global types here
 export type Permission = 

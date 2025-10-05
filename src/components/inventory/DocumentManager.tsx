@@ -63,7 +63,11 @@ interface Item {
   name: string;
 }
 
-const DocumentManager = () => {
+interface DocumentManagerProps {
+  itemId?: string; // Optional prop to filter documents for a specific item
+}
+
+const DocumentManager: React.FC<DocumentManagerProps> = ({ itemId }) => {
   const { currentAssociation } = useAssociation();
   const { toast } = useToast();
   
@@ -98,7 +102,7 @@ const DocumentManager = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('documents')
         .select(`
           *,
@@ -107,6 +111,13 @@ const DocumentManager = () => {
           )
         `)
         .order('created_at', { ascending: false });
+
+      // If itemId is provided, filter documents for that specific item
+      if (itemId) {
+        query = query.eq('item_id', itemId);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
@@ -152,10 +163,21 @@ const DocumentManager = () => {
   };
   
   const handleAddDocument = async () => {
-    if (!currentAssociation || !formData.file || !formData.itemId || !formData.name) {
+    if (!currentAssociation || !formData.file || !formData.name) {
       toast({
         title: 'Missing Fields',
         description: 'Please fill out all required fields.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Use itemId prop if provided, otherwise use formData.itemId
+    const targetItemId = itemId || formData.itemId;
+    if (!targetItemId) {
+      toast({
+        title: 'Missing Item',
+        description: 'Please select an item.',
         variant: 'destructive'
       });
       return;
@@ -168,7 +190,7 @@ const DocumentManager = () => {
       const fileExt = formData.file.name.split('.').pop();
       const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`;
       // Construct the path according to RLS policy: association_id/item_id/fileName
-      filePath = `${currentAssociation.id}/${formData.itemId}/${uniqueFileName}`;
+      filePath = `${currentAssociation.id}/${targetItemId}/${uniqueFileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents') // Bucket name remains 'documents'
@@ -198,7 +220,7 @@ const DocumentManager = () => {
           name: formData.name, // The user-provided document name
           file_url: fileUrl,   // The actual storage URL
           file_type: formData.file.type,
-          item_id: formData.itemId,
+          item_id: targetItemId,
           uploaded_by: user.id
           // association_id is implicitly linked via item_id, no need to store here usually
         });
@@ -373,7 +395,7 @@ const DocumentManager = () => {
                 <TableRow>
                   <TableHead>Type</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Related Item</TableHead>
+                  {!itemId && <TableHead>Related Item</TableHead>}
                   <TableHead>Date Added</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -387,7 +409,7 @@ const DocumentManager = () => {
                       </div>
                     </TableCell>
                     <TableCell>{doc.name}</TableCell>
-                    <TableCell>{doc.item_name}</TableCell>
+                    {!itemId && <TableCell>{doc.item_name}</TableCell>}
                     <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
@@ -427,25 +449,27 @@ const DocumentManager = () => {
               />
             </div>
             
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="item">Related Item *</Label>
-              <Select
-                value={formData.itemId}
-                onValueChange={(value) => setFormData({...formData, itemId: value})}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an item" />
-                </SelectTrigger>
-                <SelectContent>
-                  {items.map(item => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!itemId && (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="item">Related Item *</Label>
+                <Select
+                  value={formData.itemId}
+                  onValueChange={(value) => setFormData({...formData, itemId: value})}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map(item => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="file">File *</Label>
@@ -475,7 +499,7 @@ const DocumentManager = () => {
             </Button>
             <Button 
               onClick={handleAddDocument} 
-              disabled={!formData.name || !formData.itemId || !formData.file || uploading}
+              disabled={!formData.name || (!itemId && !formData.itemId) || !formData.file || uploading}
             >
               {uploading ? (
                 <>

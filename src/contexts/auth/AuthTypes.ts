@@ -40,4 +40,5 @@ export interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>; // Alias for signIn
   logout: () => Promise<void>; // Alias for signOut
   elevateToSuperAdmin: () => Promise<{success: boolean, message: string}>;
+  resetPassword: (email: string) => Promise<{success: boolean, message: string}>;
 }

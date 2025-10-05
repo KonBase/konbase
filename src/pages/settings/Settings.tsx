@@ -17,33 +17,32 @@ import {
   Moon, 
   Sun, 
   Laptop, 
-  ToggleLeft,
   MessageSquare,
-  Accessibility,
-  Bug,
-  Trash2
+  Accessibility
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeProvider';
 import { useToast } from '@/hooks/use-toast';
-import { enableDebugMode, isDebugModeEnabled, logDebug } from '@/utils/debug';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings';
 import LanguageRegionSettings from '@/components/settings/LanguageRegionSettings';
+import SessionManagement from '@/components/settings/SessionManagement';
+import PasswordChange from '@/components/settings/PasswordChange';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTranslation } from '@/utils/languageUtils';
+import { useAuth } from '@/contexts/auth';
 import { useLocation } from 'react-router-dom';
 
 const Settings = () => {
   const { profile, loading, refreshProfile } = useUserProfile();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { hasRole } = useAuth();
   const { isMobile } = useResponsive();
   const { t } = useTranslation();
   const componentMountedRef = useRef(false);
   const location = useLocation();
   
   const [isFormSaving, setIsFormSaving] = useState(false);
-  const [isDebugMode, setIsDebugMode] = useState(() => isDebugModeEnabled());
   
   const [notifications, setNotifications] = useState({
     email: true,
@@ -59,7 +58,6 @@ const Settings = () => {
     if (!componentMountedRef.current) {
       componentMountedRef.current = true;
       refreshProfile();
-      logDebug('Settings component mounted', { path: location.pathname }, 'info');
     }
   }, [refreshProfile, location]);
   
@@ -67,7 +65,6 @@ const Settings = () => {
   useEffect(() => {
     const handleForceRefresh = (event: CustomEvent) => {
       if (event.detail?.targetSection === 'settings') {
-        logDebug('Forced refresh in settings component', null, 'info');
         refreshProfile();
       }
     };
@@ -85,7 +82,6 @@ const Settings = () => {
       const { currentPath } = event.detail;
       
       if (currentPath?.includes('/settings')) {
-        logDebug('Route changed to settings', { currentPath }, 'info');
         refreshProfile();
       }
     };
@@ -104,18 +100,6 @@ const Settings = () => {
     }));
   };
 
-  const handleDebugModeToggle = () => {
-    const newValue = !isDebugMode;
-    setIsDebugMode(newValue);
-    enableDebugMode(newValue);
-    
-    toast({
-      title: newValue ? t("Debug mode enabled") : t("Debug mode disabled"),
-      description: newValue 
-        ? t("Additional debugging information is now available.") 
-        : t("Debug mode has been turned off."),
-    });
-  };
   
   const saveAccountSettings = async () => {
     setIsFormSaving(true);
@@ -203,69 +187,6 @@ const Settings = () => {
                 
                 <Separator />
                 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="debug-mode" className="flex items-center gap-2">
-                        <Bug className="h-4 w-4" />
-                        {t("Debug Mode")}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("Show additional debugging information")}
-                      </p>
-                    </div>
-                    <Switch 
-                      id="debug-mode" 
-                      checked={isDebugMode} 
-                      onCheckedChange={handleDebugModeToggle} 
-                    />
-                  </div>
-                  
-                  {isDebugMode && (
-                    <div className="bg-muted p-3 rounded-md border border-border/50 space-y-2">
-                      <h4 className="text-sm font-medium">{t("Debug Options")}</h4>
-                      <p className="text-xs text-muted-foreground">{t("Debug mode provides additional information that can help troubleshoot issues with the application.")}</p>
-                      
-                      <div className="flex justify-between gap-2 mt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs"
-                          onClick={() => {
-                            setIsDebugMode(false);
-                            enableDebugMode(false);
-                            toast({
-                              title: t("Debug mode disabled"),
-                              description: t("Debug mode has been turned off."),
-                            });
-                            // Reload the page to ensure all components respect the new setting
-                            setTimeout(() => window.location.reload(), 500);
-                          }}
-                        >
-                          <ToggleLeft className="h-3 w-3 mr-1" />
-                          {t("Disable & Reload")}
-                        </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs"
-                          onClick={() => {
-                            // Clear all debug logs
-                            localStorage.removeItem('konbase_debug_logs');
-                            toast({
-                              title: t("Debug logs cleared"),
-                              description: t("All debug logs have been cleared."),
-                            });
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          {t("Clear Debug Logs")}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -445,72 +366,16 @@ const Settings = () => {
             <div className="grid gap-4 md:gap-6">
               <TwoFactorAuth />
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    {t("Password Settings")}
-                  </CardTitle>
-                  <CardDescription>{t("Update your password or security preferences")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">{t("Current Password")}</Label>
-                    <Input id="current-password" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">{t("New Password")}</Label>
-                    <Input id="new-password" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">{t("Confirm New Password")}</Label>
-                    <Input id="confirm-password" type="password" />
-                  </div>
-                  
-                  <Button className={isMobile ? "w-full" : ""}>
-                    {t("Update Password")}
-                  </Button>
-                </CardContent>
-              </Card>
+              <PasswordChange />
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Laptop className="h-5 w-5" />
-                    {t("Sessions")}
-                  </CardTitle>
-                  <CardDescription>{t("Manage your active sessions and devices")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{t("Current Device")}</p>
-                        <p className="text-xs text-muted-foreground">{t("Chrome on Windows • Active now")}</p>
-                      </div>
-                      <span className="text-xs bg-primary/10 text-primary rounded px-2 py-1">{t("Current")}</span>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{t("Mobile App")}</p>
-                        <p className="text-xs text-muted-foreground">{t("iOS • Last active 2 days ago")}</p>
-                      </div>
-                      <Button variant="ghost" size="sm">{t("Sign out")}</Button>
-                    </div>
-                    
-                    <Button variant="outline" className="w-full">{t("Sign out of all devices")}</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <SessionManagement />
             </div>
           </TabsContent>
           
           <TabsContent value="language">
             <LanguageRegionSettings />
           </TabsContent>
+          
         </Tabs>
       </div>
     </div>
