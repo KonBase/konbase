@@ -186,6 +186,12 @@ const LoginForm = () => {
     try {
       setIsMagicLinkLoading(true);
       logDebug('Magic link sign in attempt', { email }, 'info');
+      
+      // Check if the function exists before calling
+      if (typeof signInWithMagicLink !== 'function') {
+        throw new Error('Magic link authentication is not available');
+      }
+      
       await signInWithMagicLink(email);
       
       setMagicLinkSent(true);
@@ -194,10 +200,22 @@ const LoginForm = () => {
         description: 'Check your email for a magic link to sign in.',
       });
     } catch (error: any) {
+      console.error('Magic link error:', error);
       handleError(error, 'LoginForm.handleMagicLinkLogin');
+      
+      let errorMessage = 'Could not send magic link. Please try again.';
+      
+      if (error.message?.includes('not available')) {
+        errorMessage = 'Magic link authentication is not available. Please use password login.';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.message?.includes('rate limit')) {
+        errorMessage = 'Too many requests. Please wait a moment and try again.';
+      }
+      
       toast({
         title: 'Failed to send magic link',
-        description: error.message || 'Could not send magic link. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

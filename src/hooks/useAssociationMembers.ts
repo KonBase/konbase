@@ -107,17 +107,31 @@ export const useAssociationMembers = (associationId: string) => {
     try {
       logDebug('Updating member role', { memberId, role });
       
-      const { error } = await supabase
+      // First, find the member to get their user_id
+      const member = members.find(m => m.id === memberId);
+      if (!member) {
+        throw new Error('Member not found');
+      }
+
+      // Update the role in both association_members and profiles tables
+      const { error: associationError } = await supabase
+        .from('association_members')
+        .update({ role })
+        .eq('id', memberId);
+
+      if (associationError) throw associationError;
+
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ role })
-        .eq('id', memberId); // Update the role in the profiles table instead of association_members
+        .eq('id', member.user_id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
       // Update local state
       setMembers(prev => 
-        prev.map(member => 
-          member.id === memberId ? { ...member, role } : member
+        prev.map(m => 
+          m.id === memberId ? { ...m, role } : m
         )
       );
       

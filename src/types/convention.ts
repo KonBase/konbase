@@ -123,28 +123,23 @@ export interface ConventionLocationFormData {
 export interface ConventionRequirement {
   id: string;
   convention_id: string;
-  name: string;
-  description: string | null;
-  requested_by: string;
-  requested_at: string;
-  status: 'requested' | 'approved' | 'denied' | 'fulfilled';
-  priority: 'high' | 'medium' | 'low';
-  approved_by: string | null;
-  approved_at: string | null;
-  fulfilled_at: string | null;
-  notes: string | null;
+  description: string;
+  status: string;
+  assigned_to: string | null;
+  due_date: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
   // Joined fields
-  requestor?: {
+  assignee?: {
     id: string;
     email: string;
-    display_name: string | null;
+    name: string | null;
   };
-  approver?: {
+  creator?: {
     id: string;
     email: string;
-    display_name: string | null;
+    name: string | null;
   };
 }
 
@@ -180,7 +175,7 @@ export interface ConventionLog {
   users?: {
     id: string;
     email: string;
-    display_name: string;
+    name: string;
   };
 }
 
@@ -197,7 +192,7 @@ export interface ConventionTemplate {
   // Joined fields
   creator?: {
     email: string;
-    display_name: string | null;
+    name: string | null;
   };
 }
 

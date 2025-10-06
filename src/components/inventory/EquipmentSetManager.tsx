@@ -62,7 +62,7 @@ import {
 interface EquipmentSetItem {
   id: string;
   equipment_set_id: string;
-  inventory_item_id: string;
+  item_id: string;
   quantity: number;
   notes?: string;
   item_name?: string;
@@ -110,7 +110,7 @@ const EquipmentSetManager: React.FC = () => {
   
   // New item form state
   const [newItemForm, setNewItemForm] = useState({
-    inventory_item_id: '',
+    item_id: '',
     quantity: 1,
     notes: ''
   });
@@ -159,7 +159,7 @@ const EquipmentSetManager: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('inventory_items')
+        .from('items')
         .select(`
           id, 
           name,
@@ -194,7 +194,7 @@ const EquipmentSetManager: React.FC = () => {
         .from('equipment_set_items')
         .select(`
           *,
-          inventory_items(name, categories(name))
+          items(name, categories(name))
         `)
         .eq('equipment_set_id', setId);
       
@@ -203,11 +203,11 @@ const EquipmentSetManager: React.FC = () => {
       const formattedItems = data.map(item => ({
         id: item.id,
         equipment_set_id: item.equipment_set_id,
-        inventory_item_id: item.inventory_item_id,
+        item_id: item.item_id,
         quantity: item.quantity,
         notes: item.notes,
-        item_name: item.inventory_items?.name,
-        item_category: item.inventory_items?.categories?.name
+        item_name: item.items?.name,
+        item_category: item.items?.categories?.name
       }));
       
       setSetItems(formattedItems);
@@ -285,20 +285,20 @@ const EquipmentSetManager: React.FC = () => {
   };
   
   const handleAddItemToSet = async () => {
-    if (!currentSetId || !newItemForm.inventory_item_id) return;
+    if (!currentSetId || !newItemForm.item_id) return;
     
     try {
       const { data, error } = await supabase
         .from('equipment_set_items')
         .insert({
           equipment_set_id: currentSetId,
-          inventory_item_id: newItemForm.inventory_item_id,
+          item_id: newItemForm.item_id,
           quantity: newItemForm.quantity,
           notes: newItemForm.notes || null
         })
         .select(`
           *,
-          inventory_items(name, categories(name))
+          items(name, categories(name))
         `)
         .single();
       
@@ -308,11 +308,11 @@ const EquipmentSetManager: React.FC = () => {
       const newItem: EquipmentSetItem = {
         id: data.id,
         equipment_set_id: data.equipment_set_id,
-        inventory_item_id: data.inventory_item_id,
+        item_id: data.item_id,
         quantity: data.quantity,
         notes: data.notes,
-        item_name: data.inventory_items?.name,
-        item_category: data.inventory_items?.categories?.name
+        item_name: data.items?.name,
+        item_category: data.items?.categories?.name
       };
       
       setSetItems([...setItems, newItem]);
@@ -326,7 +326,7 @@ const EquipmentSetManager: React.FC = () => {
       
       // Reset form
       setNewItemForm({
-        inventory_item_id: '',
+        item_id: '',
         quantity: 1,
         notes: ''
       });
@@ -503,7 +503,7 @@ const EquipmentSetManager: React.FC = () => {
       if (setItems && setItems.length > 0) {
         const newItems = setItems.map(item => ({
           equipment_set_id: newSet.id,
-          inventory_item_id: item.inventory_item_id,
+          item_id: item.item_id,
           quantity: item.quantity,
           notes: item.notes
         }));
@@ -722,9 +722,9 @@ const EquipmentSetManager: React.FC = () => {
                   <div className="col-span-3 md:col-span-1">
                     <Label htmlFor="item">Item</Label>
                     <Select
-                      value={newItemForm.inventory_item_id}
+                      value={newItemForm.item_id}
                       onValueChange={(value) => 
-                        setNewItemForm({ ...newItemForm, inventory_item_id: value })
+                        setNewItemForm({ ...newItemForm, item_id: value })
                       }
                     >
                       <SelectTrigger>
@@ -770,7 +770,7 @@ const EquipmentSetManager: React.FC = () => {
                   
                   <Button 
                     onClick={handleAddItemToSet}
-                    disabled={!newItemForm.inventory_item_id}
+                    disabled={!newItemForm.item_id}
                     className="col-span-3"
                   >
                     <PlusCircle className="h-4 w-4 mr-2" />

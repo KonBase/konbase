@@ -40,7 +40,7 @@ describe('AddInventoryItemForm', () => {
     vi.mock('@/lib/supabase', () => ({
       supabase: {
         from: (table: string) => ({
-          insert: table === 'inventory_items' ? insertMock : vi.fn().mockResolvedValue({ error: null }),
+          insert: table === 'items' ? insertMock : vi.fn().mockResolvedValue({ error: null }),
           select: vi.fn().mockResolvedValue({ data: [{ id: 'loc1', name: 'Storage' }], error: null }),
           order: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),

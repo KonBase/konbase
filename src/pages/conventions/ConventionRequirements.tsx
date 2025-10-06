@@ -35,8 +35,8 @@ const ConventionRequirements = () => {
         .from('convention_requirements')
         .select(`
           *,
-          profiles!requested_by(id, email, display_name),
-          approver:profiles!approved_by(id, email, display_name)
+          profiles!assigned_to(id, email, name),
+          approver:profiles!created_by(id, email, name)
         `)
         .eq('convention_id', conventionId)
         .order('created_at', { ascending: false });
@@ -46,8 +46,8 @@ const ConventionRequirements = () => {
       // Transform the data to include joined fields
       const transformedData = data?.map(item => ({
         ...item,
-        requestor: item.profiles,
-        approver: item.approver
+        assignee: item.profiles,
+        creator: item.approver
       })) || [];
       
       setRequirements(transformedData);
@@ -83,19 +83,6 @@ const ConventionRequirements = () => {
         return <Badge variant="default" className="bg-green-600 hover:bg-green-700"><CheckCircleIcon className="mr-1 h-3 w-3" /> Fulfilled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return <Badge variant="destructive"><AlertTriangle className="mr-1 h-3 w-3" /> High</Badge>;
-      case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Medium</Badge>;
-      case 'low':
-        return <Badge variant="outline">Low</Badge>;
-      default:
-        return <Badge variant="outline">{priority}</Badge>;
     }
   };
 
@@ -202,9 +189,8 @@ const ConventionRequirements = () => {
                     <TableRow>
                       <TableHead>Name / Description</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Requested By</TableHead>
-                      <TableHead>Requested Date</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead>Created Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -212,15 +198,14 @@ const ConventionRequirements = () => {
                     {requirements.map((requirement) => (
                       <TableRow key={requirement.id}>
                         <TableCell className="font-medium max-w-xs">
-                          <p className="truncate font-semibold">{requirement.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{requirement.description || 'No description'}</p>
+                          <p className="truncate font-semibold">{requirement.description}</p>
+                          <p className="text-xs text-muted-foreground truncate">Requirement ID: {requirement.id.slice(0, 8)}</p>
                         </TableCell>
                         <TableCell>{getStatusBadge(requirement.status)}</TableCell>
-                        <TableCell>{getPriorityBadge(requirement.priority)}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <User className="h-3 w-3" />
-                            {requirement.requestor?.display_name || requirement.requestor?.email || 'Unknown'}
+                            {requirement.assignee?.name || requirement.assignee?.email || 'Unassigned'}
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -228,11 +213,11 @@ const ConventionRequirements = () => {
                             <TooltipTrigger asChild>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                <span>{formatDistanceToNow(new Date(requirement.requested_at), { addSuffix: true })}</span>
+                                <span>{formatDistanceToNow(new Date(requirement.created_at), { addSuffix: true })}</span>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {format(new Date(requirement.requested_at), 'PPP p')}
+                              {format(new Date(requirement.created_at), 'PPP p')}
                             </TooltipContent>
                           </Tooltip>
                         </TableCell>

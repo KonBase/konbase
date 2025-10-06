@@ -36,7 +36,7 @@ const ConventionLogs = () => {
         .from('convention_logs')
         .select(`
           *,
-          users:user_id(id, email, display_name)
+          users:user_id(id, email, name)
         `)
         .eq('convention_id', conventionId)
         .order('created_at', { ascending: false });
@@ -103,7 +103,7 @@ const ConventionLogs = () => {
     return (
       log.action.toLowerCase().includes(searchLower) ||
       log.entity_type.toLowerCase().includes(searchLower) ||
-      log.users?.display_name?.toLowerCase().includes(searchLower) ||
+      log.users?.name?.toLowerCase().includes(searchLower) ||
       log.users?.email?.toLowerCase().includes(searchLower) ||
       (log.details && JSON.stringify(log.details).toLowerCase().includes(searchLower))
     );
@@ -113,7 +113,7 @@ const ConventionLogs = () => {
     try {
       const data = filteredLogs.map(log => ({
         Date: format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
-        User: log.users?.display_name || log.users?.email || log.user_id,
+        User: log.users?.name || log.users?.email || log.user_id,
         Action: log.action,
         EntityType: log.entity_type,
         Details: JSON.stringify(log.details || {})
@@ -220,7 +220,7 @@ const ConventionLogs = () => {
                         </TableCell>
                         <TableCell className="font-medium flex items-center gap-1">
                           <User className="h-3 w-3 text-muted-foreground" />
-                          {log.users?.display_name || log.users?.email || <span className="italic text-muted-foreground">System</span>}
+                          {log.users?.name || log.users?.email || <span className="italic text-muted-foreground">System</span>}
                         </TableCell>
                         <TableCell>{getActionBadge(log.action)}</TableCell>
                         <TableCell>{getEntityBadge(log.entity_type)}</TableCell>

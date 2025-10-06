@@ -16,19 +16,22 @@
     <meta name="twitter:site" content="@konbase" />
     <meta name="twitter:image" content="/uploads/konbase_preview.png" />
     
-    <!-- GitHub Pages SPA routing fix -->
+    <!-- SPA routing fix - only for GitHub Pages -->
     <script type="text/javascript">
       // Single Page Apps for GitHub Pages
       // MIT License
       // https://github.com/rafgraph/spa-github-pages
       (function() {
-        // This script checks to see if a redirect is present in the query string,
-        // which will be present after a GitHub Pages 404 redirect
-        var redirect = sessionStorage.getItem('konbase_spa_route');
-        if (redirect && redirect !== location.pathname.slice(1)) {
-          // Clear the redirect and then navigate to the intended route
-          sessionStorage.removeItem('konbase_spa_route');
-          history.replaceState(null, null, redirect.startsWith('/') ? redirect : '/' + redirect);
+        // Only apply GitHub Pages SPA routing fix if we're on GitHub Pages
+        if (window.location.hostname.includes('github.io')) {
+          // This script checks to see if a redirect is present in the query string,
+          // which will be present after a GitHub Pages 404 redirect
+          var redirect = sessionStorage.getItem('konbase_spa_route');
+          if (redirect && redirect !== location.pathname.slice(1)) {
+            // Clear the redirect and then navigate to the intended route
+            sessionStorage.removeItem('konbase_spa_route');
+            history.replaceState(null, null, redirect.startsWith('/') ? redirect : '/' + redirect);
+          }
         }
       })();
     </script>

@@ -32,7 +32,7 @@ const ConventionTemplates = () => {
         .from('convention_templates')
         .select(`
           *,
-          creator:created_by(email, display_name)
+          creator:created_by(email, name)
         `)
         .eq('association_id', currentAssociation.id)
         .order('name');
@@ -141,7 +141,7 @@ const ConventionTemplates = () => {
                       <div className="text-xs text-muted-foreground space-y-1 pt-2">
                         <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3" />
-                          <span>Created by {template.creator?.display_name || template.creator?.email || 'Unknown'}</span>
+                          <span>Created by {template.creator?.name || template.creator?.email || 'Unknown'}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <CalendarIcon className="h-3 w-3" />

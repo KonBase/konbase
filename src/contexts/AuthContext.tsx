@@ -197,20 +197,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError({ name: 'ConfigError', message: 'Supabase not configured.' } as AuthError);
       return;
     }
+
+    if (!supabaseClient.auth) {
+      setError({ name: 'AuthError', message: 'Supabase auth is not available.' } as AuthError);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    
     try {
-      const { error } = await supabaseClient.auth.signInWithOtp({
+      // Debug: Log available auth methods
+      console.log('Available auth methods:', Object.keys(supabaseClient.auth));
+      console.log('signInWithOtp method:', supabaseClient.auth.signInWithOtp);
+      
+      // Check if signInWithOtp exists
+      if (typeof supabaseClient.auth.signInWithOtp !== 'function') {
+        throw new Error('Magic link authentication (signInWithOtp) is not available in this Supabase version');
+      }
+      
+      // Use the correct method name for Supabase v2
+      const result = await supabaseClient.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) throw error;
+      
+      console.log('Magic link result:', result);
+      
+      if (result.error) {
+        console.error('Supabase auth error:', result.error);
+        throw result.error;
+      }
+      
+      console.log('Magic link sent successfully');
       // Magic link email sent successfully
-    } catch (err) {
+    } catch (err: any) {
       console.error('Magic link sign in error:', err);
-      setError(err as AuthError);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to send magic link. Please try again.';
+      
+      if (err.message?.includes('not available')) {
+        errorMessage = 'Magic link authentication is not available. Please use password login.';
+      } else if (err.message?.includes('Invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (err.message?.includes('rate limit')) {
+        errorMessage = 'Too many requests. Please wait a moment and try again.';
+      } else if (err.message?.includes('not found')) {
+        errorMessage = 'Magic link authentication is not enabled. Please use password login.';
+      } else if (err.message?.includes('disabled')) {
+        errorMessage = 'Magic link authentication is disabled. Please use password login.';
+      }
+      
+      setError({ 
+        name: 'MagicLinkError', 
+        message: errorMessage 
+      } as AuthError);
     } finally {
       setLoading(false);
     }
