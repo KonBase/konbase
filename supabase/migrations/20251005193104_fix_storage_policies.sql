@@ -42,3 +42,4 @@ CREATE POLICY "Item image view" ON storage.objects FOR SELECT
         bucket_id = 'item-images' AND
         public.is_member_of_association(uuid(split_part(name, '/', 1)))
     );
+

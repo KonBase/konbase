@@ -1,6 +1,7 @@
 import { ThemeProvider } from './contexts/ThemeProvider';
 import { AuthProvider } from '@/contexts/auth';
 import { AssociationProvider } from './contexts/AssociationContext';
+import { ReauthProvider } from '@/contexts/ReauthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
@@ -32,11 +33,13 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <AuthProvider>
-            <AssociationProvider>
-              <SessionRecovery />
-              <AppRouter />
-              <Toaster />
-            </AssociationProvider>
+            <ReauthProvider>
+              <AssociationProvider>
+                <SessionRecovery />
+                <AppRouter />
+                <Toaster />
+              </AssociationProvider>
+            </ReauthProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

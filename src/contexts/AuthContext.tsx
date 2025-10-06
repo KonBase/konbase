@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean; // Add isAuthenticated
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>; 
   signInWithOAuth: (provider: 'google' | 'discord') => Promise<void>; 
+  signInWithMagicLink: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   reinitializeClient: () => void;
   hasRole: (role: UserRoleType) => boolean; // Add hasRole
@@ -190,6 +191,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // No finally setLoading(false) here, as successful OAuth redirects away
   };
 
+  // Add signInWithMagicLink function
+  const signInWithMagicLink = async (email: string) => {
+    if (!supabaseClient) {
+      setError({ name: 'ConfigError', message: 'Supabase not configured.' } as AuthError);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      // Magic link email sent successfully
+    } catch (err) {
+      console.error('Magic link sign in error:', err);
+      setError(err as AuthError);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ... signOut remains the same ...
   const signOut = async () => {
     if (!supabaseClient) {
@@ -231,7 +257,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isReady, 
     isAuthenticated, // Provide isAuthenticated
     signInWithPassword,
-    signInWithOAuth, 
+    signInWithOAuth,
+    signInWithMagicLink, // Provide signInWithMagicLink
     signOut,
     reinitializeClient,
     hasRole, // Provide hasRole

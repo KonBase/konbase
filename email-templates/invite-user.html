@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited to Join KonBase</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #d84165 0%, #fce771 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: white;
+        }
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .invite-title {
+            font-size: 28px;
+            color: #0c2e62;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        .inviter-info {
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .inviter-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+        }
+        .inviter-role {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #d84165 0%, #fce771 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(216, 65, 101, 0.3);
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(216, 65, 101, 0.4);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .invitation-details {
+            background-color: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .invitation-details h3 {
+            color: #0c2e62;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .detail-value {
+            color: #4a5568;
+        }
+        .role-badge {
+            background: linear-gradient(135deg, #0fb4ea 0%, #d84165 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .security-note {
+            background-color: #fff5f5;
+            border-left: 4px solid #d84165;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .security-note h3 {
+            color: #d84165;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .security-note p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #0fb4ea;
+            text-decoration: none;
+        }
+        .icon {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #d84165 0%, #fce771 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            text-align: center;
+            line-height: 60px;
+            font-size: 24px;
+            color: white;
+        }
+        .benefits {
+            margin: 30px 0;
+        }
+        .benefit {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+        }
+        .benefit-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        .benefit-text {
+            color: #4a5568;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .invite-title {
+                font-size: 24px;
+            }
+            .cta-button {
+                padding: 14px 24px;
+                font-size: 14px;
+            }
+            .detail-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">KonBase</div>
+            <p class="tagline">You're Invited to Join!</p>
+        </div>
+        
+        <div class="content">
+            <div class="icon">👋</div>
+            <h1 class="invite-title">You're Invited!</h1>
+            
+            <div class="inviter-info">
+                <div class="inviter-name">{{ .InviterName }}</div>
+                <div class="inviter-role">{{ .InviterRole }} at {{ .AssociationName }}</div>
+            </div>
+            
+            <p class="message">
+                Great news! {{ .InviterName }} has invited you to join 
+                <strong>{{ .AssociationName }}</strong> on KonBase. 
+                You'll be joining as a <span class="role-badge">{{ .Role }}</span> 
+                and will have access to our convention management tools.
+            </p>
+            
+            <div class="invitation-details">
+                <h3>📋 Invitation Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Association:</span>
+                    <span class="detail-value">{{ .AssociationName }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Your Role:</span>
+                    <span class="detail-value">{{ .Role }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Invited by:</span>
+                    <span class="detail-value">{{ .InviterName }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Expires:</span>
+                    <span class="detail-value">{{ .ExpiresAt }}</span>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <a href="{{ .InviteURL }}" class="cta-button">
+                    Accept Invitation & Join KonBase
+                </a>
+            </div>
+            
+            <div class="benefits">
+                <div class="benefit">
+                    <div class="benefit-icon">📦</div>
+                    <div class="benefit-text">Manage convention inventory and equipment</div>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">👥</div>
+                    <div class="benefit-text">Collaborate with your team members</div>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">📊</div>
+                    <div class="benefit-text">Track usage and generate reports</div>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">🔔</div>
+                    <div class="benefit-text">Get notifications for important updates</div>
+                </div>
+            </div>
+            
+            <div class="security-note">
+                <h3>🔒 Important Security Note</h3>
+                <p>
+                    This invitation link is personal to you and will expire in 7 days. 
+                    Please don't share this link with others. If you didn't expect this invitation, 
+                    you can safely ignore this email.
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Questions about this invitation?</strong> Contact {{ .InviterName }} or visit our <a href="#">support center</a></p>
+            <p>This email was sent to {{ .Email }}. If you have any questions, we're here to help!</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
+                © 2024 KonBase. All rights reserved.<br>
+                You're receiving this email because you were invited to join a KonBase association.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

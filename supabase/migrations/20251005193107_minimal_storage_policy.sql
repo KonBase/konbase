@@ -11,3 +11,4 @@ CREATE POLICY "Item image minimal test" ON storage.objects FOR ALL
     TO authenticated
     USING (bucket_id = 'item-images')
     WITH CHECK (bucket_id = 'item-images');
+

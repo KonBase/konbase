@@ -24,7 +24,9 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
-  const { login, signInWithOAuth, userProfile, user, loading: authLoading } = useAuth();
+  const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const { login, signInWithOAuth, signInWithMagicLink, userProfile, user, loading: authLoading } = useAuth();
   const [isReady] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -171,6 +173,38 @@ const LoginForm = () => {
     }
   };
 
+  const handleMagicLinkLogin = async () => {
+    if (!email) {
+      toast({
+        title: 'Email required',
+        description: 'Please enter your email address to receive a magic link.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsMagicLinkLoading(true);
+      logDebug('Magic link sign in attempt', { email }, 'info');
+      await signInWithMagicLink(email);
+      
+      setMagicLinkSent(true);
+      toast({
+        title: 'Magic link sent!',
+        description: 'Check your email for a magic link to sign in.',
+      });
+    } catch (error: any) {
+      handleError(error, 'LoginForm.handleMagicLinkLogin');
+      toast({
+        title: 'Failed to send magic link',
+        description: error.message || 'Could not send magic link. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsMagicLinkLoading(false);
+    }
+  };
+
   // 2FA verification handlers
   const handle2FAVerified = () => {
     logDebug('2FA verification successful, completing login', null, 'info');
@@ -256,7 +290,7 @@ const LoginForm = () => {
               required 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading || isGoogleLoading || isDiscordLoading}
+              disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}
             />
           </div>
           <div className="space-y-2">
@@ -272,7 +306,7 @@ const LoginForm = () => {
               required 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading || isGoogleLoading || isDiscordLoading}
+              disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -280,33 +314,78 @@ const LoginForm = () => {
               id="remember-me" 
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
-              disabled={isLoading || isGoogleLoading || isDiscordLoading}
+              disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}
             />
             <Label htmlFor="remember-me" className="text-sm font-normal">Remember me</Label>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading || isDiscordLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}>
             {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
             Login
           </Button>
         </form>
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+        
+        {magicLinkSent ? (
+          <div className="text-center space-y-4 p-4 bg-primary/10 rounded-lg">
+            <div className="p-3 bg-primary/20 rounded-full inline-flex mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary h-6 w-6">
+                <rect width="16" height="13" x="4" y="5" rx="2"/>
+                <path d="m4 8 8 5 8-5"/>
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium">Magic link sent!</h3>
+            <p className="text-muted-foreground">
+              Check your email for a magic link to sign in. You can close this tab and return after clicking the link.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => setMagicLinkSent(false)}
+              className="mt-2"
+            >
+              Try another method
+            </Button>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading || isDiscordLoading}>
-            {isGoogleLoading ? <Spinner size="sm" className="mr-2" /> : null} Google
-          </Button>
-          <Button variant="outline" onClick={handleDiscordLogin} disabled={isLoading || isGoogleLoading || isDiscordLoading}>
-            {isDiscordLoading ? <Spinner size="sm" className="mr-2" /> : null} Discord
-          </Button>
-        </div>
+        ) : (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                onClick={handleMagicLinkLogin} 
+                disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}
+                className="w-full"
+              >
+                {isMagicLinkLoading ? <Spinner size="sm" className="mr-2" /> : null}
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4"/>
+                  <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                  <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                  <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                  <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                </svg>
+                Send Magic Link
+              </Button>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}>
+                  {isGoogleLoading ? <Spinner size="sm" className="mr-2" /> : null} Google
+                </Button>
+                <Button variant="outline" onClick={handleDiscordLogin} disabled={isLoading || isGoogleLoading || isDiscordLoading || isMagicLinkLoading}>
+                  {isDiscordLoading ? <Spinner size="sm" className="mr-2" /> : null} Discord
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
       <CardFooter className="text-sm text-center block">
         Don't have an account?{" "}

@@ -28,3 +28,4 @@ export const getRedirectPathForRole = (role: UserRoleType): string => {
       return '/profile';
   }
 };
+

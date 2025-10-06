@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your KonBase Magic Link</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0fb4ea 0%, #d84165 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: white;
+        }
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .magic-title {
+            font-size: 28px;
+            color: #0c2e62;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        .message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0fb4ea 0%, #d84165 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(15, 180, 234, 0.3);
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 180, 234, 0.4);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .magic-info {
+            background: linear-gradient(135deg, #fce771 0%, #d84165 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .magic-info h3 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+        .magic-info p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .security-note {
+            background-color: #e6f7ff;
+            border-left: 4px solid #0fb4ea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .security-note h3 {
+            color: #0c2e62;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .security-note p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #0fb4ea;
+            text-decoration: none;
+        }
+        .icon {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0fb4ea 0%, #d84165 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            text-align: center;
+            line-height: 60px;
+            font-size: 24px;
+            color: white;
+        }
+        .features {
+            margin: 30px 0;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+        }
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        .feature-text {
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .alternative-login {
+            background-color: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .alternative-login h3 {
+            color: #0c2e62;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .alternative-login p {
+            color: #4a5568;
+            font-size: 14px;
+            margin: 0;
+        }
+        .login-link {
+            color: #0fb4ea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .magic-title {
+                font-size: 24px;
+            }
+            .cta-button {
+                padding: 14px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">KonBase</div>
+            <p class="tagline">Your Magic Link is Here! ✨</p>
+        </div>
+        
+        <div class="content">
+            <div class="icon">🔗</div>
+            <h1 class="magic-title">Your Magic Link</h1>
+            
+            <p class="message">
+                Hey there! 👋 You requested a magic link to sign in to your KonBase account. 
+                No need to remember passwords - just click the button below and you'll be 
+                signed in instantly!
+            </p>
+            
+            <div class="magic-info">
+                <h3>🚀 One-Click Sign In</h3>
+                <p>This magic link will automatically sign you into your account - no password required!</p>
+            </div>
+            
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="cta-button">
+                    Sign In to KonBase
+                </a>
+            </div>
+            
+            <div class="alternative-login">
+                <h3>💡 Alternative Sign In</h3>
+                <p>
+                    Prefer to use your password instead? 
+                    <a href="{{ .LoginURL }}" class="login-link">Visit the login page</a> 
+                    and sign in the traditional way.
+                </p>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">Instant access - no password needed</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-text">Secure and encrypted connection</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⏱️</div>
+                    <div class="feature-text">Works on any device</div>
+                </div>
+            </div>
+            
+            <div class="security-note">
+                <h3>🔒 Security Information</h3>
+                <p>
+                    This magic link is unique to you and will expire in 1 hour for your security. 
+                    It can only be used once. If you didn't request this magic link, 
+                    you can safely ignore this email.
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Having trouble?</strong> Reply to this email or visit our <a href="#">support center</a></p>
+            <p>This email was sent to {{ .Email }}. If you have any questions, we're here to help!</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
+                © 2024 KonBase. All rights reserved.<br>
+                You're receiving this email because you requested a magic link to sign in to your KonBase account.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

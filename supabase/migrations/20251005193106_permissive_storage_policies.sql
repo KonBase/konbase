@@ -31,3 +31,4 @@ CREATE POLICY "Item image view permissive" ON storage.objects FOR SELECT
         bucket_id = 'item-images' AND
         auth.uid() IS NOT NULL
     );
+

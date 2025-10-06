@@ -127,3 +127,4 @@ function App() {
 - Sprawdzanie ról odbywa się zarówno po stronie klienta jak i serwera
 - Automatyczne przekierowania zapobiegają nieautoryzowanemu dostępowi
 - Sesje są monitorowane i przywracane automatycznie
+

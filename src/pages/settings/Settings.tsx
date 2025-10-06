@@ -27,6 +27,7 @@ import AccessibilitySettings from '@/components/settings/AccessibilitySettings';
 import LanguageRegionSettings from '@/components/settings/LanguageRegionSettings';
 import SessionManagement from '@/components/settings/SessionManagement';
 import PasswordChange from '@/components/settings/PasswordChange';
+import EmailChange from '@/components/settings/EmailChange';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTranslation } from '@/utils/languageUtils';
 import { useAuth } from '@/contexts/auth';
@@ -365,6 +366,8 @@ const Settings = () => {
           <TabsContent value="security">
             <div className="grid gap-4 md:gap-6">
               <TwoFactorAuth />
+              
+              <EmailChange />
               
               <PasswordChange />
               

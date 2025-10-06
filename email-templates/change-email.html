@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your New Email Address - KonBase</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fce771;
+        }
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .change-title {
+            font-size: 28px;
+            color: #0c2e62;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        .message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(12, 46, 98, 0.3);
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(12, 46, 98, 0.4);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .email-change-info {
+            background: linear-gradient(135deg, #fce771 0%, #d84165 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .email-change-info h3 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+        .email-details {
+            background-color: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .email-details h3 {
+            color: #0c2e62;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        .email-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .email-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        .email-address {
+            color: #4a5568;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .old-email {
+            color: #718096;
+            text-decoration: line-through;
+        }
+        .new-email {
+            color: #0c2e62;
+            font-weight: 600;
+        }
+        .security-note {
+            background-color: #fff5f5;
+            border-left: 4px solid #d84165;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .security-note h3 {
+            color: #d84165;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .security-note p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #0fb4ea;
+            text-decoration: none;
+        }
+        .icon {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0c2e62 0%, #0fb4ea 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            text-align: center;
+            line-height: 60px;
+            font-size: 24px;
+            color: white;
+        }
+        .warning-note {
+            background-color: #fffbf0;
+            border-left: 4px solid #fce771;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning-note h3 {
+            color: #0c2e62;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .warning-note p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .change-title {
+                font-size: 24px;
+            }
+            .cta-button {
+                padding: 14px 24px;
+                font-size: 14px;
+            }
+            .email-row {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">KonBase</div>
+            <p class="tagline">Email Address Change Confirmation</p>
+        </div>
+        
+        <div class="content">
+            <div class="icon">📧</div>
+            <h1 class="change-title">Confirm Your New Email</h1>
+            
+            <p class="message">
+                Hi {{ .UserDisplayName }}! 👋 We received a request to change your email address 
+                for your KonBase account. To complete this change, please confirm your new email address.
+            </p>
+            
+            <div class="email-change-info">
+                <h3>📧 Email Address Change</h3>
+                <p>Please confirm your new email address to complete the change</p>
+            </div>
+            
+            <div class="email-details">
+                <h3>📋 Email Change Details</h3>
+                <div class="email-row">
+                    <span class="email-label">Previous Email:</span>
+                    <span class="email-address old-email">{{ .OldEmail }}</span>
+                </div>
+                <div class="email-row">
+                    <span class="email-label">New Email:</span>
+                    <span class="email-address new-email">{{ .NewEmail }}</span>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="cta-button">
+                    Confirm New Email Address
+                </a>
+            </div>
+            
+            <div class="warning-note">
+                <h3>⚠️ Important Information</h3>
+                <p>
+                    After confirming your new email address, you'll need to use the new email 
+                    to sign in to your KonBase account. Your old email address will no longer 
+                    have access to this account.
+                </p>
+            </div>
+            
+            <div class="security-note">
+                <h3>🔒 Security Note</h3>
+                <p>
+                    This confirmation link will expire in 24 hours for your security. 
+                    If you didn't request this email change, please contact our support team 
+                    immediately or ignore this email.
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Didn't request this change?</strong> Contact our <a href="#">support team</a> immediately</p>
+            <p>This email was sent to {{ .NewEmail }}. If you have any questions, we're here to help!</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
+                © 2024 KonBase. All rights reserved.<br>
+                You're receiving this email because a request was made to change the email address for your KonBase account.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

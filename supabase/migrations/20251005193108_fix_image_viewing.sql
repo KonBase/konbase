@@ -34,3 +34,4 @@ WITH CHECK (bucket_id = 'item-images');
 CREATE POLICY "Allow deleting item images" ON storage.objects
 FOR DELETE TO authenticated
 USING (bucket_id = 'item-images');
+
