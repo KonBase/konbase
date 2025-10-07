@@ -64,8 +64,19 @@ serve(async (req) => {
       throw new Error('No token found in Authorization header');
     }
     
-    // Verify the user with the token
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    // Verify the JWT token and extract user ID
+    const jwtPayload = JSON.parse(atob(token.split('.')[1]));
+    const userId = jwtPayload.sub;
+    
+    if (!userId) {
+      console.error('No user ID found in JWT token');
+      throw new Error('Invalid JWT token: no user ID found');
+    }
+    
+    console.log('User ID from JWT:', userId);
+    
+    // Get user details using service role
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
     if (userError || !userData.user) {
       console.error('Invalid authorization:', userError);
       throw new Error(`Invalid authorization: ${userError?.message || 'No user data'}`);
@@ -77,7 +88,7 @@ serve(async (req) => {
     const { data: mfaFactors, error: mfaFactorsError } = await supabase
       .from('auth.mfa_factors')
       .select('id, factor_type, status')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .eq('status', 'verified');
     
     if (mfaFactorsError) {
@@ -103,7 +114,7 @@ serve(async (req) => {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', userData.user.id)
+      .eq('id', userId)
       .single();
       
     if (profileError) {
@@ -133,7 +144,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ role: 'super_admin' })
-      .eq('id', userData.user.id);
+      .eq('id', userId);
       
     if (updateError) {
       console.error('Error updating user role:', updateError);
@@ -146,14 +157,14 @@ serve(async (req) => {
     const { error: auditError } = await supabase.from('audit_logs').insert({
       action: 'elevate_to_super_admin',
       entity: 'profiles',
-      entity_id: userData.user.id,
-      user_id: userData.user.id,
+      entity_id: userId,
+      user_id: userId,
       changes: { 
         previous_role: profile.role,
         new_role: 'super_admin',
         elevated_at: new Date().toISOString(),
         verification_method: 'mfa_totp',
-        factor_id: factorId
+        factor_id: verifiedTotpFactors[0]?.id || 'unknown'
       }
     });
     

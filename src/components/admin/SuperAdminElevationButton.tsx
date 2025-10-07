@@ -29,22 +29,28 @@ export function SuperAdminElevationButton() {
     const checkUserStatus = async () => {
       if (session?.user?.id) {
         // Check user role
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
+        console.log('User profile check:', { profile, profileError });
         setUserRole(profile?.role || 'unknown');
         
         // Check MFA status
         try {
           const { data: factors, error } = await supabase.auth.mfa.listFactors();
+          console.log('MFA factors check:', { factors, error });
           if (!error && factors) {
             const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
+            console.log('Verified TOTP factors:', verifiedTotpFactors);
             setHasMFA(verifiedTotpFactors.length > 0);
+          } else {
+            console.error('Error checking MFA factors:', error);
+            setHasMFA(false);
           }
         } catch (error) {
-          console.error('Error checking MFA status:', error);
+          console.error('Exception during MFA check:', error);
           setHasMFA(false);
         }
       }
@@ -255,6 +261,11 @@ export function SuperAdminElevationButton() {
           MFA Status: <span className={`font-mono ${hasMFA ? 'text-green-600' : 'text-red-600'}`}>
             {hasMFA ? 'Enabled' : 'Not Enabled'}
           </span>
+        </div>
+        
+        <div className="text-xs text-muted-foreground">
+          Debug: userRole={userRole}, hasMFA={hasMFA ? 'true' : 'false'}, 
+          canElevate={userRole === 'system_admin' && hasMFA ? 'true' : 'false'}
         </div>
         
         {userRole && userRole !== 'system_admin' && (
