@@ -8,11 +8,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ELEVATION_SECRET = Deno.env.get('ELEVATION_SECRET');
+// No longer using ELEVATION_SECRET - using MFA verification instead
 
 serve(async (req) => {
+  console.log('=== Edge Function Request Debug ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -29,13 +35,21 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
-    const body = await req.json();
-    console.log('Request body:', body);
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body:', body);
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      throw new Error('Invalid request body format');
+    }
     
-    const { securityCode } = body;
+    const { mfaCode } = body;
     
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header:', authHeader ? 'Present' : 'Missing');
+    
     if (!authHeader) {
       console.error('Authorization header is required');
       throw new Error('Authorization header is required');
@@ -44,6 +58,11 @@ serve(async (req) => {
     // Extract the token from the Authorization header
     const token = authHeader.replace('Bearer ', '');
     console.log('Token received:', token ? 'Present' : 'Missing');
+    
+    if (!token) {
+      console.error('No token found in Authorization header');
+      throw new Error('No token found in Authorization header');
+    }
     
     // Verify the user with the token
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
@@ -54,16 +73,56 @@ serve(async (req) => {
     
     console.log('User verified:', userData.user.id);
     
-    // Validate the security code
-    if (!ELEVATION_SECRET) {
-      console.error('ELEVATION_SECRET not configured');
-      throw new Error('Elevation secret not configured');
+    // Validate MFA code
+    if (!mfaCode) {
+      console.error('MFA code is required');
+      throw new Error('MFA code is required for super admin elevation');
     }
     
-    if (!securityCode || securityCode !== ELEVATION_SECRET) {
-      console.log(`Invalid security code attempt: ${securityCode}`);
-      throw new Error('Invalid security code');
+    console.log('MFA code received:', mfaCode ? 'Present' : 'Missing');
+    
+    // Get user's MFA factors
+    const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+    if (factorsError) {
+      console.error('Failed to fetch MFA factors:', factorsError);
+      throw new Error(`Failed to fetch MFA factors: ${factorsError.message}`);
     }
+    
+    // Check if user has verified TOTP factors
+    const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
+    if (verifiedTotpFactors.length === 0) {
+      console.error('User has no verified TOTP factors');
+      throw new Error('You must have MFA enabled to elevate to super admin');
+    }
+    
+    console.log('User has verified TOTP factors:', verifiedTotpFactors.length);
+    
+    // Use the first verified TOTP factor for verification
+    const factorId = verifiedTotpFactors[0].id;
+    
+    // Create a challenge for MFA verification
+    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+    if (challengeError) {
+      console.error('Failed to create MFA challenge:', challengeError);
+      throw new Error(`Failed to create MFA challenge: ${challengeError.message}`);
+    }
+    
+    const challengeId = challengeData.id;
+    console.log('MFA challenge created:', challengeId);
+    
+    // Verify the MFA code
+    const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId,
+      code: mfaCode
+    });
+    
+    if (verifyError) {
+      console.error('MFA verification failed:', verifyError);
+      throw new Error(`MFA verification failed: ${verifyError.message}`);
+    }
+    
+    console.log('MFA verification successful');
     
     // Get user's current role
     const { data: profile, error: profileError } = await supabase
@@ -117,7 +176,9 @@ serve(async (req) => {
       changes: { 
         previous_role: profile.role,
         new_role: 'super_admin',
-        elevated_at: new Date().toISOString()
+        elevated_at: new Date().toISOString(),
+        verification_method: 'mfa_totp',
+        factor_id: factorId
       }
     });
     
@@ -131,7 +192,7 @@ serve(async (req) => {
     // Return success response
     return new Response(
       JSON.stringify({ 
-        message: 'Successfully elevated to super admin',
+        message: 'Successfully elevated to super admin using MFA verification',
         success: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

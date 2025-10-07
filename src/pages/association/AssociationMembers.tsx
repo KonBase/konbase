@@ -1,33 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAssociationMembers, AssociationMember, ProfileData } from '@/hooks/useAssociationMembers';
-import { UserRoleType, USER_ROLES } from '@/types/user';
-import { useAuth } from '@/contexts/auth';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { UsersRound, UserRoundCog, UserRoundX, Building2, } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, Settings, Building2 } from 'lucide-react';
+import { useAssociationMembers } from '@/hooks/useAssociationMembers';
+import { useAuth } from '@/contexts/auth';
+import { UserRoleType } from '@/types/user';
 import { useAssociation } from '@/contexts/AssociationContext';
 import InviteMemberDialog from '@/components/association/InviteMemberDialog';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import MemberList from '@/components/association/MemberList';
+import MemberLoadingState from '@/components/association/MemberLoadingState';
+import MemberSearchAndFilter from '@/components/association/MemberSearchAndFilter';
+import BulkMemberActions from '@/components/association/BulkMemberActions';
 
 const AssociationMembers = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,206 +21,221 @@ const AssociationMembers = () => {
   const associationId = id || (currentAssociation?.id || '');
   const { members, loading, fetchMembers, updateMemberRole, removeMember } = useAssociationMembers(associationId);
   const { user } = useAuth();
-  const [selectedMember, setSelectedMember] = useState<AssociationMember | null>(null);
-  const [newRole, setNewRole] = useState<UserRoleType | ''>('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   
-  // Use profile.role to determine admin status (consistent with other components)
-  const { profile } = useUserProfile();
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+  const [filteredMembers, setFilteredMembers] = useState(members);
+  const [selectedTab, setSelectedTab] = useState('members');
 
   useEffect(() => {
     fetchMembers();
   }, [fetchMembers]);
 
-  // Format member data for display
-  const getMemberDisplayData = (member: AssociationMember) => {
-    const profile = member.profile as ProfileData;
-    return {
-      id: profile?.id || member.user_id,
-      name: profile?.name || 'Unknown User',
-      email: profile?.email || 'No email',
-      role: member.role,
-      roleDisplay: USER_ROLES[member.role]?.name || member.role,
-      profileImage: profile?.profile_image,
+  useEffect(() => {
+    setFilteredMembers(members);
+  }, [members]);
+
+  // Check if current user can manage roles
+  const canManageRoles = () => {
+    if (!user) return false;
+    const currentMember = members.find(m => m.user_id === user.id);
+    return currentMember?.role === 'admin' || currentMember?.role === 'system_admin' || currentMember?.role === 'super_admin';
+  };
+
+  // Check if current user can view profiles
+  const canViewProfiles = () => {
+    if (!user) return false;
+    const currentMember = members.find(m => m.user_id === user.id);
+    return ['admin', 'manager', 'system_admin', 'super_admin'].includes(currentMember?.role || '');
+  };
+
+  const handleUpdateRole = async (memberId: string, role: UserRoleType) => {
+    await updateMemberRole(memberId, role);
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    if (confirm(`Are you sure you want to remove ${memberName} from the association?`)) {
+      await removeMember(memberId);
+    }
+  };
+
+  const handleBulkRoleChange = async (memberIds: string[], newRole: UserRoleType) => {
+    try {
+      const promises = memberIds.map(id => updateMemberRole(id, newRole));
+      await Promise.all(promises);
+      fetchMembers(); // Refresh the list
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const handleBulkRemove = async (memberIds: string[]) => {
+    try {
+      const promises = memberIds.map(id => removeMember(id));
+      await Promise.all(promises);
+      fetchMembers(); // Refresh the list
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const getRoleStats = () => {
+    const stats = {
+      admin: 0,
+      manager: 0,
+      member: 0,
+      guest: 0,
+      total: members.length
     };
+
+    members.forEach(member => {
+      stats[member.role as keyof typeof stats]++;
+    });
+
+    return stats;
   };
 
-  const handleRoleChange = async () => {
-    if (!selectedMember || !newRole) return;
-    
-    const result = await updateMemberRole(selectedMember.id, newRole as UserRoleType);
-    if (result.success) {
-      setDialogOpen(false);
-      setNewRole('');
-      setSelectedMember(null);
-    }
-  };
-
-  const handleRemoveMember = async () => {
-    if (!selectedMember) return;
-    
-    const result = await removeMember(selectedMember.id);
-    if (result.success) {
-      setRemoveDialogOpen(false);
-      setSelectedMember(null);
-    }
-  };
-
-  const openRoleDialog = (member: AssociationMember) => {
-    setSelectedMember(member);
-    setNewRole(member.role);
-    setDialogOpen(true);
-  };
-
-  const openRemoveDialog = (member: AssociationMember) => {
-    setSelectedMember(member);
-    setRemoveDialogOpen(true);
-  };
-
-  // Generate initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
+  const roleStats = getRoleStats();
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      {/* Header with back navigation */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Association Members</h1>
-            {currentAssociation && (
-              <p className="text-muted-foreground flex items-center">
-                <Building2 className="h-4 w-4 mr-1 inline-block" />
-                {currentAssociation.name}
-              </p>
-            )}
-          </div>
-        </div>
-        
-        {isAdmin && (
-          <InviteMemberDialog onInviteSent={fetchMembers} />
-        )}
-      </div>
-      
-      <Card>
-        <CardContent className="pt-6">
-          {members.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <UsersRound className="mx-auto mb-4 h-12 w-12 opacity-30" />
-              <p>No members found</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {members.map(member => {
-                const memberData = getMemberDisplayData(member);
-                const isSelf = user?.id === memberData.id;
-                
-                return (
-                  <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage src={memberData.profileImage || undefined} />
-                        <AvatarFallback>{getInitials(memberData.name)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{memberData.name} {isSelf && <Badge variant="outline">You</Badge>}</p>
-                        <p className="text-sm text-muted-foreground">{memberData.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={memberData.role === 'admin' ? "default" : "secondary"}>
-                        {memberData.roleDisplay}
-                      </Badge>
-                      {isAdmin && !isSelf && (
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openRoleDialog(member)}
-                            title="Change role"
-                          >
-                            <UserRoundCog className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openRemoveDialog(member)}
-                            title="Remove member"
-                          >
-                            <UserRoundX className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Association Members</h1>
+          {currentAssociation && (
+            <p className="text-muted-foreground flex items-center">
+              <Building2 className="h-4 w-4 mr-1 inline-block" />
+              {currentAssociation.name}
+            </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-sm">
+            {members.length} members
+          </Badge>
+          {canManageRoles() && (
+            <InviteMemberDialog onInviteSent={fetchMembers} />
+          )}
+        </div>
+      </div>
 
-      {/* Change Role Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change Member Role</DialogTitle>
-            <DialogDescription>
-              Update the role for {selectedMember?.profile?.name || 'this member'}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="role" className="mb-2 block">Role</Label>
-            <Select value={newRole} onValueChange={(value) => setNewRole(value as UserRoleType)}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleRoleChange}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-2xl font-bold">{roleStats.total}</div>
+                <div className="text-xs text-muted-foreground">Total Members</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="default" className="text-xs">Admin</Badge>
+              <div>
+                <div className="text-2xl font-bold">{roleStats.admin}</div>
+                <div className="text-xs text-muted-foreground">Administrators</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">Manager</Badge>
+              <div>
+                <div className="text-2xl font-bold">{roleStats.manager}</div>
+                <div className="text-xs text-muted-foreground">Managers</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">Member</Badge>
+              <div>
+                <div className="text-2xl font-bold">{roleStats.member}</div>
+                <div className="text-xs text-muted-foreground">Members</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Remove Member Dialog */}
-      <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove Member</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove {selectedMember?.profile?.name || 'this member'} from the association?
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRemoveDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRemoveMember}>Remove</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Main Content */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="members" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Members
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Bulk Actions
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="members" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Member Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search and Filter */}
+              <MemberSearchAndFilter
+                members={members}
+                onFilteredMembersChange={setFilteredMembers}
+              />
+
+              {/* Member List */}
+              {loading ? (
+                <MemberLoadingState />
+              ) : (
+                <MemberList
+                  members={filteredMembers}
+                  onUpdateRole={handleUpdateRole}
+                  onRemoveMember={handleRemoveMember}
+                  canManageRoles={canManageRoles()}
+                  canViewProfiles={canViewProfiles()}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bulk" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Bulk Member Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <MemberLoadingState />
+              ) : (
+                <BulkMemberActions
+                  members={members}
+                  onBulkRoleChange={canManageRoles() ? handleBulkRoleChange : undefined}
+                  onBulkRemove={canManageRoles() ? handleBulkRemove : undefined}
+                  disabled={!canManageRoles()}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

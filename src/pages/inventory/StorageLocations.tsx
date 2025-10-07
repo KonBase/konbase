@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import LocationManager from '@/components/inventory/LocationManager';
-import { MapPin } from 'lucide-react'; // Removed ArrowLeft as we no longer need it
+import { MapPin, ArrowLeft, Building2 } from 'lucide-react';
 
 const StorageLocations = () => {
   const { currentAssociation, isLoading } = useAssociation(); // Added isLoading
@@ -51,15 +51,30 @@ const StorageLocations = () => {
     // Use container for consistent padding
     <div className="container mx-auto p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
-            <MapPin className="h-6 w-6" /> Storage Locations
-          </h1>
-          <p className="text-muted-foreground">
-            Define physical or logical locations where inventory items are stored (e.g., Warehouse A, Shelf 3, Room 101).
-          </p>
+        <div className="flex items-center gap-2">
+          {/* Back Button */}
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+            <Link to="/inventory">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+              <MapPin className="h-6 w-6" /> Storage Locations
+            </h1>
+            <p className="text-muted-foreground flex items-center">
+              <Building2 className="h-4 w-4 mr-1 inline-block" />
+              <Link 
+                to="/dashboard" 
+                className="text-primary hover:underline font-medium"
+              >
+                {currentAssociation.name}
+              </Link>
+              {' - '}Define physical or logical locations where inventory items are stored (e.g., Warehouse A, Shelf 3, Room 101).
+            </p>
+          </div>
         </div>
-         {/* Add Location button might be inside LocationManager, if not, add here */}
+        {/* Add Location button might be inside LocationManager, if not, add here */}
       </div>
 
       {/* Render the manager component */}

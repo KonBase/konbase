@@ -17,32 +17,46 @@ import { useAuth } from '@/contexts/auth/useAuth';
 
 export function SuperAdminElevationButton() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [securityCode, setSecurityCode] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [hasMFA, setHasMFA] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
 
-  // Check user role on component mount
+  // Check user role and MFA status on component mount
   React.useEffect(() => {
-    const checkUserRole = async () => {
+    const checkUserStatus = async () => {
       if (session?.user?.id) {
+        // Check user role
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
         setUserRole(profile?.role || 'unknown');
+        
+        // Check MFA status
+        try {
+          const { data: factors, error } = await supabase.auth.mfa.listFactors();
+          if (!error && factors) {
+            const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
+            setHasMFA(verifiedTotpFactors.length > 0);
+          }
+        } catch (error) {
+          console.error('Error checking MFA status:', error);
+          setHasMFA(false);
+        }
       }
     };
-    checkUserRole();
+    checkUserStatus();
   }, [session]);
 
   const handleElevation = async () => {
-    if (!securityCode.trim()) {
+    if (!mfaCode.trim()) {
       toast({
-        title: 'Security Code Required',
-        description: 'Please enter the security code',
+        title: 'MFA Code Required',
+        description: 'Please enter the 6-digit code from your authenticator app',
         variant: "destructive",
       });
       return;
@@ -52,6 +66,15 @@ export function SuperAdminElevationButton() {
       toast({
         title: 'Authentication Required',
         description: 'Please log in again to continue',
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasMFA) {
+      toast({
+        title: 'MFA Required',
+        description: 'You must enable MFA before elevating to super admin',
         variant: "destructive",
       });
       return;
@@ -78,16 +101,18 @@ export function SuperAdminElevationButton() {
       }
 
       console.log('Calling elevate-to-super-admin with:', {
-        securityCode: securityCode ? 'Present' : 'Missing',
+        mfaCode: mfaCode ? 'Present' : 'Missing',
         hasToken: !!session?.access_token,
         sessionAAL: session?.aal,
         userRole: session?.user?.role,
-        dbRole: profile?.role
+        dbRole: profile?.role,
+        tokenLength: session?.access_token?.length || 0,
+        hasMFA: hasMFA
       });
 
       // Call the Supabase edge function with proper authorization
       const { data, error } = await supabase.functions.invoke('elevate-to-super-admin', {
-        body: { securityCode },
+        body: { mfaCode },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -128,11 +153,12 @@ export function SuperAdminElevationButton() {
       // If successful
       toast({
         title: 'Elevation Successful',
-        description: 'You now have super admin privileges.',
+        description: 'You now have super admin privileges using MFA verification.',
         variant: "default",
       });
       
       setIsDialogOpen(false);
+      setMfaCode(''); // Clear the MFA code
       
       // Refresh the page to update permissions, but add a query param to show a success message
       window.location.href = '/admin?elevation=success';
@@ -187,6 +213,12 @@ export function SuperAdminElevationButton() {
           Current Role: <span className="font-mono">{userRole || 'loading...'}</span>
         </div>
         
+        <div className="text-sm text-muted-foreground">
+          MFA Status: <span className={`font-mono ${hasMFA ? 'text-green-600' : 'text-red-600'}`}>
+            {hasMFA ? 'Enabled' : 'Not Enabled'}
+          </span>
+        </div>
+        
         {userRole && userRole !== 'system_admin' && (
           <Button 
             variant="outline" 
@@ -202,11 +234,17 @@ export function SuperAdminElevationButton() {
           variant="destructive" 
           onClick={() => setIsDialogOpen(true)} 
           className="w-full sm:w-auto whitespace-nowrap"
-          disabled={userRole !== 'system_admin'}
+          disabled={userRole !== 'system_admin' || !hasMFA}
         >
           <ShieldAlert className="mr-2 h-4 w-4" />
           Elevate to Super Admin
         </Button>
+        
+        {!hasMFA && (
+          <div className="text-sm text-amber-600">
+            ⚠️ You must enable MFA before elevating to super admin
+          </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -214,25 +252,26 @@ export function SuperAdminElevationButton() {
           <DialogHeader>
             <DialogTitle>Super Admin Elevation</DialogTitle>
             <DialogDescription>
-              This is a high-security operation. Please enter the security code: <strong>admin123</strong>
+              This is a high-security operation. Please enter the 6-digit code from your authenticator app.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Input
-                id="securityCode"
-                placeholder="Security Code"
-                type="password"
-                value={securityCode}
-                onChange={(e) => setSecurityCode(e.target.value)}
-                className="font-mono"
+                id="mfaCode"
+                placeholder="123456"
+                type="text"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="font-mono text-center text-lg tracking-widest"
                 autoComplete="off"
+                maxLength={6}
               />
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Lock className="h-4 w-4" />
-              <span>This action will be logged and audited</span>
+              <span>This action will be logged and audited using MFA verification</span>
             </div>
           </div>
           
@@ -247,7 +286,7 @@ export function SuperAdminElevationButton() {
             <Button 
               variant="destructive" 
               onClick={handleElevation} 
-              disabled={isProcessing || !securityCode.trim()}
+              disabled={isProcessing || !mfaCode.trim() || mfaCode.length !== 6}
             >
               {isProcessing ? 'Processing...' : 'Confirm Elevation'}
             </Button>
