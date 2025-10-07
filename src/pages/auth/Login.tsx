@@ -1,6 +1,5 @@
 
 import LoginForm from '@/components/auth/LoginForm';
-import SupabaseAuthDebug from '@/components/debug/SupabaseAuthDebug';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Login = () => {
@@ -79,12 +78,6 @@ const Login = () => {
             <p className="text-muted-foreground">Supply Chain Management</p>
           </div>
           <LoginForm />
-          
-          {/* Temporary debug component - remove in production */}
-          <div className="border-t pt-8">
-            <h2 className="text-lg font-semibold mb-4 text-center">Debug: Supabase Auth</h2>
-            <SupabaseAuthDebug />
-          </div>
         </div>
       </ScrollArea>
     </div>

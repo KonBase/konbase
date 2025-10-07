@@ -100,19 +100,57 @@ export function SuperAdminElevationButton() {
         throw new Error(`Only system administrators can be elevated to super admin. Current role: ${profile?.role || 'unknown'}`);
       }
 
+      // Perform MFA verification client-side before calling the Edge Function
+      console.log('Performing MFA verification...');
+      
+      // Get user's MFA factors
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+      if (factorsError) {
+        throw new Error(`Failed to fetch MFA factors: ${factorsError.message}`);
+      }
+
+      const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
+      if (verifiedTotpFactors.length === 0) {
+        throw new Error('No verified TOTP factors found');
+      }
+
+      const factorId = verifiedTotpFactors[0].id;
+      
+      // Create a challenge
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+      if (challengeError) {
+        throw new Error(`Failed to create MFA challenge: ${challengeError.message}`);
+      }
+
+      const challengeId = challengeData.id;
+      
+      // Verify the MFA code
+      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId,
+        code: mfaCode
+      });
+
+      if (verifyError) {
+        throw new Error(`MFA verification failed: ${verifyError.message}`);
+      }
+
+      console.log('MFA verification successful, proceeding with elevation...');
+
       console.log('Calling elevate-to-super-admin with:', {
-        mfaCode: mfaCode ? 'Present' : 'Missing',
         hasToken: !!session?.access_token,
         sessionAAL: session?.aal,
         userRole: session?.user?.role,
         dbRole: profile?.role,
         tokenLength: session?.access_token?.length || 0,
-        hasMFA: hasMFA
+        hasMFA: hasMFA,
+        mfaVerified: true
       });
 
       // Call the Supabase edge function with proper authorization
+      // No need to send mfaCode since we've already verified it client-side
       const { data, error } = await supabase.functions.invoke('elevate-to-super-admin', {
-        body: { mfaCode },
+        body: {},
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
