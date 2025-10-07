@@ -109,55 +109,65 @@ export function SuperAdminElevationButton() {
       // Perform MFA verification client-side before calling the Edge Function
       console.log('Performing MFA verification...');
       
-      // Get user's MFA factors
-      console.log('Step 1: Getting MFA factors...');
-      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
-      console.log('MFA factors result:', { factors, factorsError });
-      
-      if (factorsError) {
-        console.error('Failed to fetch MFA factors:', factorsError);
-        throw new Error(`Failed to fetch MFA factors: ${factorsError.message}`);
+      try {
+        // Get user's MFA factors
+        console.log('Step 1: Getting MFA factors...');
+        const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+        console.log('MFA factors result:', { factors, factorsError });
+        
+        if (factorsError) {
+          console.error('Failed to fetch MFA factors:', factorsError);
+          throw new Error(`Failed to fetch MFA factors: ${factorsError.message}`);
+        }
+
+        const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
+        console.log('Verified TOTP factors:', verifiedTotpFactors);
+        
+        if (verifiedTotpFactors.length === 0) {
+          console.error('No verified TOTP factors found');
+          throw new Error('No verified TOTP factors found');
+        }
+
+        const factorId = verifiedTotpFactors[0].id;
+        console.log('Using factor ID:', factorId);
+        
+        // Create a challenge
+        console.log('Step 2: Creating MFA challenge...');
+        const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+        console.log('Challenge result:', { challengeData, challengeError });
+        
+        if (challengeError) {
+          console.error('Failed to create MFA challenge:', challengeError);
+          throw new Error(`Failed to create MFA challenge: ${challengeError.message}`);
+        }
+
+        const challengeId = challengeData.id;
+        console.log('Challenge ID:', challengeId);
+        
+        // Verify the MFA code
+        console.log('Step 3: Verifying MFA code...');
+        console.log('MFA code being used:', mfaCode);
+        
+        const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
+          factorId,
+          challengeId,
+          code: mfaCode
+        });
+        
+        console.log('Verify result:', { verifyData, verifyError });
+
+        if (verifyError) {
+          console.error('MFA verification failed:', verifyError);
+          throw new Error(`MFA verification failed: ${verifyError.message}`);
+        }
+
+        console.log('✅ MFA verification successful!');
+        console.log('MFA verification successful, proceeding with elevation...');
+        
+      } catch (mfaError) {
+        console.error('MFA verification process failed:', mfaError);
+        throw mfaError;
       }
-
-      const verifiedTotpFactors = factors.totp?.filter(f => f.status === 'verified') || [];
-      console.log('Verified TOTP factors:', verifiedTotpFactors);
-      
-      if (verifiedTotpFactors.length === 0) {
-        console.error('No verified TOTP factors found');
-        throw new Error('No verified TOTP factors found');
-      }
-
-      const factorId = verifiedTotpFactors[0].id;
-      console.log('Using factor ID:', factorId);
-      
-      // Create a challenge
-      console.log('Step 2: Creating MFA challenge...');
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
-      console.log('Challenge result:', { challengeData, challengeError });
-      
-      if (challengeError) {
-        console.error('Failed to create MFA challenge:', challengeError);
-        throw new Error(`Failed to create MFA challenge: ${challengeError.message}`);
-      }
-
-      const challengeId = challengeData.id;
-      console.log('Challenge ID:', challengeId);
-      
-      // Verify the MFA code
-      console.log('Step 3: Verifying MFA code...');
-      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId,
-        code: mfaCode
-      });
-      console.log('Verify result:', { verifyData, verifyError });
-
-      if (verifyError) {
-        console.error('MFA verification failed:', verifyError);
-        throw new Error(`MFA verification failed: ${verifyError.message}`);
-      }
-
-      console.log('MFA verification successful, proceeding with elevation...');
 
       console.log('Calling elevate-to-super-admin with:', {
         hasToken: !!session?.access_token,
