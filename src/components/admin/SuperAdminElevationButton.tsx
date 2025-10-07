@@ -155,17 +155,25 @@ export function SuperAdminElevationButton() {
 
       // Call the Supabase edge function with proper authorization
       // No need to send mfaCode since we've already verified it client-side
+      console.log('About to call Edge Function...');
       const { data, error } = await supabase.functions.invoke('elevate-to-super-admin', {
         body: {},
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+      console.log('Edge Function call completed');
 
       console.log('Edge function response:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          context: error.context
+        });
         
         // Try to extract the actual error message from the response
         let errorMessage = 'Edge function returned an error';
@@ -178,6 +186,7 @@ export function SuperAdminElevationButton() {
         if (error.name === 'FunctionsHttpError' && error.context) {
           try {
             const responseBody = await error.context.response?.text();
+            console.error('Response body:', responseBody);
             if (responseBody) {
               const parsedBody = JSON.parse(responseBody);
               errorMessage = parsedBody.message || parsedBody.error || errorMessage;
@@ -284,10 +293,15 @@ export function SuperAdminElevationButton() {
           onClick={() => setIsDialogOpen(true)} 
           className="w-full sm:w-auto whitespace-nowrap"
           disabled={userRole !== 'system_admin' || !hasMFA}
+          style={{ border: '2px solid red' }} // Temporary visual indicator
         >
           <ShieldAlert className="mr-2 h-4 w-4" />
           Elevate to Super Admin
         </Button>
+        
+        <div className="text-xs text-green-600">
+          ✅ Button should be visible and enabled
+        </div>
         
         {!hasMFA && (
           <div className="text-sm text-amber-600">
